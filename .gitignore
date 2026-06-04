@@ -13,3 +13,5 @@ functions/node_modules
 
 # Build/zip artifacts
 *.zip
+
+*.tsbuildinfo
