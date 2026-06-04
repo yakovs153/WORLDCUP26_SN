@@ -1,0 +1,177 @@
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import {
+  onAuthStateChanged,
+  signOut as fbSignOut,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+  updateProfile,
+  type User
+} from 'firebase/auth'
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
+import { auth, db, DEMO_MODE } from '../firebase'
+import { checkEmailAllowed } from '../lib/emailGate'
+
+class EmailGateError extends Error {
+  code = 'email-gate'
+}
+
+function gateEmail(email: string | null | undefined): void {
+  const result = checkEmailAllowed(email || '')
+  if (!result.allowed) {
+    throw new EmailGateError(
+      result.reason === 'invalid-email'
+        ? 'אימייל לא תקין'
+        : 'ההרשמה פתוחה רק לעובדי החברה — יש להתחבר עם כתובת אימייל ארגונית'
+    )
+  }
+}
+
+interface AuthContextValue {
+  user: User | null
+  loading: boolean
+  signInEmail: (email: string, password: string) => Promise<void>
+  registerEmail: (email: string, password: string, displayName: string) => Promise<void>
+  signInGoogle: () => Promise<void>
+  signOut: () => Promise<void>
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null)
+
+async function ensureUserDoc(user: User, displayNameOverride?: string) {
+  if (DEMO_MODE) return
+  const ref = doc(db, 'users', user.uid)
+  const snap = await getDoc(ref)
+  if (snap.exists()) return
+  await setDoc(ref, {
+    uid: user.uid,
+    displayName: displayNameOverride || user.displayName || user.email?.split('@')[0] || 'משתמש',
+    email: user.email || '',
+    photoURL: user.photoURL || null,
+    totalPoints: 0,
+    predictionsCount: 0,
+    joinedAt: serverTimestamp()
+  })
+}
+
+// ===== Demo mode: fake user persisted in localStorage =====
+const DEMO_USER_KEY = 'demo-user-v1'
+
+function loadDemoUser(): User | null {
+  try {
+    const raw = localStorage.getItem(DEMO_USER_KEY)
+    if (!raw) return null
+    return JSON.parse(raw) as User
+  } catch {
+    return null
+  }
+}
+
+function saveDemoUser(u: User | null) {
+  if (u) localStorage.setItem(DEMO_USER_KEY, JSON.stringify(u))
+  else localStorage.removeItem(DEMO_USER_KEY)
+}
+
+function makeDemoUser(email: string, displayName?: string): User {
+  // Minimal shape — enough for our code's needs (uid, email, displayName, photoURL)
+  return {
+    uid: 'demo-' + (email || 'user').replace(/[^a-z0-9]/gi, '').slice(0, 12),
+    email,
+    displayName: displayName || email.split('@')[0] || 'משתמש דמו',
+    photoURL: null
+  } as unknown as User
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (DEMO_MODE) {
+      setUser(loadDemoUser())
+      setLoading(false)
+      return
+    }
+    return onAuthStateChanged(
+      auth,
+      (u) => {
+        setUser(u)
+        setLoading(false)
+      },
+      (err) => {
+        console.error('Auth state error:', err)
+        setUser(null)
+        setLoading(false)
+      }
+    )
+  }, [])
+
+  const signInEmail = async (email: string, password: string) => {
+    gateEmail(email)
+    if (DEMO_MODE) {
+      if (!email || password.length < 1) throw new Error('auth/invalid-credential')
+      const u = makeDemoUser(email)
+      saveDemoUser(u)
+      setUser(u)
+      return
+    }
+    const cred = await signInWithEmailAndPassword(auth, email, password)
+    await ensureUserDoc(cred.user)
+  }
+
+  const registerEmail = async (email: string, password: string, displayName: string) => {
+    gateEmail(email)
+    if (DEMO_MODE) {
+      if (!email || password.length < 6) throw new Error('auth/weak-password')
+      const u = makeDemoUser(email, displayName)
+      saveDemoUser(u)
+      setUser(u)
+      return
+    }
+    const cred = await createUserWithEmailAndPassword(auth, email, password)
+    if (displayName) await updateProfile(cred.user, { displayName })
+    await ensureUserDoc(cred.user, displayName)
+  }
+
+  const signInGoogle = async () => {
+    if (DEMO_MODE) {
+      gateEmail('demo.user@storenext.com')
+      const u = makeDemoUser('demo.user@storenext.com', 'משתמש דמו')
+      saveDemoUser(u)
+      setUser(u)
+      return
+    }
+    const provider = new GoogleAuthProvider()
+    const cred = await signInWithPopup(auth, provider)
+    try {
+      gateEmail(cred.user.email)
+    } catch (e) {
+      // Email isn't allowed — sign out immediately and propagate
+      await fbSignOut(auth)
+      throw e
+    }
+    await ensureUserDoc(cred.user)
+  }
+
+  const signOut = async () => {
+    if (DEMO_MODE) {
+      saveDemoUser(null)
+      setUser(null)
+      return
+    }
+    await fbSignOut(auth)
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, loading, signInEmail, registerEmail, signInGoogle, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext)
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
+  return ctx
+}

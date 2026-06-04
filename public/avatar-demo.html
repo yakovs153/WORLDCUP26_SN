@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>דוגמה — שחקן בתוך לוגו StoreNext</title>
+  <style>
+    body {
+      margin: 0;
+      background: #1a1320;
+      color: #f5f0f5;
+      font-family: 'Heebo', system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+      padding: 32px 16px 60px;
+    }
+    h1 { font-size: 20px; margin: 0; }
+    p.note { color: #a89aac; font-size: 13px; text-align: center; max-width: 360px; margin: 0; }
+    .row { display: flex; gap: 28px; align-items: flex-end; flex-wrap: wrap; justify-content: center; }
+    .cell { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .label { font-size: 12px; color: #a89aac; }
+    .card {
+      display: flex; align-items: center; gap: 14px;
+      background: #322339; border: 1px solid #3a2a42;
+      border-radius: 14px; padding: 12px 16px; width: 300px;
+    }
+    .card .meta { display: flex; flex-direction: column; }
+    .card .pname { font-weight: 800; font-size: 16px; }
+    .card .pteam { font-size: 12px; color: #a89aac; }
+    .attr { font-size: 10px; color: #6b5d70; max-width: 340px; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>🏆 שחקן בתוך המשושה של StoreNext</h1>
+  <p class="note">דוגמה עם תמונה אמיתית וחופשית של קיליאן מבאפה (Wikimedia Commons). אותה מסגרת תחול על כל שחקן.</p>
+
+  <div class="row" id="sizes"></div>
+
+  <div class="card">
+    <span id="cardAvatar"></span>
+    <span class="meta">
+      <span class="pname">קיליאן מבאפה</span>
+      <span class="pteam">צרפת · מלך השערים</span>
+    </span>
+  </div>
+
+  <p class="attr">תמונה: Anton Zaitsev / soccer.ru — רישיון CC BY-SA 3.0</p>
+
+  <script>
+    const PHOTO = 'https://upload.wikimedia.org/wikipedia/commons/e/e5/Kylian_Mbapp%C3%A9_2018.jpg';
+    const FLAG = 'https://flagcdn.com/fr.svg';
+
+    // Hexagon + red chevron, identical geometry to the React PlayerAvatar component.
+    function avatar(size, withPhoto) {
+      const w = size, h = Math.round(size * 1.15);
+      const uid = 'a' + Math.random().toString(36).slice(2, 8);
+      const HEX = '50,18 95,40 95,90 50,112 5,90 5,40';
+      const CHEVRON = 'M 20,16 L 50,-1 L 80,16 L 63,16 L 50,8 L 37,16 Z';
+      const inner = withPhoto
+        ? `<image href="${PHOTO}" x="5" y="18" width="90" height="94" preserveAspectRatio="xMidYMid slice" clip-path="url(#hex-${uid})" />`
+        : `<text x="50" y="78" text-anchor="middle" font-size="34" font-weight="900" font-family="Heebo, sans-serif" fill="#fff">קמ</text>`;
+      const flagDim = Math.round(size * 0.34);
+      return `
+        <span style="position:relative;display:inline-flex;width:${w}px;height:${h}px;">
+          <svg width="${w}" height="${h}" viewBox="0 0 100 115" style="overflow:visible">
+            <defs>
+              <clipPath id="hex-${uid}"><polygon points="${HEX}"/></clipPath>
+              <linearGradient id="lg-${uid}" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="rgba(0,0,0,0.22)"/>
+                <stop offset="50%" stop-color="rgba(0,0,0,0)"/>
+                <stop offset="100%" stop-color="rgba(255,255,255,0.12)"/>
+              </linearGradient>
+              <filter id="sh-${uid}" x="-30%" y="-30%" width="160%" height="160%">
+                <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000" flood-opacity="0.45"/>
+              </filter>
+            </defs>
+            <path d="${CHEVRON}" fill="#cc1f3e" filter="url(#sh-${uid})"/>
+            <polygon points="${HEX}" fill="#241a2c" filter="url(#sh-${uid})"/>
+            ${inner}
+            <polygon points="${HEX}" fill="url(#lg-${uid})"/>
+            <polygon points="${HEX}" fill="none" stroke="rgba(0,0,0,0.4)" stroke-width="1.5"/>
+          </svg>
+          <span style="position:absolute;bottom:${-Math.round(size*0.04)}px;inset-inline-end:-2px;width:${flagDim}px;height:${flagDim}px;border-radius:50%;overflow:hidden;background:#1a1320;border:2px solid #1a1320;box-shadow:0 1px 3px rgba(0,0,0,.4);display:inline-flex">
+            <img src="${FLAG}" style="width:100%;height:100%;object-fit:cover" />
+          </span>
+        </span>`;
+    }
+
+    document.getElementById('sizes').innerHTML = `
+      <div class="cell"><div>${avatar(140, true)}</div><span class="label">גדול · עם תמונה</span></div>
+      <div class="cell"><div>${avatar(80, true)}</div><span class="label">ברשימה</span></div>
+      <div class="cell"><div>${avatar(80, false)}</div><span class="label">ללא תמונה (ראשי תיבות)</span></div>
+    `;
+    document.getElementById('cardAvatar').innerHTML = avatar(56, true);
+  </script>
+</body>
+</html>

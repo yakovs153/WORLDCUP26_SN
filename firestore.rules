@@ -1,0 +1,112 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // ===== Users =====
+    match /users/{uid} {
+      allow read: if true; // לדירוג ציבורי
+      // המשתמש יכול ליצור את הרשומה שלו, אך לא לעדכן totalPoints/predictionsCount —
+      // אלה מעודכנים על-ידי Functions בלבד.
+      allow create: if isSelf(uid)
+                    && request.resource.data.totalPoints == 0
+                    && request.resource.data.predictionsCount == 0;
+      allow update: if isSelf(uid)
+                    && request.resource.data.totalPoints == resource.data.totalPoints
+                    && request.resource.data.predictionsCount == resource.data.predictionsCount;
+      allow delete: if false;
+    }
+
+    // ===== Matches — read-only עבור clients, נכתב רק על-ידי Functions =====
+    match /matches/{matchId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ===== App config (admin-managed) =====
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/appConfig/main) &&
+        request.auth.token.email in get(/databases/$(database)/documents/appConfig/main).data.adminEmails;
+    }
+
+    match /appConfig/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ===== Polls =====
+    match /pollVotes/{voteId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && voteId == request.auth.uid + '_' + request.resource.data.pollId
+        && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /pollTally/{pollId} {
+      allow read: if true;
+      // anyone signed-in can bump (increment via setDoc merge)
+      allow write: if isSignedIn();
+    }
+
+    // ===== Bonus predictions (championship + top scorer) =====
+    match /bonusPredictions/{uid} {
+      allow read: if isSignedIn();
+
+      function tournamentStarted() {
+        // Locked once the earliest match has kicked off.
+        // (Firestore rules don't support cross-collection aggregations cheaply,
+        // so we rely on the Cloud Function to enforce after-deadline writes by
+        // ignoring them. Client-side, the UI also disables editing.)
+        return false;
+      }
+
+      allow create, update: if isSelf(uid)
+        && request.resource.data.uid == request.auth.uid
+        && !tournamentStarted()
+        // championPoints / topScorerPoints can only be set by Functions
+        && request.resource.data.championPoints == null
+        && request.resource.data.topScorerPoints == null;
+
+      allow delete: if false;
+    }
+
+    // ===== Predictions =====
+    match /predictions/{predId} {
+      allow read: if isSignedIn();
+
+      // יצירה/עדכון רק עבור הניחושים שלך, ורק אם המשחק עוד לא התחיל
+      allow create: if isSignedIn()
+                    && request.resource.data.uid == request.auth.uid
+                    && predId == request.auth.uid + '_' + request.resource.data.matchId
+                    && exists(/databases/$(database)/documents/matches/$(request.resource.data.matchId))
+                    && get(/databases/$(database)/documents/matches/$(request.resource.data.matchId)).data.status == 'SCHEDULED'
+                    && request.resource.data.homeScore is int
+                    && request.resource.data.awayScore is int
+                    && request.resource.data.homeScore >= 0 && request.resource.data.homeScore <= 30
+                    && request.resource.data.awayScore >= 0 && request.resource.data.awayScore <= 30
+                    && request.resource.data.points == null;
+
+      allow update: if isSignedIn()
+                    && resource.data.uid == request.auth.uid
+                    && request.resource.data.uid == request.auth.uid
+                    && get(/databases/$(database)/documents/matches/$(resource.data.matchId)).data.status == 'SCHEDULED'
+                    && request.resource.data.points == resource.data.points
+                    && request.resource.data.homeScore is int
+                    && request.resource.data.awayScore is int
+                    && request.resource.data.homeScore >= 0 && request.resource.data.homeScore <= 30
+                    && request.resource.data.awayScore >= 0 && request.resource.data.awayScore <= 30;
+
+      allow delete: if false;
+    }
+  }
+}

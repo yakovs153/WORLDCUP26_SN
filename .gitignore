@@ -1,0 +1,15 @@
+node_modules
+dist
+.firebase
+.env
+.env.local
+*.log
+.DS_Store
+functions/lib
+functions/node_modules
+
+# Machine-specific Claude Code tooling (regenerated per machine)
+.claude/
+
+# Build/zip artifacts
+*.zip

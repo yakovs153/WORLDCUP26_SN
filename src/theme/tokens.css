@@ -1,0 +1,58 @@
+/*
+ * Design tokens — פלטה שחולצה מהלוגו שהמשתמש העלה:
+ *   אדום חי (CTA, ניחושים מנצחים)
+ *   סגול-בורדו עמוק (רקע, surfaces)
+ *   שחור/אפור (טקסט)
+ * נוספו: ירוק להצלחה, ענברי קל ל-accent (קונטרסט נעים על רקע סגול).
+ */
+
+:root {
+  /* Brand */
+  --color-primary:        #e11d48;   /* אדום חי מהחץ העליון בלוגו */
+  --color-primary-hover:  #f43f5e;
+  --color-accent:         #f59e0b;   /* ענברי - הדגשות, נקודות */
+  --color-danger:         #ef4444;
+  --color-success:        #22c55e;
+
+  /* Surfaces — מבוסס על הסגול-בורדו הכהה של הקובייה בלוגו */
+  --color-bg:             #1a1320;   /* רקע ראשי */
+  --color-bg-elevated:    #261a2e;
+  --color-surface:        #322339;   /* כרטיסים */
+  --color-surface-hover:  #3d2c44;
+  --color-border:         #3a2a42;
+  --color-border-strong:  #54405e;
+
+  /* Text */
+  --color-text:           #f5f0f5;
+  --color-text-muted:     #a89aac;
+  --color-text-inverse:   #1a1320;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-full: 999px;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.35);
+  --shadow-glow: 0 0 0 3px rgba(212, 175, 55, 0.25);
+
+  /* Typography */
+  --font-body: 'Heebo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Bebas Neue', 'Heebo', sans-serif;
+
+  /* Layout */
+  --header-height: 60px;
+  --bottom-nav-height: 76px;
+  --max-content-width: 720px;
+}
