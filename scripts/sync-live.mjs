@@ -24,19 +24,38 @@ const __dir = dirname(fileURLToPath(import.meta.url))
 const HE_TEAMS = JSON.parse(readFileSync(join(__dir, '..', 'src', 'data', 'heTeams.json'), 'utf8'))
 const heName = (tla, fallback) => (tla && HE_TEAMS[tla.toUpperCase()]) || fallback || ''
 
-// Tom the Analyst: bookmaker-favourite pick — stronger team (with home edge) wins
-// by a typical margin. Admin can override per match via appConfig.analystOverrides.
+// Tom the Analyst — bookmaker-favourite picks with realistic VARIETY. Same
+// match always gets the same pick (deterministic hash); admin can override.
 const STRENGTH = JSON.parse(readFileSync(join(__dir, '..', 'src', 'data', 'teamStrength.json'), 'utf8'))
 const strengthOf = (code) => STRENGTH[(code || '').toUpperCase()] ?? 3
+function hash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0 } return h >>> 0 }
+const HOME_BIG = [[2,0],[3,0],[3,1],[2,1],[4,1]]
+const HOME_COMFORT = [[2,1],[2,0],[1,0],[3,1],[3,0]]
+const HOME_SLIGHT = [[1,0],[2,1],[1,1],[2,0],[0,0]]
+const EVEN_MATCH = [[1,1],[1,0],[0,0],[2,1],[0,1],[2,2],[1,2]]
+const AWAY_SLIGHT = [[0,1],[1,2],[1,1],[0,2],[0,0]]
+const AWAY_COMFORT = [[1,2],[0,2],[0,1],[1,3],[0,3]]
+const AWAY_BIG = [[0,2],[0,3],[1,3],[1,2],[1,4]]
+function bucket(gap) {
+  if (gap >= 2.0) return HOME_BIG
+  if (gap >= 1.0) return HOME_COMFORT
+  if (gap >= 0.4) return HOME_SLIGHT
+  if (gap > -0.4) return EVEN_MATCH
+  if (gap > -1.0) return AWAY_SLIGHT
+  if (gap > -2.0) return AWAY_COMFORT
+  return AWAY_BIG
+}
 function tomPick(homeCode, awayCode, matchId, overrides) {
   const ov = overrides?.[matchId]
   if (Array.isArray(ov) && ov.length === 2) return ov
   const gap = strengthOf(homeCode) + 0.3 - strengthOf(awayCode)
-  if (gap >= 1.5) return [2, 0]
-  if (gap >= 0.5) return [2, 1]
-  if (gap > -0.5) return [1, 1]
-  if (gap > -1.5) return [1, 2]
-  return [0, 2]
+  const pool = bucket(gap)
+  const weights = pool.map((_, i) => Math.max(1, pool.length - i))
+  const totalW = weights.reduce((a, b) => a + b, 0)
+  const r = hash(`${matchId}|${homeCode}|${awayCode}`) % totalW
+  let acc = 0
+  for (let i = 0; i < pool.length; i++) { acc += weights[i]; if (r < acc) return pool[i] }
+  return pool[0]
 }
 
 const TOKEN = process.env.FOOTBALL_DATA_TOKEN
