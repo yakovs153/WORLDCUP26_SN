@@ -64,13 +64,15 @@ export default function Matches() {
 
       <KingBanner />
 
-      <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px' }}>
-        <span style={{ fontSize: 22 }}>💡</span>
-        <div>
-          <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>טיפ היום</div>
-          <div style={{ fontWeight: 600, fontSize: 14 }}>{tipOfTheDay()}</div>
+      {cfg.tipsEnabled && (
+        <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px' }}>
+          <span style={{ fontSize: 22 }}>💡</span>
+          <div>
+            <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>טיפ היום</div>
+            <div style={{ fontWeight: 600, fontSize: 14 }}>{tipOfTheDay(cfg.tips)}</div>
+          </div>
         </div>
-      </div>
+      )}
 
       {needsBonus && (
         <Link

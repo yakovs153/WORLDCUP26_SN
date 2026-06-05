@@ -1,6 +1,12 @@
-import type { ScoringConfig } from '../types'
+import type { MatchStage, ScoringConfig, StageMultipliers } from '../types'
 
 const DEFAULT: ScoringConfig = { exact: 5, winnerAndDiff: 3, winnerOnly: 1 }
+
+/** Apply the stage multiplier to base points (knockout games can be worth more). */
+export function applyStage(base: number, stage: MatchStage | undefined, mult?: StageMultipliers): number {
+  const m = stage && mult ? (mult[stage] ?? 1) : 1
+  return Math.round(base * m)
+}
 
 /**
  * Pure scoring function. Reads point values from optional config (managed by admin),

@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       comp:
-        description: 'Competition code (CL, PL, BL1, PD, SA, FL1, WC…). Empty = today across your plan.'
+        description: 'Competition code (CL, PL, BL1, PD, SA, FL1, WC…), or SIM for a fake live match. Empty = today.'
         required: false
-        default: ''
+        default: 'SIM'
       live_minutes:
         description: 'Keep polling every 60s for N minutes (0 = run once)'
         required: false
@@ -39,18 +39,23 @@ jobs:
           RT: ${{ secrets.FIREBASE_REFRESH_TOKEN }}
         run: |
           printf '{"type":"authorized_user","client_id":"563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com","client_secret":"j9iVZfS8kkCEFUPaAeJV0sAi","refresh_token":"%s"}' "$RT" > "$GOOGLE_APPLICATION_CREDENTIALS"
-      - name: Run playground sync (loops in live mode)
+      - name: Run playground (SIM = fake live match; else mirror a real competition)
         env:
           FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
           COMP: ${{ github.event.inputs.comp }}
           LIVE_MINUTES: ${{ github.event.inputs.live_minutes || '0' }}
+          SIM_MINUTES: ${{ github.event.inputs.live_minutes || '5' }}
         run: |
-          END=$(( SECONDS + 60 * LIVE_MINUTES ))
-          while : ; do
-            node scripts/playground-sync.mjs || true
-            if [ "$SECONDS" -ge "$END" ]; then break; fi
-            sleep 60
-          done
+          if [ "$COMP" = "SIM" ]; then
+            node scripts/playground-sim.mjs
+          else
+            END=$(( SECONDS + 60 * LIVE_MINUTES ))
+            while : ; do
+              node scripts/playground-sync.mjs || true
+              if [ "$SECONDS" -ge "$END" ]; then break; fi
+              sleep 60
+            done
+          fi
       - name: Clean up credentials
         if: always()
         run: rm -f "$GOOGLE_APPLICATION_CREDENTIALS"

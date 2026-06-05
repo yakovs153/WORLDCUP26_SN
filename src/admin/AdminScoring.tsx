@@ -2,7 +2,17 @@ import { useEffect, useState } from 'react'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { patchAppConfig } from '../lib/appConfig'
 import { useToast } from '../components/Toast'
-import { DEFAULT_APP_CONFIG } from '../types'
+import { DEFAULT_APP_CONFIG, type MatchStage, type StageMultipliers } from '../types'
+
+const STAGES: { key: MatchStage; label: string }[] = [
+  { key: 'GROUP', label: '🏟️ שלב הבתים' },
+  { key: 'R32', label: '3️⃣2️⃣ סיבוב 32' },
+  { key: 'R16', label: '1️⃣6️⃣ שמינית הגמר' },
+  { key: 'QF', label: '🎱 רבע הגמר' },
+  { key: 'SF', label: '🥈 חצי הגמר' },
+  { key: 'TP', label: '🥉 המקום השלישי' },
+  { key: 'F', label: '🏆 הגמר' }
+]
 
 export default function AdminScoring() {
   const cfg = useAppConfig()
@@ -15,6 +25,7 @@ export default function AdminScoring() {
   const [topScorer, setTopScorer] = useState(cfg.bonus.topScorer)
   const [runnerUp, setRunnerUp] = useState(cfg.bonus.runnerUp)
   const [surprise, setSurprise] = useState(cfg.bonus.surprise)
+  const [stageMult, setStageMult] = useState<StageMultipliers>(cfg.stageMultipliers)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -25,6 +36,7 @@ export default function AdminScoring() {
     setTopScorer(cfg.bonus.topScorer)
     setRunnerUp(cfg.bonus.runnerUp)
     setSurprise(cfg.bonus.surprise)
+    setStageMult(cfg.stageMultipliers)
   }, [cfg])
 
   const dirty =
@@ -34,13 +46,15 @@ export default function AdminScoring() {
     champion !== cfg.bonus.champion ||
     topScorer !== cfg.bonus.topScorer ||
     runnerUp !== cfg.bonus.runnerUp ||
-    surprise !== cfg.bonus.surprise
+    surprise !== cfg.bonus.surprise ||
+    JSON.stringify(stageMult) !== JSON.stringify(cfg.stageMultipliers)
 
   const save = async () => {
     setSaving(true)
     try {
       await patchAppConfig({
         scoring: { exact, winnerAndDiff: winDiff, winnerOnly: winOnly },
+        stageMultipliers: stageMult,
         bonus: { champion, topScorer, runnerUp, surprise }
       })
       toast.show('ניקוד עודכן ✓', 'success')
@@ -59,6 +73,7 @@ export default function AdminScoring() {
     setTopScorer(DEFAULT_APP_CONFIG.bonus.topScorer)
     setRunnerUp(DEFAULT_APP_CONFIG.bonus.runnerUp)
     setSurprise(DEFAULT_APP_CONFIG.bonus.surprise)
+    setStageMult(DEFAULT_APP_CONFIG.stageMultipliers)
   }
 
   return (
@@ -80,6 +95,18 @@ export default function AdminScoring() {
         <PointInput label="🥈 סגנית (מפסידת הגמר)" value={runnerUp} onChange={setRunnerUp} />
         <PointInput label="🐎 הפתעת הטורניר" value={surprise} onChange={setSurprise} />
         <PointInput label="⚽ מלך השערים"     value={topScorer} onChange={setTopScorer} />
+      </section>
+
+      <section className="card">
+        <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16, marginBottom: 4 }}>
+          📈 מכפיל נקודות לפי שלב
+        </h3>
+        <p className="text-muted" style={{ fontSize: 12, marginBottom: 8 }}>
+          נקודות המשחק מוכפלות לפי השלב. למשל מכפיל 3 בגמר = פי 3 נקודות. מכפיל 1 = רגיל.
+        </p>
+        {STAGES.map((s) => (
+          <PointInput key={s.key} label={s.label} value={stageMult[s.key]} onChange={(v) => setStageMult((p) => ({ ...p, [s.key]: v }))} />
+        ))}
       </section>
 
       <div style={{ display: 'flex', gap: 8 }}>

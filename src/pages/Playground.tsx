@@ -69,16 +69,24 @@ export default function Playground() {
                 <FlagIcon flag={m.homeTeam.flag} code={m.homeTeam.code} size={26} />
                 <span style={{ fontWeight: 700, fontSize: 14 }}>{m.homeTeam.name}</span>
               </div>
-              <div style={{ textAlign: 'center', minWidth: 64 }}>
+              <div style={{ textAlign: 'center', minWidth: 64, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                 {m.status === 'SCHEDULED'
                   ? <span style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>{m.kickoff.toDate().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}</span>
-                  : <span style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 900, color: m.status === 'LIVE' ? 'var(--color-primary)' : 'var(--color-text)' }}>{m.homeScore ?? 0} : {m.awayScore ?? 0}</span>}
+                  : <>
+                      <span style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 900, color: m.status === 'LIVE' ? 'var(--color-primary)' : 'var(--color-text)' }}>{m.homeScore ?? 0} : {m.awayScore ?? 0}</span>
+                      {m.status === 'LIVE' && m.minute != null && <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-primary)' }}>{m.minute}'</span>}
+                    </>}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
                 <span style={{ fontWeight: 700, fontSize: 14 }}>{m.awayTeam.name}</span>
                 <FlagIcon flag={m.awayTeam.flag} code={m.awayTeam.code} size={26} />
               </div>
             </div>
+            {m.scorers && m.scorers.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '4px 12px', fontSize: 12, color: 'var(--color-text-muted)' }}>
+                {m.scorers.map((s, i) => <span key={i} style={{ whiteSpace: 'nowrap' }}>⚽ {s.name}{s.minute != null ? ` ${s.minute}'` : ''}</span>)}
+              </div>
+            )}
             {m.status !== 'SCHEDULED' && <div style={{ display: 'flex', justifyContent: 'center' }}><LiveBadge status={m.status} /></div>}
           </div>
         ))}

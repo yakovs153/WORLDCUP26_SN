@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
-import { scorePrediction } from '../lib/scoring'
+import { scorePrediction, applyStage } from '../lib/scoring'
 import { octoPredict } from '../lib/octopus'
-import type { Match, Prediction, ScoringConfig } from '../types'
+import type { Match, Prediction, ScoringConfig, StageMultipliers } from '../types'
 
 /**
  * Provisional points from LIVE matches, per user — so the leaderboard moves in
@@ -11,7 +11,7 @@ import type { Match, Prediction, ScoringConfig } from '../types'
  * Octopus's pick (matching the auto-fill rule). Predictions are static once a
  * match locks, so we fetch them per live match and recompute as scores change.
  */
-export function useLivePoints(matches: Match[], scoring: ScoringConfig, uids: string[]): Map<string, number> {
+export function useLivePoints(matches: Match[], scoring: ScoringConfig, uids: string[], stageMult?: StageMultipliers): Map<string, number> {
   const liveIds = matches.filter((m) => m.status === 'LIVE' && m.homeScore != null && m.awayScore != null).map((m) => m.id)
   const key = liveIds.join(',')
   const [predsByMatch, setPredsByMatch] = useState<Record<string, Record<string, Prediction>>>({})
@@ -37,7 +37,7 @@ export function useLivePoints(matches: Match[], scoring: ScoringConfig, uids: st
         const p = pm[uid]
         const ph = p ? p.homeScore : oh
         const pa = p ? p.awayScore : oa
-        delta.set(uid, (delta.get(uid) || 0) + scorePrediction(ph, pa, m.homeScore, m.awayScore, scoring))
+        delta.set(uid, (delta.get(uid) || 0) + applyStage(scorePrediction(ph, pa, m.homeScore, m.awayScore, scoring), m.stage, stageMult))
       }
     }
     return delta

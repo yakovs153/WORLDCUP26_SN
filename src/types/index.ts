@@ -19,7 +19,15 @@ export interface Match {
   status: MatchStatus
   homeScore: number | null
   awayScore: number | null
+  minute?: number | null            // live clock (minutes), when in play
+  scorers?: MatchScorer[]            // goalscorers, when available
   lastUpdated?: Timestamp
+}
+
+export interface MatchScorer {
+  name: string
+  team: string   // team code (home/away)
+  minute: number | null
 }
 
 export interface Prediction {
@@ -135,10 +143,15 @@ export interface AnnouncementConfig {
   active: boolean
 }
 
+export type StageMultipliers = Record<MatchStage, number>
+
 export interface AppConfig {
   scoring: ScoringConfig
+  stageMultipliers: StageMultipliers   // points multiplier per stage (group, R32…final)
   bonus: BonusScoringConfig
   content: ContentConfig
+  tips: string[]                       // admin-managed "tip of the day" rotation
+  tipsEnabled: boolean
   announcement: AnnouncementConfig
   theme: ThemeConfig
   navIcons: NavIconsConfig
@@ -155,7 +168,10 @@ export interface AppConfig {
 
 export const DEFAULT_APP_CONFIG: AppConfig = {
   scoring: { exact: 5, winnerAndDiff: 3, winnerOnly: 1 },
+  stageMultipliers: { GROUP: 1, R32: 1, R16: 2, QF: 2, SF: 3, TP: 1, F: 3 },
   bonus:   { champion: 20, topScorer: 15, runnerUp: 10, surprise: 15 },
+  tips: [],
+  tipsEnabled: true,
   content: {
     tournamentName: 'מונדיאל 2026',
     tagline: 'משחק ניחושים פנימי של StoreNext',

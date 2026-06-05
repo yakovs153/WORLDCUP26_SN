@@ -8,7 +8,7 @@ import CubeMark from './CubeMark'
 import { savePrediction } from '../lib/predictions'
 import { formatTimeHe, stageLabel } from '../lib/format'
 import { useToast } from './Toast'
-import { scorePrediction } from '../lib/scoring'
+import { scorePrediction, applyStage } from '../lib/scoring'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { ringColors } from '../lib/players'
 import { fireConfetti } from '../lib/confetti'
@@ -74,7 +74,7 @@ export default function MatchCard({ match, prediction, uid }: Props) {
   const scoreKnown = match.homeScore !== null && match.awayScore !== null
   const potential =
     prediction && scoreKnown
-      ? prediction.points ?? scorePrediction(prediction.homeScore, prediction.awayScore, match.homeScore!, match.awayScore!, cfg.scoring)
+      ? prediction.points ?? applyStage(scorePrediction(prediction.homeScore, prediction.awayScore, match.homeScore!, match.awayScore!, cfg.scoring), match.stage, cfg.stageMultipliers)
       : null
 
   // Confetti once when a finished match rewards the user.
@@ -124,6 +124,10 @@ export default function MatchCard({ match, prediction, uid }: Props) {
           <CenterScore match={match} locked={locked} />
           <TeamSide team={match.awayTeam} backed={backed === 'away'} />
         </div>
+
+        {match.status !== 'SCHEDULED' && match.scorers && match.scorers.length > 0 && (
+          <ScorersRow scorers={match.scorers} homeCode={match.homeTeam.code} />
+        )}
 
         {/* Live points-in-flight */}
         {match.status === 'LIVE' && prediction && potential !== null && (
@@ -176,7 +180,7 @@ export default function MatchCard({ match, prediction, uid }: Props) {
 
         {locked && !prediction && (() => {
           const [oh, oa] = octoPredict(match.id)
-          const octoPts = scoreKnown ? scorePrediction(oh, oa, match.homeScore!, match.awayScore!, cfg.scoring) : null
+          const octoPts = scoreKnown ? applyStage(scorePrediction(oh, oa, match.homeScore!, match.awayScore!, cfg.scoring), match.stage, cfg.stageMultipliers) : null
           return (
             <>
               <ResultBadge myHome={oh} myAway={oa} points={octoPts} isLive={match.status === 'LIVE'} />
@@ -225,20 +229,37 @@ function CenterScore({ match, locked }: { match: Match; locked: boolean }) {
   }
   const live = match.status === 'LIVE'
   return (
-    <div
-      style={{
-        fontFamily: 'var(--font-display)',
-        fontSize: 34,
-        fontWeight: 900,
-        letterSpacing: 1,
-        color: live ? 'var(--color-primary)' : 'var(--color-text)',
-        textShadow: live ? '0 0 18px rgba(225,29,72,0.45)' : 'none',
-        minWidth: 78,
-        textAlign: 'center',
-        whiteSpace: 'nowrap'
-      }}
-    >
-      {match.homeScore ?? 0}<span style={{ opacity: 0.4 }}> : </span>{match.awayScore ?? 0}
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, minWidth: 78 }}>
+      <div
+        style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: 34,
+          fontWeight: 900,
+          letterSpacing: 1,
+          color: live ? 'var(--color-primary)' : 'var(--color-text)',
+          textShadow: live ? '0 0 18px rgba(225,29,72,0.45)' : 'none',
+          textAlign: 'center',
+          whiteSpace: 'nowrap'
+        }}
+      >
+        {match.homeScore ?? 0}<span style={{ opacity: 0.4 }}> : </span>{match.awayScore ?? 0}
+      </div>
+      {live && match.minute != null && (
+        <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-primary)' }}>{match.minute}'</span>
+      )}
+    </div>
+  )
+}
+
+function ScorersRow({ scorers, homeCode }: { scorers: NonNullable<Match['scorers']>; homeCode: string }) {
+  if (!scorers.length) return null
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '4px 12px', fontSize: 12, color: 'var(--color-text-muted)' }}>
+      {scorers.map((s, i) => (
+        <span key={i} style={{ whiteSpace: 'nowrap' }}>
+          {s.team === homeCode ? '' : ''}⚽ {s.name}{s.minute != null ? ` ${s.minute}'` : ''}
+        </span>
+      ))}
     </div>
   )
 }

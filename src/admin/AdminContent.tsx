@@ -15,40 +15,39 @@ export default function AdminContent() {
   const cfg = useAppConfig()
   const toast = useToast()
 
-  const [tournamentName, setTournamentName] = useState(cfg.content.tournamentName)
   const [tagline, setTagline] = useState(cfg.content.tagline)
-  const [rulesIntro, setRulesIntro] = useState(cfg.content.rulesIntro)
-  const [rulesNotes, setRulesNotes] = useState(cfg.content.rulesNotes)
   const [prize, setPrize] = useState(cfg.content.prize)
   const [annText, setAnnText] = useState(cfg.announcement.text)
   const [annActive, setAnnActive] = useState(cfg.announcement.active)
+  const [tips, setTips] = useState<string[]>(cfg.tips)
+  const [tipsEnabled, setTipsEnabled] = useState(cfg.tipsEnabled)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    setTournamentName(cfg.content.tournamentName)
     setTagline(cfg.content.tagline)
-    setRulesIntro(cfg.content.rulesIntro)
-    setRulesNotes(cfg.content.rulesNotes)
     setPrize(cfg.content.prize)
     setAnnText(cfg.announcement.text)
     setAnnActive(cfg.announcement.active)
+    setTips(cfg.tips)
+    setTipsEnabled(cfg.tipsEnabled)
   }, [cfg])
 
   const dirty =
-    tournamentName !== cfg.content.tournamentName ||
     tagline !== cfg.content.tagline ||
-    rulesIntro !== cfg.content.rulesIntro ||
-    rulesNotes !== cfg.content.rulesNotes ||
     prize !== cfg.content.prize ||
     annText !== cfg.announcement.text ||
-    annActive !== cfg.announcement.active
+    annActive !== cfg.announcement.active ||
+    tipsEnabled !== cfg.tipsEnabled ||
+    JSON.stringify(tips) !== JSON.stringify(cfg.tips)
 
   const save = async () => {
     setSaving(true)
     try {
       await patchAppConfig({
-        content: { tournamentName: tournamentName.trim() || 'מונדיאל 2026', tagline, rulesIntro, rulesNotes, prize },
-        announcement: { text: annText, active: annActive }
+        content: { ...cfg.content, tagline, prize }, // tournamentName + rules text preserved as-is
+        announcement: { text: annText, active: annActive },
+        tips: tips.map((t) => t.trim()).filter(Boolean),
+        tipsEnabled
       })
       toast.show('נשמר ✓', 'success')
     } catch (e) {
@@ -69,7 +68,7 @@ export default function AdminContent() {
             מוצג
           </label>
         </div>
-        <p className="text-muted" style={{ fontSize: 12 }}>באנר שמופיע לכל המשתמשים בראש האפליקציה. למשל: «הדדליין הערב 22:00!» או «יש פרסים 🎁».</p>
+        <p className="text-muted" style={{ fontSize: 12 }}>באנר שמופיע לכל המשתמשים בראש האפליקציה.</p>
         <textarea rows={2} value={annText} onChange={(e) => setAnnText(e.target.value)} placeholder="טקסט ההודעה…" style={fld} />
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {ANN_TEMPLATES.map((t) => (
@@ -81,20 +80,32 @@ export default function AdminContent() {
         </div>
       </section>
 
-      {/* Branding */}
+      {/* Tip of the day */}
       <section className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>🏷️ שם וכותרת</h3>
-        <Label text="שם הטורניר (כותרת עליונה)"><input value={tournamentName} onChange={(e) => setTournamentName(e.target.value)} style={fld} /></Label>
-        <Label text="כותרת משנה (מסך התחברות)"><input value={tagline} onChange={(e) => setTagline(e.target.value)} style={fld} /></Label>
-        <Label text="🎁 פרס (מוצג בעמוד הבית)"><input value={prize} onChange={(e) => setPrize(e.target.value)} placeholder="למשל: ארוחת שף לזוכה + גביע נודד" style={fld} /></Label>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>💡 טיפ היום</h3>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700 }}>
+            <input type="checkbox" checked={tipsEnabled} onChange={(e) => setTipsEnabled(e.target.checked)} />
+            מוצג
+          </label>
+        </div>
+        <p className="text-muted" style={{ fontSize: 12 }}>
+          טיפ מתחלף אוטומטית מדי יום. הוסף טיפים משלך — אם הרשימה ריקה, מוצגים טיפים מובנים כברירת מחדל.
+        </p>
+        {tips.map((t, i) => (
+          <div key={i} style={{ display: 'flex', gap: 6 }}>
+            <input value={t} onChange={(e) => setTips(tips.map((x, j) => (j === i ? e.target.value : x)))} placeholder={`טיפ ${i + 1}`} style={{ ...fld, flex: 1 }} />
+            <button onClick={() => setTips(tips.filter((_, j) => j !== i))} style={{ padding: '0 12px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', color: 'var(--color-danger)', fontSize: 18 }}>×</button>
+          </div>
+        ))}
+        <button onClick={() => setTips([...tips, ''])} className="btn-ghost" style={{ alignSelf: 'flex-start', padding: '6px 12px', fontSize: 12, border: '1px dashed var(--color-border-strong)', borderRadius: 'var(--radius-md)' }}>+ הוספת טיפ</button>
       </section>
 
-      {/* Rules text */}
+      {/* Prize + tagline */}
       <section className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>📖 טקסט בעמוד התקנון</h3>
-        <p className="text-muted" style={{ fontSize: 12 }}>טבלת הניקוד ושלבי הטורניר מתעדכנים אוטומטית מההגדרות. כאן אפשר להוסיף פסקת פתיחה והערות חופשיות.</p>
-        <Label text="פסקת פתיחה (למעלה)"><textarea rows={3} value={rulesIntro} onChange={(e) => setRulesIntro(e.target.value)} placeholder="ברוכים הבאים לתחרות…" style={fld} /></Label>
-        <Label text="הערות נוספות (למטה)"><textarea rows={4} value={rulesNotes} onChange={(e) => setRulesNotes(e.target.value)} placeholder="פרסים, לוחות זמנים, צור קשר…" style={fld} /></Label>
+        <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>🎁 פרס וכותרת</h3>
+        <Label text="🎁 פרס (מוצג בעמוד הבית)"><input value={prize} onChange={(e) => setPrize(e.target.value)} placeholder="למשל: ארוחת שף לזוכה + גביע נודד" style={fld} /></Label>
+        <Label text="כותרת משנה (מסך התחברות)"><input value={tagline} onChange={(e) => setTagline(e.target.value)} style={fld} /></Label>
       </section>
 
       <button className="btn btn-block" onClick={save} disabled={!dirty || saving} style={{ padding: '14px' }}>

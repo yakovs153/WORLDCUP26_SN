@@ -18,19 +18,19 @@ export default function Leaderboard() {
   const [tab, setTab] = useState<'personal' | 'departments'>('personal')
 
   const liveUids = useMemo(() => entries.map((e) => e.uid), [entries])
-  const liveDelta = useLivePoints(matches, cfg.scoring, liveUids)
+  const liveDelta = useLivePoints(matches, cfg.scoring, liveUids, cfg.stageMultipliers)
   const hasLive = useMemo(() => matches.some((m) => m.status === 'LIVE'), [matches])
 
   // Inject the Octopus + fold in provisional points from any live matches.
   const ranked = useMemo(() => {
-    const octo = octopusEntry(matches, cfg.scoring) // includes live, provisional
+    const octo = octopusEntry(matches, cfg.scoring, cfg.stageMultipliers) // includes live, provisional
     const withLive = entries
       .filter((e) => e.uid !== OCTOPUS_UID)
       .map((e) => ({ ...e, totalPoints: e.totalPoints + (liveDelta.get(e.uid) || 0) }))
     const all = [...withLive, octo]
     all.sort((a, b) => b.totalPoints - a.totalPoints)
     return all.map((e, i) => ({ ...e, rank: i + 1 }))
-  }, [entries, matches, cfg.scoring, liveDelta])
+  }, [entries, matches, cfg.scoring, cfg.stageMultipliers, liveDelta])
 
   // Departments exclude the Octopus (it isn't an employee).
   const deptRows = useMemo(() => aggregateDepartments(ranked.filter((e) => e.uid !== OCTOPUS_UID)), [ranked])

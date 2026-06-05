@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import FlagIcon from './FlagIcon'
 
 /** Optional licensed logo — drop public/wc2026-logo.png and it's used automatically. */
 export const WC_LOGO_IMG = '/wc2026-logo.png'
@@ -28,7 +29,11 @@ export default function Wc2026Mark({ height = 34 }: { height?: number }) {
     >
       <span style={{ fontSize: height * 0.62 }}>🏆</span>
       <span>2026</span>
-      <span style={{ fontSize: height * 0.5 }}>🇨🇦🇲🇽🇺🇸</span>
+      <span style={{ display: 'inline-flex', gap: height * 0.1 }}>
+        <FlagIcon flag="" code="CAN" size={height * 0.5} />
+        <FlagIcon flag="" code="MEX" size={height * 0.5} />
+        <FlagIcon flag="" code="USA" size={height * 0.5} />
+      </span>
     </span>
   )
 }

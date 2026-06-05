@@ -71,6 +71,19 @@ export default function Rules() {
         />
       </Section>
 
+      {/* Per-stage multipliers */}
+      <Section title="מכפיל נקודות לפי שלב" icon="📈">
+        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 12 }}>
+          ככל שמתקדמים בטורניר, המשחקים שווים יותר. נקודות המשחק מוכפלות לפי השלב.
+        </p>
+        {([
+          ['GROUP', 'שלב הבתים'], ['R32', 'סיבוב 32'], ['R16', 'שמינית הגמר'],
+          ['QF', 'רבע הגמר'], ['SF', 'חצי הגמר'], ['TP', 'המקום השלישי'], ['F', 'הגמר']
+        ] as const).map(([key, label]) => (
+          <StagePill key={key} name={label} detail={`× ${cfg.stageMultipliers[key]}`} />
+        ))}
+      </Section>
+
       {/* Bonus scoring */}
       <Section title="ניחושי בונוס" icon="🏆">
         <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 12 }}>

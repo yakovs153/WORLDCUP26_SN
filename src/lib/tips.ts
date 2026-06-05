@@ -30,8 +30,10 @@ const TIPS: string[] = [
   'גם אם פספסתם משחק — הטורניר ארוך, תמיד אפשר לחזור למרוץ.'
 ]
 
-export function tipOfTheDay(date: Date = new Date()): string {
+/** Tip of the day. Uses the admin-managed list when provided, else the bundled list. */
+export function tipOfTheDay(custom: string[] = [], date: Date = new Date()): string {
+  const list = custom.length ? custom : TIPS
   const start = new Date(date.getFullYear(), 0, 0)
   const day = Math.floor((date.getTime() - start.getTime()) / 86_400_000)
-  return TIPS[day % TIPS.length]
+  return list[day % list.length]
 }

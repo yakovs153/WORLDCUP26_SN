@@ -1,5 +1,5 @@
-import { scorePrediction } from './scoring'
-import type { Match, ScoringConfig, LeaderboardEntry } from '../types'
+import { scorePrediction, applyStage } from './scoring'
+import type { Match, ScoringConfig, StageMultipliers, LeaderboardEntry } from '../types'
 
 export const OCTOPUS_UID = 'octopus'
 export const OCTOPUS_NAME = 'סטורי התמנון'
@@ -19,14 +19,14 @@ export function octoPredict(matchId: string): [number, number] {
 }
 
 /** Synthetic leaderboard entry for the Octopus, scored from its picks vs finished results. */
-export function octopusEntry(matches: Match[], scoring: ScoringConfig): LeaderboardEntry {
+export function octopusEntry(matches: Match[], scoring: ScoringConfig, stageMult?: StageMultipliers): LeaderboardEntry {
   let total = 0
   let count = 0
   for (const m of matches) {
     // Finished = final points; live = provisional (so the board moves during a match).
     if ((m.status === 'FINISHED' || m.status === 'LIVE') && m.homeScore != null && m.awayScore != null) {
       const [h, a] = octoPredict(m.id)
-      total += scorePrediction(h, a, m.homeScore, m.awayScore, scoring)
+      total += applyStage(scorePrediction(h, a, m.homeScore, m.awayScore, scoring), m.stage, stageMult)
       count++
     }
   }

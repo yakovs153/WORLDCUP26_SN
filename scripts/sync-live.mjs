@@ -68,6 +68,8 @@ async function main() {
 
   const cfgSnap = await db.collection('appConfig').doc('main').get()
   const scoringCfg = cfgSnap.exists ? cfgSnap.data()?.scoring : undefined
+  const stageMult = cfgSnap.exists ? cfgSnap.data()?.stageMultipliers : undefined
+  const applyStage = (base, stage) => Math.round(base * ((stage && stageMult && stageMult[stage]) || 1))
 
   // Existing match docs (manualLock + scored flags).
   const existingSnap = await db.collection('matches').get()
@@ -95,6 +97,7 @@ async function main() {
         status,
         homeScore: hs,
         awayScore: as,
+        minute: m.minute ?? null,
         lastUpdated: Timestamp.now()
       }, { merge: true })
       upserts++
@@ -105,10 +108,29 @@ async function main() {
     const effH = cur?.manualLock === true ? cur.homeScore : hs
     const effA = cur?.manualLock === true ? cur.awayScore : as
     if (effStatus === 'FINISHED' && typeof effH === 'number' && typeof effA === 'number' && cur?.scored !== true) {
-      finishedToScore.push({ id, h: effH, a: effA })
+      finishedToScore.push({ id, h: effH, a: effA, stage: STAGE[m.stage] || cur?.stage || 'GROUP' })
     }
   }
   await batch.commit()
+
+  // ===== Live detail: minute + goalscorers for in-play matches =====
+  for (const m of apiMatches) {
+    if (statusOf(m.status) !== 'LIVE') continue
+    try {
+      const dres = await fetch(`https://api.football-data.org/v4/matches/${m.id}`, { headers: { 'X-Auth-Token': TOKEN } })
+      if (!dres.ok) continue
+      const detail = await dres.json()
+      const goals = Array.isArray(detail.goals) ? detail.goals : []
+      const scorers = goals
+        .map((g) => ({
+          name: g.scorer?.name || '',
+          team: g.team?.id === detail.homeTeam?.id ? (detail.homeTeam?.tla || '') : (detail.awayTeam?.tla || ''),
+          minute: g.minute ?? null
+        }))
+        .filter((s) => s.name)
+      await db.collection('matches').doc(String(m.id)).set({ minute: detail.minute ?? m.minute ?? null, scorers }, { merge: true })
+    } catch { /* ignore detail errors */ }
+  }
 
   // ===== Octopus auto-fill: anyone who forgot gets סטורי's pick at kickoff =====
   const nowMs = Date.now()
@@ -138,7 +160,7 @@ async function main() {
       for (const d of preds.docs) {
         const p = d.data()
         if (p.points !== null && p.points !== undefined) continue
-        const pts = scorePrediction(p.homeScore, p.awayScore, fm.h, fm.a, scoringCfg)
+        const pts = applyStage(scorePrediction(p.homeScore, p.awayScore, fm.h, fm.a, scoringCfg), fm.stage)
         tx.update(d.ref, { points: pts })
         userDelta.set(p.uid, (userDelta.get(p.uid) || 0) + pts)
       }
