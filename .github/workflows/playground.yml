@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       comp:
-        description: 'Competition code (CL, PL, BL1, PD, SA, FL1, WC…), or SIM for a fake live match. Empty = today.'
+        description: 'SIM = fake live match · LIVE = real games via ESPN (any sport) · or a football-data code (CL/PL/BSA…)'
         required: false
-        default: 'SIM'
+        default: 'LIVE'
       live_minutes:
         description: 'Keep polling every 60s for N minutes (0 = run once)'
         required: false
@@ -48,6 +48,13 @@ jobs:
         run: |
           if [ "$COMP" = "SIM" ]; then
             node scripts/playground-sim.mjs
+          elif [ "$COMP" = "LIVE" ]; then
+            END=$(( SECONDS + 60 * LIVE_MINUTES ))
+            while : ; do
+              node scripts/playground-livetest.mjs || true
+              if [ "$SECONDS" -ge "$END" ]; then break; fi
+              sleep 60
+            done
           else
             END=$(( SECONDS + 60 * LIVE_MINUTES ))
             while : ; do
