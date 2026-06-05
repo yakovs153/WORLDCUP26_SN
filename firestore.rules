@@ -68,6 +68,15 @@ service cloud.firestore {
       allow write: if isSignedIn();
     }
 
+    // ===== Survey responses (multi-question, single-choice; results public) =====
+    match /surveyResponses/{respId} {
+      allow read: if true; // results are always public
+      allow create, update: if isSignedIn()
+        && respId == request.auth.uid + '_' + request.resource.data.surveyId
+        && request.resource.data.uid == request.auth.uid;
+      allow delete: if false;
+    }
+
     // ===== Bonus predictions (championship + top scorer) =====
     match /bonusPredictions/{uid} {
       allow read: if isSignedIn();

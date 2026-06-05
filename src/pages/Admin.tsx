@@ -4,7 +4,7 @@ import AdminMatches from '../admin/AdminMatches'
 import AdminContent from '../admin/AdminContent'
 import AdminDepartments from '../admin/AdminDepartments'
 import AdminScoring from '../admin/AdminScoring'
-import AdminPolls from '../admin/AdminPolls'
+import AdminSurveys from '../admin/AdminSurveys'
 import AdminPlayers from '../admin/AdminPlayers'
 import AdminAccess from '../admin/AdminAccess'
 
@@ -16,7 +16,7 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: 'departments', label: 'מחלקות', icon: '🏢' },
   { key: 'scoring', label: 'ניקוד',    icon: '🧮' },
   { key: 'players', label: 'שחקנים',   icon: '👟' },
-  { key: 'polls',   label: 'סקרים',    icon: '📊' },
+  { key: 'polls',   label: 'סקרים',    icon: '📋' },
   { key: 'access',  label: 'גישה',     icon: '🔒' }
 ]
 
@@ -84,7 +84,7 @@ export default function Admin() {
       {tab === 'departments' && <AdminDepartments />}
       {tab === 'scoring' && <AdminScoring />}
       {tab === 'players' && <AdminPlayers />}
-      {tab === 'polls' && <AdminPolls />}
+      {tab === 'polls' && <AdminSurveys />}
       {tab === 'access' && <AdminAccess />}
     </div>
   )

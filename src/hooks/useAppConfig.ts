@@ -38,6 +38,7 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
           theme: { ...DEFAULT_APP_CONFIG.theme, ...(data.theme || {}) },
           navIcons: { ...DEFAULT_APP_CONFIG.navIcons, ...(data.navIcons || {}) },
           polls: data.polls || [],
+          surveys: data.surveys || [],
           playerPhotos: data.playerPhotos || {},
           customPlayers: data.customPlayers || [],
           hiddenScorers: data.hiddenScorers || [],

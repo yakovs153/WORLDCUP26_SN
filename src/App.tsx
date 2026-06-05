@@ -13,6 +13,7 @@ import Leaderboard from './pages/Leaderboard'
 import MyPredictions from './pages/MyPredictions'
 import Profile from './pages/Profile'
 import Bonus from './pages/Bonus'
+import Survey from './pages/Survey'
 import Rules from './pages/Rules'
 import Admin from './pages/Admin'
 import { ToastProvider } from './components/Toast'
@@ -46,6 +47,7 @@ export default function App() {
                 <Route path="bracket" element={<BracketPage />} />
                 <Route path="match/:id" element={<MatchRoom />} />
                 <Route path="bonus" element={<Bonus />} />
+                <Route path="survey/:id" element={<Survey />} />
                 <Route path="my" element={<MyPredictions />} />
                 <Route path="leaderboard" element={<Leaderboard />} />
                 <Route path="profile" element={<Profile />} />

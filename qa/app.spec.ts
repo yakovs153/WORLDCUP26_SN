@@ -106,6 +106,32 @@ test('match room: send a message', async ({ page }) => {
   expect(errs).toEqual([])
 })
 
+test('survey: admin creates a survey, user fills it and sees public results', async ({ page }) => {
+  const errs = watchErrors(page)
+  // Admin builds a survey in the סקרים tab
+  await page.goto('/?demo=1&sim=1#/admin', { waitUntil: 'networkidle' })
+  await page.getByRole('button', { name: 'סקרים', exact: false }).first().click()
+  await page.waitForTimeout(300)
+  await page.getByRole('button', { name: /סקר חדש/ }).click()
+  await page.getByPlaceholder(/כותרת הסקר/).fill('סקר QA')
+  await page.getByPlaceholder('שאלה 1').fill('מי תזכה?')
+  await page.getByPlaceholder('אפשרות 1').fill('ברזיל')
+  await page.getByPlaceholder('אפשרות 2').fill('צרפת')
+  await page.getByRole('button', { name: 'פרסום' }).click()
+  await page.waitForTimeout(500)
+
+  // User opens the survey from the home card
+  await page.goto('/?demo=1&sim=1#/', { waitUntil: 'networkidle' })
+  await page.waitForTimeout(800)
+  await page.locator('a[href*="/survey/"]').first().click()
+  await page.waitForTimeout(500)
+  // answer first option then submit
+  await page.getByRole('button', { name: /ברזיל/ }).click()
+  await page.getByRole('button', { name: 'שליחה' }).click()
+  await expect(page.getByText(/תודה שהשתתפת/).first()).toBeVisible({ timeout: 5000 })
+  expect(errs).toEqual([])
+})
+
 test('admin: open each tab without errors', async ({ page }) => {
   const errs = watchErrors(page)
   await page.goto('/?demo=1&sim=1#/admin', { waitUntil: 'networkidle' })

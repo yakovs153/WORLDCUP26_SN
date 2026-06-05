@@ -19,6 +19,7 @@ export function getDemoConfig(): AppConfig {
       theme: { ...DEFAULT_APP_CONFIG.theme, ...(parsed.theme || {}) },
       navIcons: { ...DEFAULT_APP_CONFIG.navIcons, ...(parsed.navIcons || {}) },
       polls: parsed.polls || [],
+      surveys: parsed.surveys || [],
       playerPhotos: parsed.playerPhotos || {},
       customPlayers: parsed.customPlayers || [],
       hiddenScorers: parsed.hiddenScorers || [],

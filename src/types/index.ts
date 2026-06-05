@@ -103,6 +103,19 @@ export interface Poll {
   createdAt: number  // ms
 }
 
+export interface SurveyQuestion {
+  id: string
+  text: string
+  options: string[]   // single-choice options
+}
+
+export interface Survey {
+  id: string
+  title: string
+  active: boolean
+  questions: SurveyQuestion[]
+}
+
 export interface CustomPlayer {
   name: string
   countryCode: string
@@ -130,6 +143,7 @@ export interface AppConfig {
   theme: ThemeConfig
   navIcons: NavIconsConfig
   polls: Poll[]
+  surveys: Survey[]                     // multi-question surveys (single-choice, public results)
   playerPhotos: Record<string, string>  // player name → photo URL (or data URL in demo)
   customPlayers: CustomPlayer[]         // additional players added by admin (besides TOP_SCORER_CANDIDATES)
   hiddenScorers: string[]               // names of top-scorer candidates removed from the list by admin
@@ -166,6 +180,7 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
     profile: '👤'
   },
   polls: [],
+  surveys: [],
   playerPhotos: {},
   customPlayers: [],
   hiddenScorers: [],
