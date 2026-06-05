@@ -1,5 +1,16 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import OctopusMark from '../components/OctopusMark'
+import OctopusMark, { OCTOPUS_IMG } from '../components/OctopusMark'
+
+function OctoHero() {
+  const [broken, setBroken] = useState(false)
+  if (broken) return null
+  return (
+    <div style={{ borderRadius: 'var(--radius-lg)', overflow: 'hidden', background: '#eef6fb', border: '1px solid var(--glass-border)' }}>
+      <img src={OCTOPUS_IMG} alt="התמנון" onError={() => setBroken(true)} style={{ display: 'block', width: '100%', height: 'auto' }} />
+    </div>
+  )
+}
 
 /**
  * MOCKUP / preview of the Octopus oracle feature — for sign-off before wiring
@@ -41,6 +52,8 @@ export default function OctopusPreview() {
           <Link to="/" className="btn-ghost" style={{ padding: '6px 14px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', fontSize: 13, textDecoration: 'none', color: 'inherit' }}>← חזרה</Link>
           <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-accent)', letterSpacing: 1 }}>תצוגה מקדימה · לא סופי</span>
         </div>
+
+        <OctoHero />
 
         {/* Hero */}
         <section className="card" style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 20%, var(--color-bg-elevated)), var(--color-bg-elevated))' }}>
