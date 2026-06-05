@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { doc, onSnapshot } from 'firebase/firestore'
+import { db, DEMO_MODE } from '../firebase'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { patchAppConfig } from '../lib/appConfig'
 import { useToast } from '../components/Toast'
@@ -8,6 +10,13 @@ function rid() {
   return Math.random().toString(36).slice(2, 10)
 }
 
+interface Suggestion { title: string; options: string[] }
+const DEMO_SUGGESTIONS: Suggestion[] = [
+  { title: 'מי תרים את הגביע ב-2026?', options: ['ברזיל', 'צרפת', 'ארגנטינה', 'אחר'] },
+  { title: 'מי יהיה מלך השערים?', options: ['מבאפה', 'קיין', 'הולאנד', 'אחר'] },
+  { title: 'איזו מחלקה תנצח בתחרות?', options: ['פיתוח', 'מוצר', 'מכירות', 'דאטה'] }
+]
+
 type DraftQ = { id: string; text: string; options: string[] }
 
 export default function AdminSurveys() {
@@ -16,6 +25,25 @@ export default function AdminSurveys() {
   const [creating, setCreating] = useState(false)
   const [title, setTitle] = useState('')
   const [questions, setQuestions] = useState<DraftQ[]>([{ id: rid(), text: '', options: ['', ''] }])
+  const [suggestions, setSuggestions] = useState<Suggestion[]>(DEMO_MODE ? DEMO_SUGGESTIONS : [])
+  const [sIdx, setSIdx] = useState(0)
+
+  useEffect(() => {
+    if (DEMO_MODE) return
+    return onSnapshot(doc(db, 'appState', 'surveySuggestions'), (s) => {
+      const items = s.data()?.items
+      if (Array.isArray(items)) setSuggestions(items.filter((x) => x?.title && Array.isArray(x.options)))
+    })
+  }, [])
+
+  const applySuggestion = () => {
+    if (!suggestions.length) { toast.show('עדיין אין הצעות — טום יכין כמה בבוקר', 'info'); return }
+    const sug = suggestions[sIdx % suggestions.length]
+    setSIdx((i) => i + 1)
+    if (!title.trim()) setTitle('סקר מונדיאל 2026')
+    setQuestions([{ id: rid(), text: sug.title, options: sug.options.length >= 2 ? [...sug.options] : [...sug.options, ''] }])
+    toast.show('הצעה מטום נטענה ✨', 'success')
+  }
 
   const reset = () => {
     setTitle('')
@@ -62,6 +90,11 @@ export default function AdminSurveys() {
         {creating && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12, padding: 12, background: 'var(--color-bg-elevated)', borderRadius: 'var(--radius-md)' }}>
             <input placeholder="כותרת הסקר (לדוגמה: סקר אמצע טורניר)" value={title} onChange={(e) => setTitle(e.target.value)} style={inputStyle} />
+
+            <button type="button" onClick={applySuggestion} className="btn-ghost"
+              style={{ alignSelf: 'flex-start', padding: '6px 12px', fontSize: 12, border: '1px dashed var(--color-primary)', borderRadius: 'var(--radius-md)', color: 'var(--color-primary)' }}>
+              ✨ הצע שאלה (טום האנליסט)
+            </button>
 
             {questions.map((q, qi) => (
               <div key={q.id} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 10, background: 'var(--color-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>

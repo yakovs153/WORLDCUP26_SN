@@ -10,19 +10,28 @@ const DEMO_LINE = '👑 רונן ל. בפסגה — אבל הלילה הכול �
 export default function PunditCard() {
   const cfg = useAppConfig()
   const [text, setText] = useState<string>(DEMO_MODE ? DEMO_LINE : '')
+  const [preview, setPreview] = useState<string>(DEMO_MODE ? 'המשחק הגדול של היום: ברזיל נגד ארגנטינה — תתכוננו לדרמה! 🔥' : '')
 
   useEffect(() => {
     if (DEMO_MODE) return
-    return onSnapshot(doc(db, 'appState', 'pundit'), (s) => setText((s.data()?.text as string) || ''))
+    return onSnapshot(doc(db, 'appState', 'pundit'), (s) => {
+      setText((s.data()?.text as string) || '')
+      setPreview((s.data()?.preview as string) || '')
+    })
   }, [])
 
-  if (!cfg.features.pundit || !text) return null
+  if (!cfg.features.pundit || (!text && !preview)) return null
   return (
     <div className="glass" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 16px', background: 'linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-elevated)), var(--color-bg-elevated))' }}>
       <OctopusMark size={40} />
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700, marginBottom: 4 }}>🤖 טום האנליסט · ניתוח AI</div>
-        <div style={{ fontWeight: 600, fontSize: 14, lineHeight: 1.7, whiteSpace: 'pre-line' }}>{text}</div>
+        {text && <div style={{ fontWeight: 600, fontSize: 14, lineHeight: 1.7, whiteSpace: 'pre-line' }}>{text}</div>}
+        {preview && (
+          <div style={{ marginTop: text ? 8 : 0, paddingTop: text ? 8 : 0, borderTop: text ? '1px solid var(--glass-border)' : 'none', fontSize: 13, fontWeight: 700 }}>
+            🔮 תחזית היום: {preview}
+          </div>
+        )}
       </div>
     </div>
   )
