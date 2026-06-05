@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useAppConfig } from '../hooks/useAppConfig'
 import ThemeToggle from './ThemeToggle'
 import CubeMark from './CubeMark'
+import Wc2026Mark from './Wc2026Mark'
 
 export default function Header() {
   const { user, signOut } = useAuth()
@@ -50,6 +51,7 @@ export default function Header() {
       </Link>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <Wc2026Mark height={22} />
         <ThemeToggle />
         {user && (
           <button

@@ -167,6 +167,12 @@ export default function MatchCard({ match, prediction, uid }: Props) {
           <ResultBadge myHome={prediction.homeScore} myAway={prediction.awayScore} points={potential} isLive={match.status === 'LIVE'} />
         )}
 
+        {locked && prediction?.auto && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-muted)' }}>
+            🐙 סטורי התמנון ניחש בשבילך
+          </div>
+        )}
+
         {locked && !prediction && (
           <div style={{ padding: '8px 12px', background: 'var(--glass-bg-hi)', borderRadius: 'var(--radius-md)', color: 'var(--color-text-muted)', fontSize: 13, textAlign: 'center' }}>
             לא הוזן ניחוש למשחק זה

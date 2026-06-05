@@ -6,6 +6,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { Link } from 'react-router-dom'
 import MatchCard from '../components/MatchCard'
 import NextMatchHero from '../components/NextMatchHero'
+import KingBanner from '../components/KingBanner'
 import { MatchCardSkeleton } from '../components/Skeleton'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { dateKey, formatDateHe } from '../lib/format'
@@ -60,6 +61,8 @@ export default function Matches() {
         </div>
       )}
       {nextMatch && <NextMatchHero match={nextMatch} />}
+
+      <KingBanner />
 
       <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px' }}>
         <span style={{ fontSize: 22 }}>💡</span>

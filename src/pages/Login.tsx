@@ -5,6 +5,7 @@ import { DEMO_MODE } from '../firebase'
 import { useAppConfig } from '../hooks/useAppConfig'
 import ThemeToggle from '../components/ThemeToggle'
 import CubeMark from '../components/CubeMark'
+import Wc2026Mark from '../components/Wc2026Mark'
 
 export default function Login() {
   const { user, signInEmail } = useAuth()
@@ -65,6 +66,7 @@ export default function Login() {
           <h1 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1.5 }}>{cfg.content.tournamentName}</h1>
           <p className="text-muted" style={{ marginTop: 4 }}>{cfg.content.tagline}</p>
         </div>
+        <div style={{ display: 'flex', justifyContent: 'center' }}><Wc2026Mark height={30} /></div>
 
         <form onSubmit={handleEmail} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <FieldInput type="email" placeholder="אימייל" value={email} onChange={setEmail} autoComplete="email" />

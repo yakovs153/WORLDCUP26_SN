@@ -5,6 +5,7 @@ import { useGoldenBoot } from '../hooks/useGoldenBoot'
 import { useAppConfig } from '../hooks/useAppConfig'
 import FlagIcon from '../components/FlagIcon'
 import CubeMark from '../components/CubeMark'
+import Wc2026Mark from '../components/Wc2026Mark'
 import { TOP_SCORER_CANDIDATES } from '../lib/players'
 import { formatTimeHe, formatDateHe } from '../lib/format'
 
@@ -67,9 +68,12 @@ export default function Lobby() {
         <span style={{ fontFamily: 'var(--font-display)', letterSpacing: 3, fontSize: 'clamp(26px,4vw,52px)' }}>
           STORE<span style={{ color: 'var(--color-primary)' }}>NEXT</span> · {cfg.content.tournamentName}
         </span>
-        {live.length > 0 && (
-          <span className="points-flight" style={{ marginInlineStart: 'auto', fontSize: 'clamp(14px,1.6vw,22px)' }}>🔴 LIVE</span>
-        )}
+        <span style={{ marginInlineStart: 'auto', display: 'flex', alignItems: 'center', gap: 16 }}>
+          {live.length > 0 && (
+            <span className="points-flight" style={{ fontSize: 'clamp(14px,1.6vw,22px)' }}>🔴 LIVE</span>
+          )}
+          <Wc2026Mark height={40} />
+        </span>
       </div>
 
       {panel === 'matches' && <MatchesPanel live={live} next={next} />}

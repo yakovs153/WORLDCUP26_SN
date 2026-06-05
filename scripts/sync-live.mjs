@@ -24,6 +24,16 @@ const __dir = dirname(fileURLToPath(import.meta.url))
 const HE_TEAMS = JSON.parse(readFileSync(join(__dir, '..', 'src', 'data', 'heTeams.json'), 'utf8'))
 const heName = (tla, fallback) => (tla && HE_TEAMS[tla.toUpperCase()]) || fallback || ''
 
+// The Octopus's deterministic, plausible pick for a match (0–3/side, total ≤ 5).
+function octoPredict(matchId) {
+  let h = 0
+  for (let i = 0; i < matchId.length; i++) h = (h * 31 + matchId.charCodeAt(i)) >>> 0
+  let home = h % 4
+  let away = Math.floor(h / 4) % 4
+  while (home + away > 5) { if (home >= away) home--; else away-- }
+  return [home, away]
+}
+
 const TOKEN = process.env.FOOTBALL_DATA_TOKEN
 if (!TOKEN) { console.error('FOOTBALL_DATA_TOKEN missing'); process.exit(1) }
 
@@ -100,6 +110,26 @@ async function main() {
   }
   await batch.commit()
 
+  // ===== Octopus auto-fill: anyone who forgot gets סטורי's pick at kickoff =====
+  const nowMs = Date.now()
+  const allUserIds = (await db.collection('users').get()).docs.map((d) => d.id)
+  for (const m of apiMatches) {
+    const id = String(m.id)
+    if (existing.get(id)?.autofilled === true) continue
+    if (new Date(m.utcDate).getTime() > nowMs) continue // not locked yet
+    const have = new Set((await db.collection('predictions').where('matchId', '==', id).get()).docs.map((d) => d.data().uid))
+    const [oh, oa] = octoPredict(id)
+    const fb = db.batch()
+    for (const uid of allUserIds) {
+      if (have.has(uid)) continue
+      fb.set(db.collection('predictions').doc(`${uid}_${id}`), {
+        uid, matchId: id, homeScore: oh, awayScore: oa, points: null, auto: true, submittedAt: Timestamp.now()
+      })
+    }
+    fb.set(db.collection('matches').doc(id), { autofilled: true }, { merge: true })
+    await fb.commit()
+  }
+
   // Score finished matches.
   const userDelta = new Map()
   for (const fm of finishedToScore) {
@@ -164,6 +194,15 @@ async function main() {
   const dis = arr.filter(([, a]) => a.predCount >= 3).sort((x, y) => x[1].points - y[1].points)[0]
   if (dis) hof.disaster = { name: nm(dis[0]), detail: `${dis[1].points} נק׳ מ-${dis[1].predCount} משחקים` }
   await db.collection('stats').doc('hallOfFame').set(hof)
+
+  // ===== King of the hill (current leader) — drives the leader perk =====
+  const topSnap = await db.collection('users').orderBy('totalPoints', 'desc').limit(1).get()
+  if (!topSnap.empty && (topSnap.docs[0].data().totalPoints || 0) > 0) {
+    const top = topSnap.docs[0]
+    await db.collection('appState').doc('king').set({
+      uid: top.id, name: top.data().displayName || 'משתמש', totalPoints: top.data().totalPoints || 0, updatedAt: Timestamp.now()
+    })
+  }
 
   console.log(`sync ok: upserts=${upserts}, skipped(locked)=${skipped}, scored matches=${finishedToScore.length}, users updated=${userDelta.size}`)
 }
