@@ -6,7 +6,6 @@ import { useAuth } from '../auth/AuthProvider'
 import { Link } from 'react-router-dom'
 import MatchCard from '../components/MatchCard'
 import NextMatchHero from '../components/NextMatchHero'
-import PollCard from '../components/PollCard'
 import { MatchCardSkeleton } from '../components/Skeleton'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { dateKey, formatDateHe } from '../lib/format'
@@ -20,7 +19,6 @@ export default function Matches() {
   const { data: bonus } = useBonus(user?.uid ?? null)
 
   const grouped = useMemo(() => groupByDate(matches), [matches])
-  const activePolls = useMemo(() => cfg.polls.filter((p) => p.active), [cfg.polls])
 
   const nextMatch = useMemo(() => {
     const now = Date.now()
@@ -61,10 +59,6 @@ export default function Matches() {
         </div>
       )}
       {nextMatch && <NextMatchHero match={nextMatch} />}
-
-      {activePolls.map((p) => (
-        <PollCard key={p.id} poll={p} />
-      ))}
 
       {needsBonus && (
         <Link
