@@ -16,6 +16,12 @@ functions/node_modules
 
 *.tsbuildinfo
 
+# Playwright QA artifacts
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
 # Secrets — never commit
 secrets/
 serviceAccount*.json
