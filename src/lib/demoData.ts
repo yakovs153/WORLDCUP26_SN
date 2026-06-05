@@ -108,7 +108,7 @@ export function getDemoLeaderboard(currentUid: string, currentDisplayName: strin
     { uid: 'u-ronen', displayName: 'רונן ל.', email: '', photoURL: null, totalPoints: 47, predictionsCount: 14, joinedAt: Timestamp.now(), department: null, _d: 'שיווק' },
     { uid: 'u-sharon', displayName: 'שרון ק.', email: '', photoURL: null, totalPoints: 41, predictionsCount: 14, joinedAt: Timestamp.now(), department: null, _d: 'פיתוח' },
     { uid: 'u-amit', displayName: 'עמית ב.', email: '', photoURL: null, totalPoints: 38, predictionsCount: 13, joinedAt: Timestamp.now(), department: null, _d: 'מכירות' },
-    { uid: currentUid, displayName: currentDisplayName || 'אני', email: '', photoURL: null, totalPoints: getCurrentUserPoints(), predictionsCount: getCurrentUserPredictionCount(), joinedAt: Timestamp.now(), department: null, _d: 'שיווק' },
+    { uid: currentUid, displayName: loadProfile().displayName || currentDisplayName || 'אני', email: '', photoURL: loadProfile().photoURL ?? null, totalPoints: getCurrentUserPoints(), predictionsCount: getCurrentUserPredictionCount(), joinedAt: Timestamp.now(), department: null, _d: 'שיווק' },
     { uid: 'u-nadav', displayName: 'נדב ש.', email: '', photoURL: null, totalPoints: 22, predictionsCount: 11, joinedAt: Timestamp.now(), department: null, _d: 'פיתוח' },
     { uid: 'u-tal', displayName: 'טל ר.', email: '', photoURL: null, totalPoints: 19, predictionsCount: 10, joinedAt: Timestamp.now(), department: null, _d: 'תפעול' },
     { uid: 'u-yael', displayName: 'יעל ד.', email: '', photoURL: null, totalPoints: 15, predictionsCount: 8, joinedAt: Timestamp.now(), department: null, _d: 'מכירות' },
@@ -261,12 +261,23 @@ export function setDemoDepartment(uid: string, department: string): void {
   window.dispatchEvent(new Event('demo-department-changed'))
 }
 
+// ===== Profile overrides (demo) — display name + photo set on the profile page =====
+const PROFILE_KEY = 'demo-profile-v1'
+function loadProfile(): { displayName?: string; photoURL?: string } {
+  try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}') } catch { return {} }
+}
+export function setDemoProfile(patch: { displayName?: string; photoURL?: string }): void {
+  localStorage.setItem(PROFILE_KEY, JSON.stringify({ ...loadProfile(), ...patch }))
+  window.dispatchEvent(new Event('demo-predictions-changed'))
+}
+
 export function getDemoUser(uid: string, displayName: string): UserDoc {
+  const p = loadProfile()
   return {
     uid,
-    displayName: displayName || 'משתמש דמו',
+    displayName: p.displayName || displayName || 'משתמש דמו',
     email: '',
-    photoURL: null,
+    photoURL: p.photoURL ?? null,
     department: getDemoDepartment(uid),
     totalPoints: getCurrentUserPoints(),
     predictionsCount: getCurrentUserPredictionCount(),

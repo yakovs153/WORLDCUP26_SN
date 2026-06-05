@@ -1,3 +1,4 @@
+import { useRef, useState, type ChangeEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { useUserDoc } from '../hooks/useUserDoc'
@@ -8,6 +9,7 @@ import StatsBreakdown from '../components/StatsBreakdown'
 import { useIsAdmin } from '../admin/AdminGate'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { setDepartment } from '../lib/departments'
+import { updateDisplayName, updatePhoto, fileToAvatarDataUrl } from '../lib/profile'
 
 export default function Profile() {
   const { user, signOut } = useAuth()
@@ -17,11 +19,32 @@ export default function Profile() {
   const toast = useToast()
   const isAdmin = useIsAdmin()
   const cfg = useAppConfig()
+  const [editingName, setEditingName] = useState(false)
+  const [nameDraft, setNameDraft] = useState('')
+  const [busy, setBusy] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const changeDept = async (dept: string) => {
     if (!user || !dept) return
     try { await setDepartment(user.uid, dept); toast.show('המחלקה עודכנה ✓', 'success') }
     catch (e) { toast.show(e instanceof Error ? e.message : 'עדכון נכשל', 'error') }
+  }
+
+  const saveName = async () => {
+    if (!user) return
+    setBusy(true)
+    try { await updateDisplayName(user.uid, nameDraft); toast.show('השם עודכן ✓', 'success'); setEditingName(false) }
+    catch (e) { toast.show(e instanceof Error ? e.message : 'עדכון נכשל', 'error') }
+    finally { setBusy(false) }
+  }
+
+  const onPhoto = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    setBusy(true)
+    try { const url = await fileToAvatarDataUrl(file); await updatePhoto(user.uid, url); toast.show('התמונה עודכנה ✓', 'success') }
+    catch (err) { toast.show(err instanceof Error ? err.message : 'העלאה נכשלה', 'error') }
+    finally { setBusy(false); if (fileRef.current) fileRef.current.value = '' }
   }
 
   if (!user) return null
@@ -31,23 +54,35 @@ export default function Profile() {
       <h1 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1 }}>פרופיל</h1>
 
       <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-        {user.photoURL ? (
-          <img src={user.photoURL} alt="" width={60} height={60} style={{ borderRadius: '50%' }} />
-        ) : (
-          <div
-            style={{
-              width: 60, height: 60, borderRadius: '50%',
-              background: 'var(--color-primary)',
-              color: 'var(--color-text-inverse)',
-              display: 'grid', placeItems: 'center',
-              fontWeight: 900, fontSize: 24
-            }}
-          >
-            {(data?.displayName || user.email || '?').charAt(0).toUpperCase()}
-          </div>
-        )}
-        <div>
-          <div style={{ fontWeight: 800, fontSize: 18 }}>{data?.displayName || 'משתמש'}</div>
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          {data?.photoURL ? (
+            <img src={data.photoURL} alt="" width={60} height={60} style={{ borderRadius: '50%', objectFit: 'cover', width: 60, height: 60 }} />
+          ) : (
+            <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'var(--color-primary)', color: 'var(--color-text-inverse)', display: 'grid', placeItems: 'center', fontWeight: 900, fontSize: 24 }}>
+              {(data?.displayName || user.email || '?').charAt(0).toUpperCase()}
+            </div>
+          )}
+          <button onClick={() => fileRef.current?.click()} disabled={busy} title="החלף תמונה"
+            style={{ position: 'absolute', bottom: -4, insetInlineEnd: -4, width: 26, height: 26, borderRadius: '50%', background: 'var(--color-surface)', border: '1px solid var(--color-border-strong)', fontSize: 13, cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
+            📷
+          </button>
+          <input ref={fileRef} type="file" accept="image/*" onChange={onPhoto} style={{ display: 'none' }} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {editingName ? (
+            <div style={{ display: 'flex', gap: 6 }}>
+              <input value={nameDraft} maxLength={40} onChange={(e) => setNameDraft(e.target.value)} autoFocus
+                style={{ flex: 1, minWidth: 0, padding: '8px 10px', background: 'var(--glass-bg-hi)', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', color: 'var(--color-text)', fontSize: 16, outline: 'none' }} />
+              <button className="btn" onClick={saveName} disabled={busy || !nameDraft.trim()} style={{ padding: '8px 12px' }}>שמור</button>
+              <button onClick={() => setEditingName(false)} className="btn-ghost" style={{ padding: '8px 10px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)' }}>✕</button>
+            </div>
+          ) : (
+            <div style={{ fontWeight: 800, fontSize: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
+              {data?.displayName || 'משתמש'}
+              <button onClick={() => { setNameDraft(data?.displayName || ''); setEditingName(true) }} title="ערוך שם"
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 14, opacity: 0.7 }}>✏️</button>
+            </div>
+          )}
           <div className="text-muted" style={{ fontSize: 13 }}>{user.email}</div>
         </div>
       </div>
