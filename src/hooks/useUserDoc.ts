@@ -22,7 +22,11 @@ export function useUserDoc(uid: string | null) {
       refresh()
       setLoading(false)
       window.addEventListener('demo-predictions-changed', refresh)
-      return () => window.removeEventListener('demo-predictions-changed', refresh)
+      window.addEventListener('demo-department-changed', refresh)
+      return () => {
+        window.removeEventListener('demo-predictions-changed', refresh)
+        window.removeEventListener('demo-department-changed', refresh)
+      }
     }
     const unsub = onSnapshot(doc(db, 'users', uid), (snap) => {
       setData(snap.exists() ? (snap.data() as UserDoc) : null)

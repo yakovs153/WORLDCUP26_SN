@@ -19,28 +19,38 @@ service cloud.firestore {
       allow create: if isSelf(uid)
                     && request.resource.data.totalPoints == 0
                     && request.resource.data.predictionsCount == 0;
-      allow update: if isSelf(uid)
+      // Self can edit own profile (e.g. department) but not points/count.
+      // Admins can also edit any user's profile (e.g. assign department) but not points/count.
+      allow update: if (isSelf(uid) || isAdmin())
                     && request.resource.data.totalPoints == resource.data.totalPoints
                     && request.resource.data.predictionsCount == resource.data.predictionsCount;
       allow delete: if false;
     }
 
-    // ===== Matches — read-only עבור clients, נכתב רק על-ידי Functions =====
-    match /matches/{matchId} {
-      allow read: if true;
-      allow write: if false;
-    }
-
-    // ===== App config (admin-managed) =====
+    // App-config / admin helper (defined before use by /matches).
     function isAdmin() {
       return isSignedIn() &&
         exists(/databases/$(database)/documents/appConfig/main) &&
         request.auth.token.email in get(/databases/$(database)/documents/appConfig/main).data.adminEmails;
     }
 
+    // ===== Matches =====
+    // Public read. Writes: the GitHub Actions sync (service account, bypasses
+    // rules) and admins via the Admin "Matches" tab (manual override).
+    match /matches/{matchId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /appConfig/{docId} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    // ===== Stats (golden boot, hall of fame) — written by the sync worker only =====
+    match /stats/{docId} {
+      allow read: if true;
+      allow write: if false;
     }
 
     // ===== Polls =====
@@ -108,5 +118,13 @@ service cloud.firestore {
 
       allow delete: if false;
     }
+
+    // ===== Match rooms (live chat / reactions) =====
+    match /matches/{matchId}/chat/{msgId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
   }
 }

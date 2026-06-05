@@ -1,0 +1,39 @@
+name: Live results sync
+
+# Keyless live-sync (no service-account key — uses Workload Identity Federation).
+# Polls football-data.org and writes fixtures + live scores to Firestore,
+# scoring finished matches. See docs/WIF-SETUP.md for one-time setup.
+on:
+  schedule:
+    - cron: '*/5 * * * *' # every 5 minutes (GitHub's minimum)
+  workflow_dispatch: {}
+
+concurrency:
+  group: live-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write   # required for Workload Identity Federation
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GOOGLE_CLOUD_PROJECT: world-cup-2026-c145b
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authenticate to Google Cloud (keyless)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install firebase-admin@^12 --no-save
+      - name: Run sync
+        env:
+          FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
+        run: node scripts/sync-live.mjs

@@ -10,10 +10,17 @@
  *   node scripts/seed-matches.mjs <project-id>
  *
  * הערה: לסנכרון נתוני אמת ב-production, השתמש ב-Cloud Function `syncMatchesNow`
- * (פונה ל-football-data.org). הסקריפט הזה הוא לפיתוח/בדיקה בלבד.
+ * (פונה ל-football-data.org). הסקריפט הזה הוא לפיתוח/בדיקה / fallback בלבד.
+ *
+ * Fallback ללוח אמיתי ללא API: ספק קובץ JSON עם הלוח הרשמי:
+ *   node scripts/seed-matches.mjs <project-id> scripts/wc2026-fixtures.json
+ * פורמט (מערך): { id, home:{name,code,flag}, away:{name,code,flag},
+ *   kickoff: "2026-06-11T19:00:00Z", stage:"GROUP"|"R32"|"R16"|"QF"|"SF"|"TP"|"F",
+ *   group:"A"|null }
  */
 import { initializeApp, cert, applicationDefault } from 'firebase-admin/app'
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
+import { readFileSync, existsSync } from 'node:fs'
 
 const projectId = process.argv[2] || process.env.GCLOUD_PROJECT || 'demo-mundial'
 
@@ -78,21 +85,41 @@ function kickoff(month, day, hour) {
 }
 
 async function main() {
-  console.log(`Seeding ${SPECS.length} matches to project '${projectId}'...`)
+  const fixturesFile = process.argv[3]
   const batch = db.batch()
-  for (const s of SPECS) {
-    const ref = db.collection('matches').doc(s.id)
-    batch.set(ref, {
-      homeTeam: TEAMS[s.home],
-      awayTeam: TEAMS[s.away],
-      kickoff: Timestamp.fromDate(kickoff(s.month, s.day, s.hour)),
-      stage: s.stage,
-      group: s.group,
-      status: s.status,
-      homeScore: s.homeScore,
-      awayScore: s.awayScore,
-      lastUpdated: Timestamp.now()
-    })
+
+  if (fixturesFile && existsSync(fixturesFile)) {
+    // Real schedule from a JSON file.
+    const fixtures = JSON.parse(readFileSync(fixturesFile, 'utf8'))
+    console.log(`Seeding ${fixtures.length} matches from ${fixturesFile} to '${projectId}'...`)
+    for (const f of fixtures) {
+      batch.set(db.collection('matches').doc(f.id), {
+        homeTeam: f.home,
+        awayTeam: f.away,
+        kickoff: Timestamp.fromDate(new Date(f.kickoff)),
+        stage: f.stage || 'GROUP',
+        group: f.group ?? null,
+        status: f.status || 'SCHEDULED',
+        homeScore: f.homeScore ?? null,
+        awayScore: f.awayScore ?? null,
+        lastUpdated: Timestamp.now()
+      })
+    }
+  } else {
+    console.log(`Seeding ${SPECS.length} sample matches to project '${projectId}'...`)
+    for (const s of SPECS) {
+      batch.set(db.collection('matches').doc(s.id), {
+        homeTeam: TEAMS[s.home],
+        awayTeam: TEAMS[s.away],
+        kickoff: Timestamp.fromDate(kickoff(s.month, s.day, s.hour)),
+        stage: s.stage,
+        group: s.group,
+        status: s.status,
+        homeScore: s.homeScore,
+        awayScore: s.awayScore,
+        lastUpdated: Timestamp.now()
+      })
+    }
   }
   await batch.commit()
   console.log('Done.')

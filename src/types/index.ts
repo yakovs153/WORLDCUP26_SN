@@ -30,6 +30,7 @@ export interface Prediction {
   awayScore: number
   submittedAt: Timestamp
   points: number | null
+  joker?: boolean   // ×2 points — one per matchday
 }
 
 export interface UserDoc {
@@ -37,6 +38,7 @@ export interface UserDoc {
   displayName: string
   email: string
   photoURL?: string | null
+  department?: string | null
   totalPoints: number
   predictionsCount: number
   joinedAt: Timestamp
@@ -103,14 +105,30 @@ export interface CustomPlayer {
   // Photos for custom players are stored alongside hard-coded players in `playerPhotos`.
 }
 
+export interface ContentConfig {
+  tournamentName: string   // header title
+  tagline: string          // login subtitle
+  rulesIntro: string       // free text shown at top of the Rules page
+  rulesNotes: string       // free text shown at the bottom of the Rules page
+}
+
+export interface AnnouncementConfig {
+  text: string
+  active: boolean
+}
+
 export interface AppConfig {
   scoring: ScoringConfig
   bonus: BonusScoringConfig
+  content: ContentConfig
+  announcement: AnnouncementConfig
   theme: ThemeConfig
   navIcons: NavIconsConfig
   polls: Poll[]
   playerPhotos: Record<string, string>  // player name → photo URL (or data URL in demo)
   customPlayers: CustomPlayer[]         // additional players added by admin (besides TOP_SCORER_CANDIDATES)
+  hiddenScorers: string[]               // names of top-scorer candidates removed from the list by admin
+  departments: string[]                 // company departments users can belong to
   adminEmails: string[]
   allowedEmailDomains: string[]         // e.g. ["storenext.com"] — empty = no restriction
   updatedAt?: Timestamp
@@ -119,6 +137,13 @@ export interface AppConfig {
 export const DEFAULT_APP_CONFIG: AppConfig = {
   scoring: { exact: 5, winnerAndDiff: 3, winnerOnly: 1 },
   bonus:   { champion: 20, topScorer: 15 },
+  content: {
+    tournamentName: 'מונדיאל 2026',
+    tagline: 'משחק ניחושים פנימי של StoreNext',
+    rulesIntro: '',
+    rulesNotes: ''
+  },
+  announcement: { text: '', active: false },
   theme: {
     primary: '#e11d48',
     accent:  '#f59e0b',
@@ -137,6 +162,8 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
   polls: [],
   playerPhotos: {},
   customPlayers: [],
+  hiddenScorers: [],
+  departments: ['דאטה ואנליזה', 'פיתוח', 'סיסטם', 'פרוייקטים', 'מטאור', 'המימד השביעי', 'משאבי אנוש', 'הנהלה', 'כספים', 'מוצר'],
   adminEmails: [],
   allowedEmailDomains: []
 }

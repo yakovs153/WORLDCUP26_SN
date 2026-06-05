@@ -2,6 +2,21 @@
 <html lang="he" dir="rtl">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Set theme mode before first paint to avoid a flash of the wrong theme.
+      (function () {
+        try {
+          var q = new URLSearchParams(location.search).get('theme');
+          var m = (q === 'dark' || q === 'light') ? q : localStorage.getItem('theme-mode');
+          if (m !== 'dark' && m !== 'light') {
+            m = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+          }
+          document.documentElement.setAttribute('data-theme', m);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
     <link rel="icon" type="image/png" href="/icon-192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#1a1320" />

@@ -12,6 +12,7 @@ import {
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { auth, db, DEMO_MODE } from '../firebase'
 import { checkEmailAllowed } from '../lib/emailGate'
+import { setDemoDepartment } from '../lib/demoData'
 
 class EmailGateError extends Error {
   code = 'email-gate'
@@ -32,23 +33,28 @@ interface AuthContextValue {
   user: User | null
   loading: boolean
   signInEmail: (email: string, password: string) => Promise<void>
-  registerEmail: (email: string, password: string, displayName: string) => Promise<void>
+  registerEmail: (email: string, password: string, displayName: string, department?: string) => Promise<void>
   signInGoogle: () => Promise<void>
   signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-async function ensureUserDoc(user: User, displayNameOverride?: string) {
+async function ensureUserDoc(user: User, displayNameOverride?: string, department?: string) {
   if (DEMO_MODE) return
   const ref = doc(db, 'users', user.uid)
   const snap = await getDoc(ref)
-  if (snap.exists()) return
+  if (snap.exists()) {
+    // keep department in sync if provided (e.g. picked at registration)
+    if (department) await setDoc(ref, { department }, { merge: true })
+    return
+  }
   await setDoc(ref, {
     uid: user.uid,
     displayName: displayNameOverride || user.displayName || user.email?.split('@')[0] || 'משתמש',
     email: user.email || '',
     photoURL: user.photoURL || null,
+    department: department || null,
     totalPoints: 0,
     predictionsCount: 0,
     joinedAt: serverTimestamp()
@@ -89,7 +95,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (DEMO_MODE) {
-      setUser(loadDemoUser())
+      let u = loadDemoUser()
+      // Demo quick-entry: `?demo=1` (or any value) signs in a sample user so the
+      // app is instantly previewable without typing. `?sim=1` also seeds sample
+      // predictions on the showcase matches. Demo mode only.
+      try {
+        const params = new URLSearchParams(window.location.search)
+        const p = params.get('demo')
+        if (!u && p) {
+          u = makeDemoUser(p.includes('@') ? p : 'demo.user@storenext.com', 'משתמש דמו')
+          saveDemoUser(u)
+        }
+        if (params.get('sim')) {
+          void import('../lib/demoData').then((m) => m.seedDemoSimulation())
+        }
+      } catch { /* ignore */ }
+      setUser(u)
       setLoading(false)
       return
     }
@@ -120,18 +141,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await ensureUserDoc(cred.user)
   }
 
-  const registerEmail = async (email: string, password: string, displayName: string) => {
+  const registerEmail = async (email: string, password: string, displayName: string, department?: string) => {
     gateEmail(email)
     if (DEMO_MODE) {
       if (!email || password.length < 6) throw new Error('auth/weak-password')
       const u = makeDemoUser(email, displayName)
       saveDemoUser(u)
+      if (department) setDemoDepartment(u.uid, department)
       setUser(u)
       return
     }
     const cred = await createUserWithEmailAndPassword(auth, email, password)
     if (displayName) await updateProfile(cred.user, { displayName })
-    await ensureUserDoc(cred.user, displayName)
+    await ensureUserDoc(cred.user, displayName, department)
   }
 
   const signInGoogle = async () => {

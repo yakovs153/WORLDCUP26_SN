@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom'
+import { useAppConfig } from '../hooks/useAppConfig'
 
 export default function Rules() {
+  const cfg = useAppConfig()
+  const s = cfg.scoring
+  const b = cfg.bonus
   return (
     <div
       className="page-fade"
@@ -32,26 +36,32 @@ export default function Rules() {
         </h1>
       </div>
 
+      {cfg.content.rulesIntro && (
+        <div className="card" style={{ whiteSpace: 'pre-wrap', lineHeight: 1.7, fontSize: 14 }}>
+          {cfg.content.rulesIntro}
+        </div>
+      )}
+
       {/* Match scoring */}
       <Section title="ניחושי משחקים" icon="⚽">
         <ScoringRow
           icon="🎯"
           label="תוצאה מדויקת"
           example="ניחשת 2-1 — יצא 2-1"
-          points={5}
+          points={s.exact}
           highlight
         />
         <ScoringRow
           icon="✅"
           label="מנצחת + הפרש שערים נכון"
           example="ניחשת 3-1 — יצא 2-0"
-          points={3}
+          points={s.winnerAndDiff}
         />
         <ScoringRow
           icon="➕"
           label="מנצחת נכונה בלבד"
           example="ניחשת 2-1 — יצא 3-0 (גם תיקו נכון נספר)"
-          points={1}
+          points={s.winnerOnly}
         />
         <ScoringRow
           icon="❌"
@@ -71,14 +81,14 @@ export default function Rules() {
           icon="🏆"
           label="זוכה המונדיאל"
           example="בחר את הנבחרת שתזכה בגביע"
-          points={20}
+          points={b.champion}
           highlight
         />
         <ScoringRow
           icon="⚽"
           label="מלך השערים"
           example="הכובש המוביל בכל הטורניר"
-          points={15}
+          points={b.topScorer}
           highlight
         />
         <div
@@ -90,7 +100,7 @@ export default function Rules() {
             fontSize: 13
           }}
         >
-          <span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>סה״כ בונוס מקסימלי: 35 נקודות</span>
+          <span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>סה״כ בונוס מקסימלי: {b.champion + b.topScorer} נקודות</span>
         </div>
       </Section>
 
@@ -121,6 +131,12 @@ export default function Rules() {
         <Bullet>הימור על תוצאה מדויקת בהפרש 2 (3-1, 2-0) מאזן סיכוי וסיכון.</Bullet>
         <Bullet>בבונוס — בחר מועדף עם פוטנציאל הצגה לאורך הטורניר, לא רק לפי "מי הכי טוב כרגע".</Bullet>
       </Section>
+
+      {cfg.content.rulesNotes && (
+        <Section title="הערות נוספות" icon="📝">
+          <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.7, fontSize: 14 }}>{cfg.content.rulesNotes}</div>
+        </Section>
+      )}
     </div>
   )
 }

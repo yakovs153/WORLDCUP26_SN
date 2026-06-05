@@ -12,19 +12,13 @@ export default function ThemeApplier() {
     const root = document.documentElement
     const t = cfg.theme
 
+    // Only the BRAND hues are admin-configurable. Surface/bg/text tokens are
+    // owned by the light/dark theme mode (see useThemeMode + tokens.css), so we
+    // deliberately do not override them here.
     root.style.setProperty('--color-primary', t.primary)
     root.style.setProperty('--color-primary-hover', adjustLightness(t.primary, 0.08))
     root.style.setProperty('--color-accent', t.accent)
-    root.style.setProperty('--color-bg', t.bg)
-    root.style.setProperty('--color-bg-elevated', adjustLightness(t.bg, 0.04))
-    root.style.setProperty('--color-surface', t.surface)
-    root.style.setProperty('--color-surface-hover', adjustLightness(t.surface, 0.04))
-    root.style.setProperty('--color-text', t.text)
     root.style.setProperty('--color-danger', t.danger)
-
-    // Also keep the meta theme-color in sync
-    const meta = document.querySelector('meta[name="theme-color"]')
-    if (meta) meta.setAttribute('content', t.bg)
   }, [cfg.theme])
 
   return null

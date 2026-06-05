@@ -31,6 +31,14 @@ export default function AdminPlayers() {
   ]
 
   const isCustom = (name: string) => cfg.customPlayers.some((p) => p.name === name)
+  const hidden = new Set(cfg.hiddenScorers || [])
+
+  const toggleHidden = async (name: string) => {
+    const cur = cfg.hiddenScorers || []
+    const next = cur.includes(name) ? cur.filter((n) => n !== name) : [...cur, name]
+    await patchAppConfig({ hiddenScorers: next })
+    toast.show(cur.includes(name) ? `${name} הוחזר לרשימה` : `${name} הוסר מהרשימה`, 'info')
+  }
 
   const addPlayer = async () => {
     const name = newName.trim()
@@ -151,6 +159,8 @@ export default function AdminPlayers() {
                   }
                 }}
                 onRemovePlayer={custom ? () => removeCustomPlayer(p.name) : undefined}
+                isHidden={hidden.has(p.name)}
+                onToggleHidden={custom ? undefined : () => toggleHidden(p.name)}
               />
             )
           })}
@@ -162,7 +172,7 @@ export default function AdminPlayers() {
 
 function PlayerRow({
   name, countryCode, country, photoUrl, isCustom, busy,
-  onUpload, onRemovePhoto, onRemovePlayer
+  onUpload, onRemovePhoto, onRemovePlayer, isHidden, onToggleHidden
 }: {
   name: string
   countryCode: string
@@ -173,6 +183,8 @@ function PlayerRow({
   onUpload: (f: File) => Promise<void>
   onRemovePhoto: () => Promise<void>
   onRemovePlayer?: () => void
+  isHidden?: boolean
+  onToggleHidden?: () => void
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
@@ -196,7 +208,8 @@ function PlayerRow({
         background: dragOver ? 'color-mix(in srgb, var(--color-primary) 18%, var(--color-bg-elevated))' : 'var(--color-bg-elevated)',
         borderRadius: 'var(--radius-md)',
         border: dragOver ? '2px dashed var(--color-primary)' : '1px solid var(--color-border)',
-        transition: 'all 0.15s ease'
+        transition: 'all 0.15s ease',
+        opacity: isHidden ? 0.5 : 1
       }}
     >
       <PlayerAvatar name={name} countryCode={countryCode} photoUrl={photoUrl} size={48} />
@@ -247,6 +260,16 @@ function PlayerRow({
             title="הסר שחקן מותאם"
           >
             ✕
+          </button>
+        )}
+        {onToggleHidden && !busy && (
+          <button
+            onClick={onToggleHidden}
+            className="btn-ghost"
+            style={{ padding: '6px 10px', fontSize: 13, color: isHidden ? 'var(--color-success)' : 'var(--color-text-muted)', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', whiteSpace: 'nowrap' }}
+            title={isHidden ? 'החזר לרשימה' : 'הסר מרשימת מלך השערים'}
+          >
+            {isHidden ? '↩ החזר' : '🚫 הסתר'}
           </button>
         )}
       </div>

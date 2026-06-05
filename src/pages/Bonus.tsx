@@ -5,6 +5,8 @@ import { useBonus } from '../hooks/useBonus'
 import { useAppConfig } from '../hooks/useAppConfig'
 import FlagIcon from '../components/FlagIcon'
 import PlayerAvatar from '../components/PlayerAvatar'
+import GoldenBootRace from '../components/GoldenBootRace'
+import { useGoldenBoot } from '../hooks/useGoldenBoot'
 import { useToast } from '../components/Toast'
 import { saveBonus } from '../lib/bonus'
 import { TOP_SCORER_CANDIDATES, type PlayerOption } from '../lib/players'
@@ -17,6 +19,7 @@ export default function Bonus() {
   const { matches, loading: lm } = useMatches()
   const { data: bonus, loading: lb } = useBonus(user?.uid ?? null)
   const cfg = useAppConfig()
+  const goldenBoot = useGoldenBoot()
   const toast = useToast()
 
   // Get admin-uploaded photo if present, else fall back to player's hard-coded photoUrl
@@ -25,7 +28,6 @@ export default function Bonus() {
   const [championCode, setChampionCode] = useState<string | null>(null)
   const [topScorer, setTopScorer] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-  const [query, setQuery] = useState('')
 
   useEffect(() => {
     if (bonus) {
@@ -61,6 +63,7 @@ export default function Bonus() {
 
   // Combine hard-coded candidates with admin-added custom players
   const allPlayers = useMemo<PlayerOption[]>(() => {
+    const hidden = new Set(cfg.hiddenScorers || [])
     return [
       ...TOP_SCORER_CANDIDATES,
       ...cfg.customPlayers.map<PlayerOption>((cp) => ({
@@ -68,14 +71,8 @@ export default function Bonus() {
         countryCode: cp.countryCode,
         display: `${cp.name} · ${cp.countryCode}`
       }))
-    ]
-  }, [cfg.customPlayers])
-
-  const filteredPlayers = useMemo(() => {
-    if (!query) return allPlayers
-    const q = query.trim()
-    return allPlayers.filter((p) => p.display.includes(q))
-  }, [query, allPlayers])
+    ].filter((p) => !hidden.has(p.name))
+  }, [cfg.customPlayers, cfg.hiddenScorers])
 
   const handleSave = async () => {
     if (!user) return
@@ -182,65 +179,15 @@ export default function Bonus() {
         </div>
       </section>
 
-      {/* Top scorer picker */}
-      <section className="card animate-in">
-        <h2 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 18, marginBottom: 4 }}>
-          מלך השערים
-        </h2>
-        <p className="text-muted" style={{ fontSize: 12, marginBottom: 12 }}>
-          בחר את הכובש המוביל של הטורניר.
-        </p>
-        <input
-          type="text"
-          placeholder="חיפוש שחקן…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          disabled={locked}
-          style={{
-            width: '100%',
-            padding: '10px 14px',
-            background: 'var(--color-bg-elevated)',
-            border: '1px solid var(--color-border-strong)',
-            borderRadius: 'var(--radius-md)',
-            outline: 'none',
-            marginBottom: 10
-          }}
-        />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 420, overflowY: 'auto', paddingInlineEnd: 4 }}>
-          {filteredPlayers.map((p) => {
-            const selected = topScorer === p.name
-            return (
-              <button
-                key={p.name}
-                onClick={() => !locked && setTopScorer(selected ? null : p.name)}
-                disabled={locked}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '10px 12px',
-                  borderRadius: 'var(--radius-md)',
-                  background: selected ? 'color-mix(in srgb, var(--color-primary) 16%, transparent)' : 'var(--color-bg-elevated)',
-                  border: selected ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-                  textAlign: 'right',
-                  cursor: locked ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <PlayerAvatar name={p.name} countryCode={p.countryCode} photoUrl={photoFor(p.name, p.photoUrl)} size={56} shape="logo" />
-                <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2, flex: 1 }}>
-                  <span style={{ fontSize: 15, fontWeight: selected ? 800 : 700 }}>{p.name}</span>
-                  <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 600 }}>{p.display.split('·')[1]?.trim() || p.countryCode}</span>
-                </span>
-                {selected && <span style={{ color: 'var(--color-primary)', fontSize: 18 }}>✓</span>}
-              </button>
-            )
-          })}
-          {filteredPlayers.length === 0 && (
-            <div className="text-muted" style={{ textAlign: 'center', padding: 12 }}>אין תוצאות חיפוש</div>
-          )}
-        </div>
-      </section>
+      {/* Top scorer — Golden Boot race */}
+      <GoldenBootRace
+        players={allPlayers}
+        goals={goldenBoot}
+        selected={topScorer}
+        photoFor={photoFor}
+        onPick={(n) => !locked && setTopScorer(n)}
+        locked={locked}
+      />
 
       {!locked && (
         <button

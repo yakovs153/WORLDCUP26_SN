@@ -5,6 +5,9 @@ import Layout from './components/Layout'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Matches from './pages/Matches'
+import Teams from './pages/Teams'
+import BracketPage from './pages/Bracket'
+import MatchRoom from './pages/MatchRoom'
 import Leaderboard from './pages/Leaderboard'
 import MyPredictions from './pages/MyPredictions'
 import Profile from './pages/Profile'
@@ -14,10 +17,12 @@ import Admin from './pages/Admin'
 import { ToastProvider } from './components/Toast'
 import { AppConfigProvider } from './hooks/useAppConfig'
 import ThemeApplier from './components/ThemeApplier'
+import { ThemeModeProvider } from './hooks/useThemeMode'
 import AdminGate from './admin/AdminGate'
 
 export default function App() {
   return (
+    <ThemeModeProvider>
     <AuthProvider>
       <AppConfigProvider>
         <ThemeApplier />
@@ -35,6 +40,9 @@ export default function App() {
                 }
               >
                 <Route index element={<Matches />} />
+                <Route path="teams" element={<Teams />} />
+                <Route path="bracket" element={<BracketPage />} />
+                <Route path="match/:id" element={<MatchRoom />} />
                 <Route path="bonus" element={<Bonus />} />
                 <Route path="my" element={<MyPredictions />} />
                 <Route path="leaderboard" element={<Leaderboard />} />
@@ -54,5 +62,6 @@ export default function App() {
         </ToastProvider>
       </AppConfigProvider>
     </AuthProvider>
+    </ThemeModeProvider>
   )
 }

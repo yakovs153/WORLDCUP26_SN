@@ -33,11 +33,15 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
           ...data,
           scoring: { ...DEFAULT_APP_CONFIG.scoring, ...(data.scoring || {}) },
           bonus: { ...DEFAULT_APP_CONFIG.bonus, ...(data.bonus || {}) },
+          content: { ...DEFAULT_APP_CONFIG.content, ...(data.content || {}) },
+          announcement: { ...DEFAULT_APP_CONFIG.announcement, ...(data.announcement || {}) },
           theme: { ...DEFAULT_APP_CONFIG.theme, ...(data.theme || {}) },
           navIcons: { ...DEFAULT_APP_CONFIG.navIcons, ...(data.navIcons || {}) },
           polls: data.polls || [],
           playerPhotos: data.playerPhotos || {},
           customPlayers: data.customPlayers || [],
+          hiddenScorers: data.hiddenScorers || [],
+          departments: data.departments || DEFAULT_APP_CONFIG.departments,
           adminEmails: data.adminEmails || [],
           allowedEmailDomains: data.allowedEmailDomains || []
         }

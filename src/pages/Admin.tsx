@@ -1,25 +1,27 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import AdminMatches from '../admin/AdminMatches'
+import AdminContent from '../admin/AdminContent'
+import AdminDepartments from '../admin/AdminDepartments'
 import AdminScoring from '../admin/AdminScoring'
-import AdminTheme from '../admin/AdminTheme'
 import AdminPolls from '../admin/AdminPolls'
-import AdminIcons from '../admin/AdminIcons'
 import AdminPlayers from '../admin/AdminPlayers'
 import AdminAccess from '../admin/AdminAccess'
 
-type Tab = 'scoring' | 'theme' | 'polls' | 'icons' | 'players' | 'access'
+type Tab = 'matches' | 'content' | 'departments' | 'scoring' | 'polls' | 'players' | 'access'
 
 const TABS: { key: Tab; label: string; icon: string }[] = [
+  { key: 'matches', label: 'משחקים',  icon: '🗓️' },
+  { key: 'content', label: 'תוכן',     icon: '📝' },
+  { key: 'departments', label: 'מחלקות', icon: '🏢' },
   { key: 'scoring', label: 'ניקוד',    icon: '🧮' },
-  { key: 'theme',   label: 'עיצוב',    icon: '🎨' },
-  { key: 'polls',   label: 'סקרים',    icon: '📊' },
-  { key: 'icons',   label: 'אייקונים',  icon: '✨' },
   { key: 'players', label: 'שחקנים',   icon: '👟' },
+  { key: 'polls',   label: 'סקרים',    icon: '📊' },
   { key: 'access',  label: 'גישה',     icon: '🔒' }
 ]
 
 export default function Admin() {
-  const [tab, setTab] = useState<Tab>('scoring')
+  const [tab, setTab] = useState<Tab>('matches')
 
   return (
     <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -77,11 +79,12 @@ export default function Admin() {
         ))}
       </div>
 
+      {tab === 'matches' && <AdminMatches />}
+      {tab === 'content' && <AdminContent />}
+      {tab === 'departments' && <AdminDepartments />}
       {tab === 'scoring' && <AdminScoring />}
-      {tab === 'theme' && <AdminTheme />}
-      {tab === 'polls' && <AdminPolls />}
-      {tab === 'icons' && <AdminIcons />}
       {tab === 'players' && <AdminPlayers />}
+      {tab === 'polls' && <AdminPolls />}
       {tab === 'access' && <AdminAccess />}
     </div>
   )

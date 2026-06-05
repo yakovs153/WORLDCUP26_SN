@@ -1,76 +1,127 @@
+import { useMemo, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useLeaderboard } from '../hooks/useLeaderboard'
 import { LeaderboardRowSkeleton } from '../components/Skeleton'
+import HallOfFame from '../components/HallOfFame'
+import type { LeaderboardEntry } from '../types'
 
 export default function Leaderboard() {
   const { user } = useAuth()
-  const { entries, loading } = useLeaderboard(100)
+  const { entries, loading } = useLeaderboard(200)
+  const [tab, setTab] = useState<'personal' | 'departments'>('personal')
 
-  if (loading)
-    return (
-      <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1 }}>טבלת דירוג</h1>
-        <div className="card" style={{ padding: 0 }}>
-          {[0, 1, 2, 3, 4].map((i) => <LeaderboardRowSkeleton key={i} />)}
-        </div>
-      </div>
-    )
+  const deptRows = useMemo(() => aggregateDepartments(entries), [entries])
 
   return (
     <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <h1 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1 }}>טבלת דירוג</h1>
-      {entries.length === 0 && (
-        <div className="card" style={{ textAlign: 'center' }}>
-          עוד אין משתמשים בדירוג
-        </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, padding: 4, background: 'var(--glass-bg-hi)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-full)' }}>
+        <Toggle active={tab === 'personal'} onClick={() => setTab('personal')}>👤 אישי</Toggle>
+        <Toggle active={tab === 'departments'} onClick={() => setTab('departments')}>🏢 מחלקות</Toggle>
+      </div>
+
+      {loading ? (
+        <div className="card" style={{ padding: 0 }}>{[0, 1, 2, 3, 4].map((i) => <LeaderboardRowSkeleton key={i} />)}</div>
+      ) : tab === 'personal' ? (
+        <Personal entries={entries} meUid={user?.uid} />
+      ) : (
+        <Departments rows={deptRows} myDept={entries.find((e) => e.uid === user?.uid)?.department ?? null} />
       )}
-      <div className="card stagger" style={{ padding: 0, overflow: 'hidden' }}>
-        {entries.map((e) => {
-          const me = user?.uid === e.uid
-          return (
-            <div
-              key={e.uid}
-              className="animate-in"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '40px 1fr auto',
-                alignItems: 'center',
-                gap: 'var(--space-3)',
-                padding: 'var(--space-3) var(--space-4)',
-                background: me ? 'rgba(212,175,55,0.08)' : 'transparent',
-                borderBottom: '1px solid var(--color-border)'
-              }}
-            >
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, color: rankColor(e.rank) }}>
-                {medal(e.rank) || e.rank}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                {e.photoURL ? (
-                  <img src={e.photoURL} alt="" width={32} height={32} style={{ borderRadius: '50%' }} />
-                ) : (
-                  <div
-                    style={{
-                      width: 32, height: 32, borderRadius: '50%',
-                      background: 'var(--color-bg-elevated)',
-                      display: 'grid', placeItems: 'center',
-                      fontWeight: 700, fontSize: 14
-                    }}
-                  >
-                    {e.displayName.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div>
-                  <div style={{ fontWeight: 700 }}>{e.displayName}{me && <span style={{ color: 'var(--color-primary)', marginRight: 6, fontSize: 12 }}>(אתה)</span>}</div>
-                  <div className="text-muted" style={{ fontSize: 12 }}>{e.predictionsCount} ניחושים</div>
+
+      <HallOfFame />
+    </div>
+  )
+}
+
+function Toggle({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button onClick={onClick} style={{
+      padding: '9px 8px', borderRadius: 'var(--radius-full)', fontWeight: 700, fontSize: 13,
+      background: active ? 'var(--color-primary)' : 'transparent',
+      color: active ? 'var(--color-on-primary)' : 'var(--color-text-muted)'
+    }}>{children}</button>
+  )
+}
+
+function Personal({ entries, meUid }: { entries: LeaderboardEntry[]; meUid?: string }) {
+  if (entries.length === 0) return <div className="card" style={{ textAlign: 'center' }}>עוד אין משתמשים בדירוג</div>
+  return (
+    <div className="card stagger" style={{ padding: 0, overflow: 'hidden' }}>
+      {entries.map((e) => {
+        const me = meUid === e.uid
+        const king = e.rank === 1 && e.totalPoints > 0
+        return (
+          <div key={e.uid} className="animate-in" style={{
+            display: 'grid', gridTemplateColumns: '40px 1fr auto', alignItems: 'center', gap: 'var(--space-3)',
+            padding: 'var(--space-3) var(--space-4)',
+            background: king ? 'linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 18%, transparent), transparent)'
+              : me ? 'color-mix(in srgb, var(--color-primary) 10%, transparent)' : 'transparent',
+            borderBottom: '1px solid var(--glass-border)'
+          }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: king ? 24 : 20, color: e.rank <= 3 ? 'var(--color-primary)' : 'var(--color-text-muted)' }}>
+              {king ? '👑' : medal(e.rank) || e.rank}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {e.photoURL ? <img src={e.photoURL} alt="" width={32} height={32} style={{ borderRadius: '50%' }} />
+                : <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--glass-bg-hi)', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 14 }}>{e.displayName.charAt(0).toUpperCase()}</div>}
+              <div>
+                <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {e.displayName}
+                  {king && <span style={{ fontSize: 10, fontWeight: 800, color: '#1a1320', background: 'var(--color-accent)', padding: '1px 8px', borderRadius: 'var(--radius-full)' }}>המלך</span>}
+                  {me && <span style={{ color: 'var(--color-primary)', fontSize: 12 }}>(אתה)</span>}
                 </div>
-              </div>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--color-primary)' }}>
-                {e.totalPoints}
+                <div className="text-muted" style={{ fontSize: 12 }}>{e.department || `${e.predictionsCount} ניחושים`}</div>
               </div>
             </div>
-          )
-        })}
-      </div>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--color-primary)' }}>{e.totalPoints}</div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+interface DeptRow { department: string; total: number; members: number; avg: number }
+
+function aggregateDepartments(entries: LeaderboardEntry[]): DeptRow[] {
+  const map = new Map<string, { total: number; members: number }>()
+  for (const e of entries) {
+    const d = e.department || 'ללא מחלקה'
+    const cur = map.get(d) || { total: 0, members: 0 }
+    cur.total += e.totalPoints; cur.members += 1
+    map.set(d, cur)
+  }
+  return [...map.entries()]
+    .map(([department, v]) => ({ department, total: v.total, members: v.members, avg: v.members ? Math.round(v.total / v.members) : 0 }))
+    .sort((a, b) => b.total - a.total)
+}
+
+function Departments({ rows, myDept }: { rows: DeptRow[]; myDept: string | null }) {
+  if (rows.length === 0) return <div className="card" style={{ textAlign: 'center' }}>עוד אין נתוני מחלקות</div>
+  return (
+    <div className="stagger" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      {rows.map((r, i) => {
+        const mine = r.department === myDept
+        return (
+          <div key={r.department} className="card animate-in" style={{
+            display: 'flex', alignItems: 'center', gap: 14, padding: 'var(--space-4)',
+            border: mine ? '1px solid var(--color-primary)' : '1px solid var(--glass-border)'
+          }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 30, width: 40, textAlign: 'center', color: i < 3 ? 'var(--color-primary)' : 'var(--color-text-muted)' }}>
+              {medal(i + 1) || i + 1}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 800, fontSize: 17 }}>{r.department}{mine && <span style={{ color: 'var(--color-primary)', fontSize: 12, marginRight: 6 }}>(שלך)</span>}</div>
+              <div className="text-muted" style={{ fontSize: 12 }}>{r.members} משתתפים · ממוצע {r.avg}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: 'var(--color-primary)' }}>{r.total}</div>
+              <div className="text-muted" style={{ fontSize: 10 }}>נקודות</div>
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -80,8 +131,4 @@ function medal(rank: number): string | null {
   if (rank === 2) return '🥈'
   if (rank === 3) return '🥉'
   return null
-}
-function rankColor(rank: number): string {
-  if (rank <= 3) return 'var(--color-primary)'
-  return 'var(--color-text-muted)'
 }

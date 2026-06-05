@@ -1,0 +1,1982 @@
+{
+  "fetchedAt": "2026-06-04T15:53:15.884Z",
+  "count": 104,
+  "matches": [
+    {
+      "id": "537327",
+      "home": {
+        "name": "מקסיקו",
+        "code": "MEX",
+        "flag": ""
+      },
+      "away": {
+        "name": "דרום אפריקה",
+        "code": "RSA",
+        "flag": ""
+      },
+      "kickoff": "2026-06-11T19:00:00Z",
+      "stage": "GROUP",
+      "group": "A",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537328",
+      "home": {
+        "name": "קוריאה הדרומית",
+        "code": "KOR",
+        "flag": ""
+      },
+      "away": {
+        "name": "צ׳כיה",
+        "code": "CZE",
+        "flag": ""
+      },
+      "kickoff": "2026-06-12T02:00:00Z",
+      "stage": "GROUP",
+      "group": "A",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537333",
+      "home": {
+        "name": "קנדה",
+        "code": "CAN",
+        "flag": ""
+      },
+      "away": {
+        "name": "בוסניה",
+        "code": "BIH",
+        "flag": ""
+      },
+      "kickoff": "2026-06-12T19:00:00Z",
+      "stage": "GROUP",
+      "group": "B",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537345",
+      "home": {
+        "name": "ארה״ב",
+        "code": "USA",
+        "flag": ""
+      },
+      "away": {
+        "name": "פרגוואי",
+        "code": "PAR",
+        "flag": ""
+      },
+      "kickoff": "2026-06-13T01:00:00Z",
+      "stage": "GROUP",
+      "group": "D",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537334",
+      "home": {
+        "name": "קטאר",
+        "code": "QAT",
+        "flag": ""
+      },
+      "away": {
+        "name": "שווייץ",
+        "code": "SUI",
+        "flag": ""
+      },
+      "kickoff": "2026-06-13T19:00:00Z",
+      "stage": "GROUP",
+      "group": "B",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537339",
+      "home": {
+        "name": "ברזיל",
+        "code": "BRA",
+        "flag": ""
+      },
+      "away": {
+        "name": "מרוקו",
+        "code": "MAR",
+        "flag": ""
+      },
+      "kickoff": "2026-06-13T22:00:00Z",
+      "stage": "GROUP",
+      "group": "C",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537340",
+      "home": {
+        "name": "האיטי",
+        "code": "HAI",
+        "flag": ""
+      },
+      "away": {
+        "name": "סקוטלנד",
+        "code": "SCO",
+        "flag": ""
+      },
+      "kickoff": "2026-06-14T01:00:00Z",
+      "stage": "GROUP",
+      "group": "C",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537346",
+      "home": {
+        "name": "אוסטרליה",
+        "code": "AUS",
+        "flag": ""
+      },
+      "away": {
+        "name": "טורקיה",
+        "code": "TUR",
+        "flag": ""
+      },
+      "kickoff": "2026-06-14T04:00:00Z",
+      "stage": "GROUP",
+      "group": "D",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537351",
+      "home": {
+        "name": "גרמניה",
+        "code": "GER",
+        "flag": ""
+      },
+      "away": {
+        "name": "קוראסאו",
+        "code": "CUW",
+        "flag": ""
+      },
+      "kickoff": "2026-06-14T17:00:00Z",
+      "stage": "GROUP",
+      "group": "E",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537357",
+      "home": {
+        "name": "הולנד",
+        "code": "NED",
+        "flag": ""
+      },
+      "away": {
+        "name": "יפן",
+        "code": "JPN",
+        "flag": ""
+      },
+      "kickoff": "2026-06-14T20:00:00Z",
+      "stage": "GROUP",
+      "group": "F",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537352",
+      "home": {
+        "name": "חוף השנהב",
+        "code": "CIV",
+        "flag": ""
+      },
+      "away": {
+        "name": "אקוודור",
+        "code": "ECU",
+        "flag": ""
+      },
+      "kickoff": "2026-06-14T23:00:00Z",
+      "stage": "GROUP",
+      "group": "E",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537358",
+      "home": {
+        "name": "שוודיה",
+        "code": "SWE",
+        "flag": ""
+      },
+      "away": {
+        "name": "תוניסיה",
+        "code": "TUN",
+        "flag": ""
+      },
+      "kickoff": "2026-06-15T02:00:00Z",
+      "stage": "GROUP",
+      "group": "F",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537369",
+      "home": {
+        "name": "ספרד",
+        "code": "ESP",
+        "flag": ""
+      },
+      "away": {
+        "name": "כף ורדה",
+        "code": "CPV",
+        "flag": ""
+      },
+      "kickoff": "2026-06-15T16:00:00Z",
+      "stage": "GROUP",
+      "group": "H",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537363",
+      "home": {
+        "name": "בלגיה",
+        "code": "BEL",
+        "flag": ""
+      },
+      "away": {
+        "name": "מצרים",
+        "code": "EGY",
+        "flag": ""
+      },
+      "kickoff": "2026-06-15T19:00:00Z",
+      "stage": "GROUP",
+      "group": "G",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537370",
+      "home": {
+        "name": "ערב הסעודית",
+        "code": "KSA",
+        "flag": ""
+      },
+      "away": {
+        "name": "אורוגוואי",
+        "code": "URY",
+        "flag": ""
+      },
+      "kickoff": "2026-06-15T22:00:00Z",
+      "stage": "GROUP",
+      "group": "H",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537364",
+      "home": {
+        "name": "איראן",
+        "code": "IRN",
+        "flag": ""
+      },
+      "away": {
+        "name": "ניו זילנד",
+        "code": "NZL",
+        "flag": ""
+      },
+      "kickoff": "2026-06-16T01:00:00Z",
+      "stage": "GROUP",
+      "group": "G",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537391",
+      "home": {
+        "name": "צרפת",
+        "code": "FRA",
+        "flag": ""
+      },
+      "away": {
+        "name": "סנגל",
+        "code": "SEN",
+        "flag": ""
+      },
+      "kickoff": "2026-06-16T19:00:00Z",
+      "stage": "GROUP",
+      "group": "I",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537392",
+      "home": {
+        "name": "עיראק",
+        "code": "IRQ",
+        "flag": ""
+      },
+      "away": {
+        "name": "נורבגיה",
+        "code": "NOR",
+        "flag": ""
+      },
+      "kickoff": "2026-06-16T22:00:00Z",
+      "stage": "GROUP",
+      "group": "I",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537397",
+      "home": {
+        "name": "ארגנטינה",
+        "code": "ARG",
+        "flag": ""
+      },
+      "away": {
+        "name": "אלג׳יריה",
+        "code": "ALG",
+        "flag": ""
+      },
+      "kickoff": "2026-06-17T01:00:00Z",
+      "stage": "GROUP",
+      "group": "J",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537398",
+      "home": {
+        "name": "אוסטריה",
+        "code": "AUT",
+        "flag": ""
+      },
+      "away": {
+        "name": "ירדן",
+        "code": "JOR",
+        "flag": ""
+      },
+      "kickoff": "2026-06-17T04:00:00Z",
+      "stage": "GROUP",
+      "group": "J",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537403",
+      "home": {
+        "name": "פורטוגל",
+        "code": "POR",
+        "flag": ""
+      },
+      "away": {
+        "name": "קונגו",
+        "code": "COD",
+        "flag": ""
+      },
+      "kickoff": "2026-06-17T17:00:00Z",
+      "stage": "GROUP",
+      "group": "K",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537409",
+      "home": {
+        "name": "אנגליה",
+        "code": "ENG",
+        "flag": ""
+      },
+      "away": {
+        "name": "קרואטיה",
+        "code": "CRO",
+        "flag": ""
+      },
+      "kickoff": "2026-06-17T20:00:00Z",
+      "stage": "GROUP",
+      "group": "L",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537410",
+      "home": {
+        "name": "גאנה",
+        "code": "GHA",
+        "flag": ""
+      },
+      "away": {
+        "name": "פנמה",
+        "code": "PAN",
+        "flag": ""
+      },
+      "kickoff": "2026-06-17T23:00:00Z",
+      "stage": "GROUP",
+      "group": "L",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537404",
+      "home": {
+        "name": "אוזבקיסטן",
+        "code": "UZB",
+        "flag": ""
+      },
+      "away": {
+        "name": "קולומביה",
+        "code": "COL",
+        "flag": ""
+      },
+      "kickoff": "2026-06-18T02:00:00Z",
+      "stage": "GROUP",
+      "group": "K",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537329",
+      "home": {
+        "name": "צ׳כיה",
+        "code": "CZE",
+        "flag": ""
+      },
+      "away": {
+        "name": "דרום אפריקה",
+        "code": "RSA",
+        "flag": ""
+      },
+      "kickoff": "2026-06-18T16:00:00Z",
+      "stage": "GROUP",
+      "group": "A",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537335",
+      "home": {
+        "name": "שווייץ",
+        "code": "SUI",
+        "flag": ""
+      },
+      "away": {
+        "name": "בוסניה",
+        "code": "BIH",
+        "flag": ""
+      },
+      "kickoff": "2026-06-18T19:00:00Z",
+      "stage": "GROUP",
+      "group": "B",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537336",
+      "home": {
+        "name": "קנדה",
+        "code": "CAN",
+        "flag": ""
+      },
+      "away": {
+        "name": "קטאר",
+        "code": "QAT",
+        "flag": ""
+      },
+      "kickoff": "2026-06-18T22:00:00Z",
+      "stage": "GROUP",
+      "group": "B",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537330",
+      "home": {
+        "name": "מקסיקו",
+        "code": "MEX",
+        "flag": ""
+      },
+      "away": {
+        "name": "קוריאה הדרומית",
+        "code": "KOR",
+        "flag": ""
+      },
+      "kickoff": "2026-06-19T01:00:00Z",
+      "stage": "GROUP",
+      "group": "A",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537348",
+      "home": {
+        "name": "ארה״ב",
+        "code": "USA",
+        "flag": ""
+      },
+      "away": {
+        "name": "אוסטרליה",
+        "code": "AUS",
+        "flag": ""
+      },
+      "kickoff": "2026-06-19T19:00:00Z",
+      "stage": "GROUP",
+      "group": "D",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537342",
+      "home": {
+        "name": "סקוטלנד",
+        "code": "SCO",
+        "flag": ""
+      },
+      "away": {
+        "name": "מרוקו",
+        "code": "MAR",
+        "flag": ""
+      },
+      "kickoff": "2026-06-19T22:00:00Z",
+      "stage": "GROUP",
+      "group": "C",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537341",
+      "home": {
+        "name": "ברזיל",
+        "code": "BRA",
+        "flag": ""
+      },
+      "away": {
+        "name": "האיטי",
+        "code": "HAI",
+        "flag": ""
+      },
+      "kickoff": "2026-06-20T00:30:00Z",
+      "stage": "GROUP",
+      "group": "C",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537347",
+      "home": {
+        "name": "טורקיה",
+        "code": "TUR",
+        "flag": ""
+      },
+      "away": {
+        "name": "פרגוואי",
+        "code": "PAR",
+        "flag": ""
+      },
+      "kickoff": "2026-06-20T03:00:00Z",
+      "stage": "GROUP",
+      "group": "D",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537359",
+      "home": {
+        "name": "הולנד",
+        "code": "NED",
+        "flag": ""
+      },
+      "away": {
+        "name": "שוודיה",
+        "code": "SWE",
+        "flag": ""
+      },
+      "kickoff": "2026-06-20T17:00:00Z",
+      "stage": "GROUP",
+      "group": "F",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537353",
+      "home": {
+        "name": "גרמניה",
+        "code": "GER",
+        "flag": ""
+      },
+      "away": {
+        "name": "חוף השנהב",
+        "code": "CIV",
+        "flag": ""
+      },
+      "kickoff": "2026-06-20T20:00:00Z",
+      "stage": "GROUP",
+      "group": "E",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537354",
+      "home": {
+        "name": "אקוודור",
+        "code": "ECU",
+        "flag": ""
+      },
+      "away": {
+        "name": "קוראסאו",
+        "code": "CUW",
+        "flag": ""
+      },
+      "kickoff": "2026-06-21T00:00:00Z",
+      "stage": "GROUP",
+      "group": "E",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537360",
+      "home": {
+        "name": "תוניסיה",
+        "code": "TUN",
+        "flag": ""
+      },
+      "away": {
+        "name": "יפן",
+        "code": "JPN",
+        "flag": ""
+      },
+      "kickoff": "2026-06-21T04:00:00Z",
+      "stage": "GROUP",
+      "group": "F",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537371",
+      "home": {
+        "name": "ספרד",
+        "code": "ESP",
+        "flag": ""
+      },
+      "away": {
+        "name": "ערב הסעודית",
+        "code": "KSA",
+        "flag": ""
+      },
+      "kickoff": "2026-06-21T16:00:00Z",
+      "stage": "GROUP",
+      "group": "H",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537365",
+      "home": {
+        "name": "בלגיה",
+        "code": "BEL",
+        "flag": ""
+      },
+      "away": {
+        "name": "איראן",
+        "code": "IRN",
+        "flag": ""
+      },
+      "kickoff": "2026-06-21T19:00:00Z",
+      "stage": "GROUP",
+      "group": "G",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537372",
+      "home": {
+        "name": "אורוגוואי",
+        "code": "URY",
+        "flag": ""
+      },
+      "away": {
+        "name": "כף ורדה",
+        "code": "CPV",
+        "flag": ""
+      },
+      "kickoff": "2026-06-21T22:00:00Z",
+      "stage": "GROUP",
+      "group": "H",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537366",
+      "home": {
+        "name": "ניו זילנד",
+        "code": "NZL",
+        "flag": ""
+      },
+      "away": {
+        "name": "מצרים",
+        "code": "EGY",
+        "flag": ""
+      },
+      "kickoff": "2026-06-22T01:00:00Z",
+      "stage": "GROUP",
+      "group": "G",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537399",
+      "home": {
+        "name": "ארגנטינה",
+        "code": "ARG",
+        "flag": ""
+      },
+      "away": {
+        "name": "אוסטריה",
+        "code": "AUT",
+        "flag": ""
+      },
+      "kickoff": "2026-06-22T17:00:00Z",
+      "stage": "GROUP",
+      "group": "J",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537393",
+      "home": {
+        "name": "צרפת",
+        "code": "FRA",
+        "flag": ""
+      },
+      "away": {
+        "name": "עיראק",
+        "code": "IRQ",
+        "flag": ""
+      },
+      "kickoff": "2026-06-22T21:00:00Z",
+      "stage": "GROUP",
+      "group": "I",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537394",
+      "home": {
+        "name": "נורבגיה",
+        "code": "NOR",
+        "flag": ""
+      },
+      "away": {
+        "name": "סנגל",
+        "code": "SEN",
+        "flag": ""
+      },
+      "kickoff": "2026-06-23T00:00:00Z",
+      "stage": "GROUP",
+      "group": "I",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537400",
+      "home": {
+        "name": "ירדן",
+        "code": "JOR",
+        "flag": ""
+      },
+      "away": {
+        "name": "אלג׳יריה",
+        "code": "ALG",
+        "flag": ""
+      },
+      "kickoff": "2026-06-23T03:00:00Z",
+      "stage": "GROUP",
+      "group": "J",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537405",
+      "home": {
+        "name": "פורטוגל",
+        "code": "POR",
+        "flag": ""
+      },
+      "away": {
+        "name": "אוזבקיסטן",
+        "code": "UZB",
+        "flag": ""
+      },
+      "kickoff": "2026-06-23T17:00:00Z",
+      "stage": "GROUP",
+      "group": "K",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537411",
+      "home": {
+        "name": "אנגליה",
+        "code": "ENG",
+        "flag": ""
+      },
+      "away": {
+        "name": "גאנה",
+        "code": "GHA",
+        "flag": ""
+      },
+      "kickoff": "2026-06-23T20:00:00Z",
+      "stage": "GROUP",
+      "group": "L",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537412",
+      "home": {
+        "name": "פנמה",
+        "code": "PAN",
+        "flag": ""
+      },
+      "away": {
+        "name": "קרואטיה",
+        "code": "CRO",
+        "flag": ""
+      },
+      "kickoff": "2026-06-23T23:00:00Z",
+      "stage": "GROUP",
+      "group": "L",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537406",
+      "home": {
+        "name": "קולומביה",
+        "code": "COL",
+        "flag": ""
+      },
+      "away": {
+        "name": "קונגו",
+        "code": "COD",
+        "flag": ""
+      },
+      "kickoff": "2026-06-24T02:00:00Z",
+      "stage": "GROUP",
+      "group": "K",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537337",
+      "home": {
+        "name": "שווייץ",
+        "code": "SUI",
+        "flag": ""
+      },
+      "away": {
+        "name": "קנדה",
+        "code": "CAN",
+        "flag": ""
+      },
+      "kickoff": "2026-06-24T19:00:00Z",
+      "stage": "GROUP",
+      "group": "B",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537338",
+      "home": {
+        "name": "בוסניה",
+        "code": "BIH",
+        "flag": ""
+      },
+      "away": {
+        "name": "קטאר",
+        "code": "QAT",
+        "flag": ""
+      },
+      "kickoff": "2026-06-24T19:00:00Z",
+      "stage": "GROUP",
+      "group": "B",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537344",
+      "home": {
+        "name": "מרוקו",
+        "code": "MAR",
+        "flag": ""
+      },
+      "away": {
+        "name": "האיטי",
+        "code": "HAI",
+        "flag": ""
+      },
+      "kickoff": "2026-06-24T22:00:00Z",
+      "stage": "GROUP",
+      "group": "C",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537343",
+      "home": {
+        "name": "סקוטלנד",
+        "code": "SCO",
+        "flag": ""
+      },
+      "away": {
+        "name": "ברזיל",
+        "code": "BRA",
+        "flag": ""
+      },
+      "kickoff": "2026-06-24T22:00:00Z",
+      "stage": "GROUP",
+      "group": "C",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537331",
+      "home": {
+        "name": "צ׳כיה",
+        "code": "CZE",
+        "flag": ""
+      },
+      "away": {
+        "name": "מקסיקו",
+        "code": "MEX",
+        "flag": ""
+      },
+      "kickoff": "2026-06-25T01:00:00Z",
+      "stage": "GROUP",
+      "group": "A",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537332",
+      "home": {
+        "name": "דרום אפריקה",
+        "code": "RSA",
+        "flag": ""
+      },
+      "away": {
+        "name": "קוריאה הדרומית",
+        "code": "KOR",
+        "flag": ""
+      },
+      "kickoff": "2026-06-25T01:00:00Z",
+      "stage": "GROUP",
+      "group": "A",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537355",
+      "home": {
+        "name": "אקוודור",
+        "code": "ECU",
+        "flag": ""
+      },
+      "away": {
+        "name": "גרמניה",
+        "code": "GER",
+        "flag": ""
+      },
+      "kickoff": "2026-06-25T20:00:00Z",
+      "stage": "GROUP",
+      "group": "E",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537356",
+      "home": {
+        "name": "קוראסאו",
+        "code": "CUW",
+        "flag": ""
+      },
+      "away": {
+        "name": "חוף השנהב",
+        "code": "CIV",
+        "flag": ""
+      },
+      "kickoff": "2026-06-25T20:00:00Z",
+      "stage": "GROUP",
+      "group": "E",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537361",
+      "home": {
+        "name": "תוניסיה",
+        "code": "TUN",
+        "flag": ""
+      },
+      "away": {
+        "name": "הולנד",
+        "code": "NED",
+        "flag": ""
+      },
+      "kickoff": "2026-06-25T23:00:00Z",
+      "stage": "GROUP",
+      "group": "F",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537362",
+      "home": {
+        "name": "יפן",
+        "code": "JPN",
+        "flag": ""
+      },
+      "away": {
+        "name": "שוודיה",
+        "code": "SWE",
+        "flag": ""
+      },
+      "kickoff": "2026-06-25T23:00:00Z",
+      "stage": "GROUP",
+      "group": "F",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537349",
+      "home": {
+        "name": "טורקיה",
+        "code": "TUR",
+        "flag": ""
+      },
+      "away": {
+        "name": "ארה״ב",
+        "code": "USA",
+        "flag": ""
+      },
+      "kickoff": "2026-06-26T02:00:00Z",
+      "stage": "GROUP",
+      "group": "D",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537350",
+      "home": {
+        "name": "פרגוואי",
+        "code": "PAR",
+        "flag": ""
+      },
+      "away": {
+        "name": "אוסטרליה",
+        "code": "AUS",
+        "flag": ""
+      },
+      "kickoff": "2026-06-26T02:00:00Z",
+      "stage": "GROUP",
+      "group": "D",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537395",
+      "home": {
+        "name": "נורבגיה",
+        "code": "NOR",
+        "flag": ""
+      },
+      "away": {
+        "name": "צרפת",
+        "code": "FRA",
+        "flag": ""
+      },
+      "kickoff": "2026-06-26T19:00:00Z",
+      "stage": "GROUP",
+      "group": "I",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537396",
+      "home": {
+        "name": "סנגל",
+        "code": "SEN",
+        "flag": ""
+      },
+      "away": {
+        "name": "עיראק",
+        "code": "IRQ",
+        "flag": ""
+      },
+      "kickoff": "2026-06-26T19:00:00Z",
+      "stage": "GROUP",
+      "group": "I",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537373",
+      "home": {
+        "name": "אורוגוואי",
+        "code": "URY",
+        "flag": ""
+      },
+      "away": {
+        "name": "ספרד",
+        "code": "ESP",
+        "flag": ""
+      },
+      "kickoff": "2026-06-27T00:00:00Z",
+      "stage": "GROUP",
+      "group": "H",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537374",
+      "home": {
+        "name": "כף ורדה",
+        "code": "CPV",
+        "flag": ""
+      },
+      "away": {
+        "name": "ערב הסעודית",
+        "code": "KSA",
+        "flag": ""
+      },
+      "kickoff": "2026-06-27T00:00:00Z",
+      "stage": "GROUP",
+      "group": "H",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537367",
+      "home": {
+        "name": "ניו זילנד",
+        "code": "NZL",
+        "flag": ""
+      },
+      "away": {
+        "name": "בלגיה",
+        "code": "BEL",
+        "flag": ""
+      },
+      "kickoff": "2026-06-27T03:00:00Z",
+      "stage": "GROUP",
+      "group": "G",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537368",
+      "home": {
+        "name": "מצרים",
+        "code": "EGY",
+        "flag": ""
+      },
+      "away": {
+        "name": "איראן",
+        "code": "IRN",
+        "flag": ""
+      },
+      "kickoff": "2026-06-27T03:00:00Z",
+      "stage": "GROUP",
+      "group": "G",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537413",
+      "home": {
+        "name": "פנמה",
+        "code": "PAN",
+        "flag": ""
+      },
+      "away": {
+        "name": "אנגליה",
+        "code": "ENG",
+        "flag": ""
+      },
+      "kickoff": "2026-06-27T21:00:00Z",
+      "stage": "GROUP",
+      "group": "L",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537414",
+      "home": {
+        "name": "קרואטיה",
+        "code": "CRO",
+        "flag": ""
+      },
+      "away": {
+        "name": "גאנה",
+        "code": "GHA",
+        "flag": ""
+      },
+      "kickoff": "2026-06-27T21:00:00Z",
+      "stage": "GROUP",
+      "group": "L",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537407",
+      "home": {
+        "name": "קולומביה",
+        "code": "COL",
+        "flag": ""
+      },
+      "away": {
+        "name": "פורטוגל",
+        "code": "POR",
+        "flag": ""
+      },
+      "kickoff": "2026-06-27T23:30:00Z",
+      "stage": "GROUP",
+      "group": "K",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537408",
+      "home": {
+        "name": "קונגו",
+        "code": "COD",
+        "flag": ""
+      },
+      "away": {
+        "name": "אוזבקיסטן",
+        "code": "UZB",
+        "flag": ""
+      },
+      "kickoff": "2026-06-27T23:30:00Z",
+      "stage": "GROUP",
+      "group": "K",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537401",
+      "home": {
+        "name": "ירדן",
+        "code": "JOR",
+        "flag": ""
+      },
+      "away": {
+        "name": "ארגנטינה",
+        "code": "ARG",
+        "flag": ""
+      },
+      "kickoff": "2026-06-28T02:00:00Z",
+      "stage": "GROUP",
+      "group": "J",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537402",
+      "home": {
+        "name": "אלג׳יריה",
+        "code": "ALG",
+        "flag": ""
+      },
+      "away": {
+        "name": "אוסטריה",
+        "code": "AUT",
+        "flag": ""
+      },
+      "kickoff": "2026-06-28T02:00:00Z",
+      "stage": "GROUP",
+      "group": "J",
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537417",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-06-28T19:00:00Z",
+      "stage": "R32",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537423",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-06-29T17:00:00Z",
+      "stage": "R32",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537415",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-06-29T20:30:00Z",
+      "stage": "R32",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537418",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-06-30T01:00:00Z",
+      "stage": "R32",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537424",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-06-30T17:00:00Z",
+      "stage": "R32",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537416",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-06-30T21:00:00Z",
+      "stage": "R32",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537425",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-01T01:00:00Z",
+      "stage": "R32",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537426",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-01T16:00:00Z",
+      "stage": "R32",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537422",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-01T20:00:00Z",
+      "stage": "R32",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537421",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-02T00:00:00Z",
+      "stage": "R32",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537420",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-02T19:00:00Z",
+      "stage": "R32",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537419",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-02T23:00:00Z",
+      "stage": "R32",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537429",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-03T03:00:00Z",
+      "stage": "R32",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537428",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-03T18:00:00Z",
+      "stage": "R32",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537427",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-03T22:00:00Z",
+      "stage": "R32",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537430",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-04T01:30:00Z",
+      "stage": "R32",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537376",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-04T17:00:00Z",
+      "stage": "R16",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537375",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-04T21:00:00Z",
+      "stage": "R16",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537377",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-05T20:00:00Z",
+      "stage": "R16",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537378",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-06T00:00:00Z",
+      "stage": "R16",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537379",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-06T19:00:00Z",
+      "stage": "R16",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537380",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-07T00:00:00Z",
+      "stage": "R16",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537381",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-07T16:00:00Z",
+      "stage": "R16",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537382",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-07T20:00:00Z",
+      "stage": "R16",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537383",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-09T20:00:00Z",
+      "stage": "QF",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537384",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-10T19:00:00Z",
+      "stage": "QF",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537385",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-11T21:00:00Z",
+      "stage": "QF",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537386",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-12T01:00:00Z",
+      "stage": "QF",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537387",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-14T19:00:00Z",
+      "stage": "SF",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537388",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-15T19:00:00Z",
+      "stage": "SF",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537389",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-18T21:00:00Z",
+      "stage": "TP",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    },
+    {
+      "id": "537390",
+      "home": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "away": {
+        "name": "",
+        "code": "",
+        "flag": ""
+      },
+      "kickoff": "2026-07-19T19:00:00Z",
+      "stage": "F",
+      "group": null,
+      "status": "SCHEDULED",
+      "homeScore": null,
+      "awayScore": null
+    }
+  ]
+}

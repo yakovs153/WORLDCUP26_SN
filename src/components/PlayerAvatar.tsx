@@ -139,7 +139,7 @@ function LogoFramedAvatar({ name, countryCode, photoUrl, size, showFlag }: Requi
             y="18"
             width="90"
             height="94"
-            preserveAspectRatio="xMidYMid slice"
+            preserveAspectRatio="xMidYMin slice"
             clipPath={`url(#hex-${uid})`}
             onError={() => setImgFailed(true)}
           />

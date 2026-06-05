@@ -75,7 +75,8 @@ export default function Bracket({ matches, predictions }: Props) {
                   fontSize: 14,
                   color: 'var(--color-text-muted)',
                   padding: '6px 8px',
-                  background: 'var(--color-bg-elevated)',
+                  background: 'var(--glass-bg-hi)',
+                  border: '1px solid var(--glass-border)',
                   borderRadius: 'var(--radius-full)'
                 }}
               >
@@ -98,10 +99,8 @@ function BracketCard({ match, prediction }: { match: Match; prediction?: Predict
   const locked = match.status !== 'SCHEDULED'
   return (
     <div
+      className="glass"
       style={{
-        background: 'var(--color-surface)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 'var(--radius-md)',
         padding: 10,
         display: 'flex',
         flexDirection: 'column',
@@ -166,9 +165,13 @@ function TeamRow({
         opacity: locked && !winner && score !== null ? 0.55 : 1
       }}
     >
-      <FlagIcon flag={team.flag} code={team.code} size={20} />
-      <span style={{ flex: 1, fontSize: 13, fontWeight: winner ? 800 : 600, color: winner ? 'var(--color-primary)' : 'inherit' }}>
-        {team.name}
+      {team.name ? (
+        <FlagIcon flag={team.flag} code={team.code} size={20} />
+      ) : (
+        <span style={{ width: 30, height: 20, borderRadius: 4, background: 'var(--glass-bg-hi)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: 'var(--color-text-muted)' }}>?</span>
+      )}
+      <span style={{ flex: 1, fontSize: 13, fontWeight: winner ? 800 : 600, color: winner ? 'var(--color-primary)' : team.name ? 'inherit' : 'var(--color-text-muted)' }}>
+        {team.name || 'להיקבע'}
       </span>
       {locked && score !== null && (
         <span style={{ fontFamily: 'var(--font-display)', fontSize: 18, color: winner ? 'var(--color-primary)' : 'var(--color-text)' }}>

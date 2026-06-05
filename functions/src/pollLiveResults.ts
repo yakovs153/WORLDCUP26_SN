@@ -37,8 +37,17 @@ export const pollLiveResults = onSchedule(
       return
     }
 
+    // Skip matches an admin has manually locked (hand-entered score/status).
+    const refs = relevant.map((m) => db.collection('matches').doc(String(m.id)))
+    const existing = await db.getAll(...refs)
+    const locked = new Set(
+      existing.filter((d) => d.exists && d.data()?.manualLock === true).map((d) => d.id)
+    )
+
     const batch = db.batch()
+    let updated = 0
     for (const m of relevant) {
+      if (locked.has(String(m.id))) continue
       batch.set(
         db.collection('matches').doc(String(m.id)),
         {
@@ -49,8 +58,9 @@ export const pollLiveResults = onSchedule(
         },
         { merge: true }
       )
+      updated++
     }
     await batch.commit()
-    logger.info(`updated ${relevant.length} matches`)
+    logger.info(`updated ${updated} matches (skipped ${locked.size} manually-locked)`)
   }
 )

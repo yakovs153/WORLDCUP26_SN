@@ -8,6 +8,8 @@ import { useToast } from '../components/Toast'
 import StatsBreakdown from '../components/StatsBreakdown'
 import FlagIcon from '../components/FlagIcon'
 import { useIsAdmin } from '../admin/AdminGate'
+import { useAppConfig } from '../hooks/useAppConfig'
+import { setDepartment } from '../lib/departments'
 
 export default function Profile() {
   const { user, signOut } = useAuth()
@@ -17,28 +19,18 @@ export default function Profile() {
   const { data: bonus } = useBonus(user?.uid ?? null)
   const toast = useToast()
   const isAdmin = useIsAdmin()
+  const cfg = useAppConfig()
+
+  const changeDept = async (dept: string) => {
+    if (!user || !dept) return
+    try { await setDepartment(user.uid, dept); toast.show('המחלקה עודכנה ✓', 'success') }
+    catch (e) { toast.show(e instanceof Error ? e.message : 'עדכון נכשל', 'error') }
+  }
 
   const championTeam = bonus?.championTeamCode
     ? matches.find((m) => m.homeTeam.code === bonus.championTeamCode)?.homeTeam ||
       matches.find((m) => m.awayTeam.code === bonus.championTeamCode)?.awayTeam
     : null
-
-  const handleShare = async () => {
-    const points = data?.totalPoints ?? 0
-    const text = `יש לי ${points} נקודות במונדיאל 2026 של StoreNext 🏆\nבוא תחזור לי...`
-    const url = window.location.origin
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: 'מונדיאל 2026', text, url })
-        return
-      }
-      await navigator.clipboard.writeText(`${text} ${url}`)
-      toast.show('הקישור הועתק ללוח', 'success')
-    } catch (e) {
-      if (e instanceof Error && e.name === 'AbortError') return
-      toast.show('השיתוף נכשל', 'error')
-    }
-  }
 
   if (!user) return null
 
@@ -67,6 +59,24 @@ export default function Profile() {
           <div className="text-muted" style={{ fontSize: 13 }}>{user.email}</div>
         </div>
       </div>
+
+      {/* Department */}
+      <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ fontSize: 20 }}>🏢</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: 14 }}>המחלקה שלי</div>
+          {!data?.department && <div style={{ fontSize: 12, color: 'var(--color-accent)' }}>בחר מחלקה כדי להשתתף בתחרות בין המחלקות</div>}
+        </div>
+        <select
+          value={data?.department || ''}
+          onChange={(e) => changeDept(e.target.value)}
+          style={{ padding: '8px 10px', background: 'var(--glass-bg-hi)', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', outline: 'none' }}
+        >
+          <option value="" disabled>בחר…</option>
+          {cfg.departments.map((d) => <option key={d} value={d}>{d}</option>)}
+        </select>
+      </div>
+
 
       <div className="card" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', textAlign: 'center', gap: 8 }}>
         <div>
@@ -114,14 +124,6 @@ export default function Profile() {
         </div>
       </Link>
 
-      <button
-        onClick={handleShare}
-        className="btn btn-block"
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-      >
-        <span>🔗</span>
-        <span>שיתוף הנקודות שלי</span>
-      </button>
 
       <Link
         to="/rules"

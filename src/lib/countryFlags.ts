@@ -24,7 +24,10 @@ const FIFA_TO_ISO: Record<string, string> = {
   UZB: 'uz', JOR: 'jo', LIB: 'lb', OMA: 'om', CHN: 'cn', PRK: 'kp', IND: 'in', THA: 'th',
 
   // Oceania
-  NZL: 'nz', FIJ: 'fj'
+  NZL: 'nz', FIJ: 'fj',
+
+  // Additional 2026 qualifiers not already mapped above
+  BIH: 'ba', CPV: 'cv', CUW: 'cw', HAI: 'ht'
 }
 
 /**

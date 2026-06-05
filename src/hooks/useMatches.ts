@@ -11,9 +11,17 @@ export function useMatches() {
 
   useEffect(() => {
     if (DEMO_MODE) {
-      setMatches(getDemoMatches())
+      const refresh = () => setMatches(getDemoMatches())
+      refresh()
       setLoading(false)
-      return
+      window.addEventListener('demo-matches-changed', refresh)
+      window.addEventListener('demo-predictions-changed', refresh)
+      window.addEventListener('storage', refresh)
+      return () => {
+        window.removeEventListener('demo-matches-changed', refresh)
+        window.removeEventListener('demo-predictions-changed', refresh)
+        window.removeEventListener('storage', refresh)
+      }
     }
     const q = query(collection(db, 'matches'), orderBy('kickoff', 'asc'))
     const unsub = onSnapshot(

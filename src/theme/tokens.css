@@ -1,58 +1,101 @@
 /*
- * Design tokens — פלטה שחולצה מהלוגו שהמשתמש העלה:
- *   אדום חי (CTA, ניחושים מנצחים)
- *   סגול-בורדו עמוק (רקע, surfaces)
- *   שחור/אפור (טקסט)
- * נוספו: ירוק להצלחה, ענברי קל ל-accent (קונטרסט נעים על רקע סגול).
+ * Design tokens — StoreNext "Glass & Depth" system.
+ *
+ * Two layers:
+ *  1. BRAND tokens (primary / accent / danger / success) — StoreNext red + amber.
+ *     Fixed across light/dark; admin can still override the brand hues via AppConfig.theme
+ *     (see ThemeApplier — it only writes the brand vars, never the surfaces).
+ *  2. SURFACE tokens (bg / surface / text / border / glass / glow) — these SWAP with the
+ *     theme mode. Dark is the default; light is opt-in via <html data-theme="light">.
  */
 
 :root {
-  /* Brand */
-  --color-primary:        #e11d48;   /* אדום חי מהחץ העליון בלוגו */
+  /* ---- Brand (mode-independent) ---- */
+  --color-primary:        #e11d48;
   --color-primary-hover:  #f43f5e;
-  --color-accent:         #f59e0b;   /* ענברי - הדגשות, נקודות */
+  --color-accent:         #f59e0b;
   --color-danger:         #ef4444;
   --color-success:        #22c55e;
+  --color-on-primary:     #ffffff;   /* text/icons on a primary fill */
 
-  /* Surfaces — מבוסס על הסגול-בורדו הכהה של הקובייה בלוגו */
-  --color-bg:             #1a1320;   /* רקע ראשי */
-  --color-bg-elevated:    #261a2e;
-  --color-surface:        #322339;   /* כרטיסים */
-  --color-surface-hover:  #3d2c44;
-  --color-border:         #3a2a42;
+  /* ---- Spacing ---- */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-8: 48px;
+
+  /* ---- Radii ---- */
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 18px; --radius-xl: 24px; --radius-full: 999px;
+
+  /* ---- Typography ---- */
+  --font-body: 'Heebo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Bebas Neue', 'Heebo', sans-serif;
+
+  /* ---- Layout ---- */
+  --header-height: 62px;
+  --bottom-nav-height: 78px;
+  --max-content-width: 720px;
+}
+
+/* ============================================================
+ * DARK (default)
+ * ============================================================ */
+:root,
+:root[data-theme='dark'] {
+  --color-bg:             #140e1a;
+  --color-bg-elevated:    #1f1626;
+  --color-surface:        #251a2e;
+  --color-surface-hover:  #2f2238;
+  --color-border:         #392a44;
   --color-border-strong:  #54405e;
 
-  /* Text */
   --color-text:           #f5f0f5;
   --color-text-muted:     #a89aac;
   --color-text-inverse:   #1a1320;
 
-  /* Spacing */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-8: 48px;
+  /* Frosted-glass surface */
+  --glass-bg:      rgba(255, 255, 255, 0.065);
+  --glass-bg-hi:   rgba(255, 255, 255, 0.10);
+  --glass-border:  rgba(255, 255, 255, 0.14);
+  --glass-shadow:  0 18px 44px rgba(0, 0, 0, 0.5);
+  --glass-blur:    12px;
 
-  /* Radii */
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-full: 999px;
+  /* Ambient colour glows behind content */
+  --glow-1: #e11d48;
+  --glow-2: #7c3aed;
+  --glow-opacity: 0.42;
 
-  /* Shadows */
-  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.35);
-  --shadow-glow: 0 0 0 3px rgba(212, 175, 55, 0.25);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.4);
 
-  /* Typography */
-  --font-body: 'Heebo', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'Bebas Neue', 'Heebo', sans-serif;
+  color-scheme: dark;
+}
 
-  /* Layout */
-  --header-height: 60px;
-  --bottom-nav-height: 76px;
-  --max-content-width: 720px;
+/* ============================================================
+ * LIGHT
+ * ============================================================ */
+:root[data-theme='light'] {
+  --color-bg:             #f4eef7;
+  --color-bg-elevated:    #ffffff;
+  --color-surface:        #ffffff;
+  --color-surface-hover:  #f3edf6;
+  --color-border:         rgba(26, 19, 32, 0.10);
+  --color-border-strong:  rgba(26, 19, 32, 0.20);
+
+  --color-text:           #1a1320;
+  --color-text-muted:     #6b5b70;
+  --color-text-inverse:   #ffffff;
+
+  --glass-bg:      rgba(255, 255, 255, 0.72);
+  --glass-bg-hi:   rgba(255, 255, 255, 0.88);
+  --glass-border:  rgba(255, 255, 255, 0.9);
+  --glass-shadow:  0 18px 40px rgba(120, 60, 90, 0.18);
+  --glass-blur:    10px;
+
+  --glow-1: #fbbf24;
+  --glow-2: #f43f5e;
+  --glow-opacity: 0.5;
+
+  --shadow-sm: 0 2px 8px rgba(120, 60, 90, 0.12);
+  --shadow-md: 0 10px 28px rgba(120, 60, 90, 0.16);
+
+  color-scheme: light;
 }

@@ -1,12 +1,15 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import { useAppConfig } from '../hooks/useAppConfig'
 
 export default function Register() {
   const { user, registerEmail } = useAuth()
+  const cfg = useAppConfig()
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [department, setDepartment] = useState('')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
@@ -18,7 +21,7 @@ export default function Register() {
     setBusy(true)
     setErr(null)
     try {
-      await registerEmail(email, password, displayName.trim())
+      await registerEmail(email, password, displayName.trim(), department || undefined)
     } catch (e2) {
       const m = e2 instanceof Error ? e2.message : String(e2)
       if (m.includes('email-already-in-use')) setErr('האימייל כבר בשימוש')
@@ -51,7 +54,11 @@ export default function Register() {
         />
         <input type="email" placeholder="אימייל" value={email} onChange={(e) => setEmail(e.target.value)} required style={fieldStyle} />
         <input type="password" placeholder="סיסמה (לפחות 6 תווים)" value={password} onChange={(e) => setPassword(e.target.value)} required style={fieldStyle} />
-        <button className="btn btn-block" disabled={busy || !email || !password || !displayName.trim()}>
+        <select value={department} onChange={(e) => setDepartment(e.target.value)} required style={fieldStyle}>
+          <option value="" disabled>בחר מחלקה…</option>
+          {cfg.departments.map((d) => <option key={d} value={d}>{d}</option>)}
+        </select>
+        <button className="btn btn-block" disabled={busy || !email || !password || !displayName.trim() || !department}>
           {busy ? '…' : 'יצירת חשבון'}
         </button>
       </form>

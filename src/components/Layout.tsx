@@ -1,13 +1,29 @@
 import { Outlet } from 'react-router-dom'
 import Header from './Header'
 import BottomNav from './BottomNav'
-import DemoBanner from './DemoBanner'
+import { useAppConfig } from '../hooks/useAppConfig'
 
 export default function Layout() {
+  const cfg = useAppConfig()
+  const ann = cfg.announcement
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <DemoBanner />
+      <div className="glow-bg" aria-hidden />
       <Header />
+      {ann.active && ann.text && (
+        <div
+          style={{
+            background: 'linear-gradient(135deg, var(--color-accent), var(--color-primary))',
+            color: '#fff',
+            textAlign: 'center',
+            fontWeight: 700,
+            fontSize: 14,
+            padding: '10px 16px'
+          }}
+        >
+          📣 {ann.text}
+        </div>
+      )}
       <main
         style={{
           flex: 1,

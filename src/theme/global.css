@@ -29,6 +29,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior-y: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #root {
@@ -86,14 +87,15 @@ a:hover { text-decoration: underline; }
   gap: var(--space-2);
   padding: var(--space-3) var(--space-5);
   background: var(--color-primary);
-  color: var(--color-text-inverse);
+  color: var(--color-on-primary);
   border-radius: var(--radius-md);
   font-weight: 700;
-  transition: background 0.15s ease, transform 0.1s ease;
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
 }
 
 .btn:hover:not(:disabled) {
   background: var(--color-primary-hover);
+  box-shadow: 0 6px 18px rgba(225, 29, 72, 0.4);
 }
 
 .btn:active:not(:disabled) {
@@ -215,4 +217,132 @@ input[type='number']::-webkit-outer-spin-button {
 }
 input[type='number'] {
   -moz-appearance: textfield;
+}
+
+/* ============================================================
+ * Glass & Depth
+ * ============================================================ */
+
+/* Frosted glass surface — the signature card style */
+.glass {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-lg);
+}
+
+/* Make the default .card glass everywhere (overrides the solid version above) */
+.card {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-lg);
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+  border-color: var(--color-border-strong);
+}
+
+/* Subtle 3D lift on hover for interactive cards */
+.card-3d {
+  transition: transform 0.18s ease, box-shadow 0.2s ease;
+}
+.card-3d:hover {
+  transform: translateY(-3px);
+}
+
+/* Ambient colour glows painted behind the whole app */
+.glow-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--color-bg);
+}
+.glow-bg::before,
+.glow-bg::after {
+  content: '';
+  position: absolute;
+  width: 60vw;
+  max-width: 540px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: var(--glow-opacity);
+}
+.glow-bg::before { background: var(--glow-1); top: -12vh; inset-inline-end: -10vw; }
+.glow-bg::after  { background: var(--glow-2); bottom: -16vh; inset-inline-start: -12vw; }
+
+/* National-colour gradient ring around a backed team (keeps the flag rectangular) */
+.team-ring {
+  position: relative;
+  display: inline-block;
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  background: linear-gradient(135deg, var(--ring-a, var(--color-primary)), var(--ring-b, var(--color-accent)));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--ring-a, var(--color-primary)) 50%, transparent);
+}
+.team-ring > * {
+  display: block;
+  border-radius: calc(var(--radius-sm) - 2px);
+  background: var(--color-bg);
+  padding: 2px;
+}
+
+/* Points-in-flight badge */
+.points-flight {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 11px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.4);
+}
+.points-flight.bump { animation: pop 0.4s ease both; }
+
+/* Theme toggle pill */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-full);
+  background: var(--glass-bg-hi);
+  border: 1px solid var(--glass-border);
+}
+.theme-toggle button {
+  width: 28px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.theme-toggle button.active {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+/* Confetti canvas overlay */
+.confetti-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .points-flight.bump { animation: none !important; }
+  body { transition: none !important; }
 }

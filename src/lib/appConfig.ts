@@ -14,11 +14,15 @@ export function getDemoConfig(): AppConfig {
       ...parsed,
       scoring: { ...DEFAULT_APP_CONFIG.scoring, ...(parsed.scoring || {}) },
       bonus: { ...DEFAULT_APP_CONFIG.bonus, ...(parsed.bonus || {}) },
+      content: { ...DEFAULT_APP_CONFIG.content, ...(parsed.content || {}) },
+      announcement: { ...DEFAULT_APP_CONFIG.announcement, ...(parsed.announcement || {}) },
       theme: { ...DEFAULT_APP_CONFIG.theme, ...(parsed.theme || {}) },
       navIcons: { ...DEFAULT_APP_CONFIG.navIcons, ...(parsed.navIcons || {}) },
       polls: parsed.polls || [],
       playerPhotos: parsed.playerPhotos || {},
       customPlayers: parsed.customPlayers || [],
+      hiddenScorers: parsed.hiddenScorers || [],
+      departments: parsed.departments || DEFAULT_APP_CONFIG.departments,
       adminEmails: parsed.adminEmails || [],
       allowedEmailDomains: parsed.allowedEmailDomains || []
     }

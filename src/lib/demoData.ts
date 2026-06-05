@@ -1,114 +1,122 @@
 import { Timestamp } from 'firebase/firestore'
 import type { Match, MatchStage, MatchStatus, Prediction, UserDoc } from '../types'
 import { scorePrediction } from './scoring'
+import scheduleData from '../data/wc2026.json'
 
 /**
- * נתוני דמו עבור VITE_DEMO_MODE=true.
- * משחקים פיקטיביים עם תאריכים יחסיים ל-now כדי שהמסך תמיד "חי".
+ * מקור האמת ללוח המשחקים: הלוח הרשמי של מונדיאל 2026 (104 משחקים) שנמשך
+ * מ-football-data.org אל src/data/wc2026.json (ע"י scripts/fetch-schedule.mjs).
+ * במצב דמו זהו המקור; בפרודקשן הנתונים מגיעים מ-Firestore המסונכרן מאותו API.
  */
-
-const T = {
-  bra: { name: 'ברזיל', code: 'BRA', flag: '🇧🇷' },
-  arg: { name: 'ארגנטינה', code: 'ARG', flag: '🇦🇷' },
-  fra: { name: 'צרפת', code: 'FRA', flag: '🇫🇷' },
-  eng: { name: 'אנגליה', code: 'ENG', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
-  esp: { name: 'ספרד', code: 'ESP', flag: '🇪🇸' },
-  por: { name: 'פורטוגל', code: 'POR', flag: '🇵🇹' },
-  ger: { name: 'גרמניה', code: 'GER', flag: '🇩🇪' },
-  ned: { name: 'הולנד', code: 'NED', flag: '🇳🇱' },
-  bel: { name: 'בלגיה', code: 'BEL', flag: '🇧🇪' },
-  cro: { name: 'קרואטיה', code: 'CRO', flag: '🇭🇷' },
-  ita: { name: 'איטליה', code: 'ITA', flag: '🇮🇹' },
-  usa: { name: 'ארה"ב', code: 'USA', flag: '🇺🇸' },
-  mex: { name: 'מקסיקו', code: 'MEX', flag: '🇲🇽' },
-  can: { name: 'קנדה', code: 'CAN', flag: '🇨🇦' },
-  mar: { name: 'מרוקו', code: 'MAR', flag: '🇲🇦' },
-  jpn: { name: 'יפן', code: 'JPN', flag: '🇯🇵' },
-  sen: { name: 'סנגל', code: 'SEN', flag: '🇸🇳' },
-  uru: { name: 'אורוגוואי', code: 'URY', flag: '🇺🇾' }
-}
-
-interface DemoSpec {
+interface ScheduleMatch {
   id: string
-  home: keyof typeof T
-  away: keyof typeof T
+  home: { name: string; code: string; flag: string }
+  away: { name: string; code: string; flag: string }
+  kickoff: string
   stage: MatchStage
   group: string | null
-  // Absolute date in WC 2026 schedule
-  month: number  // 6 = June, 7 = July
-  day: number
-  hour: number   // local time (Israel)
   status: MatchStatus
   homeScore: number | null
   awayScore: number | null
 }
 
-/**
- * לוח משחקי מונדיאל 2026 — תאריכים מ-11/6/2026 עד 19/7/2026.
- * זו רשימה דמו ייצוגית. תוכל לערוך/להחליף דרך פאנל הניהול (בעתיד) או דרך seed-matches.mjs.
- */
-const YEAR = 2026
+const SCHEDULE: ScheduleMatch[] = (scheduleData as { matches: ScheduleMatch[] }).matches
 
-const SPECS: DemoSpec[] = [
-  // === GROUP STAGE — Matchday 1 (June 11-16) ===
-  { id: 'm01', home: 'mex', away: 'bra', stage: 'GROUP', group: 'A', month: 6, day: 11, hour: 22, status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 'm02', home: 'usa', away: 'fra', stage: 'GROUP', group: 'B', month: 6, day: 12, hour: 22, status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 'm03', home: 'can', away: 'arg', stage: 'GROUP', group: 'C', month: 6, day: 13, hour: 20, status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 'm04', home: 'eng', away: 'sen', stage: 'GROUP', group: 'D', month: 6, day: 13, hour: 22, status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 'm05', home: 'esp', away: 'jpn', stage: 'GROUP', group: 'E', month: 6, day: 14, hour: 20, status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 'm06', home: 'ger', away: 'cro', stage: 'GROUP', group: 'F', month: 6, day: 14, hour: 22, status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 'm07', home: 'por', away: 'mar', stage: 'GROUP', group: 'G', month: 6, day: 15, hour: 22, status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 'm08', home: 'ned', away: 'ita', stage: 'GROUP', group: 'H', month: 6, day: 16, hour: 22, status: 'SCHEDULED', homeScore: null, awayScore: null },
+/** When the official schedule snapshot was fetched (ISO string), for the live-status indicator. */
+export function getScheduleFetchedAt(): string | null {
+  return (scheduleData as { fetchedAt?: string }).fetchedAt ?? null
+}
 
-  // === GROUP STAGE — Matchday 2 (June 17-21) ===
-  { id: 'm09', home: 'bra', away: 'bel', stage: 'GROUP', group: 'A', month: 6, day: 17, hour: 22, status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 'm10', home: 'fra', away: 'uru', stage: 'GROUP', group: 'B', month: 6, day: 18, hour: 22, status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 'm11', home: 'arg', away: 'mex', stage: 'GROUP', group: 'C', month: 6, day: 19, hour: 22, status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 'm12', home: 'esp', away: 'eng', stage: 'GROUP', group: 'D', month: 6, day: 20, hour: 22, status: 'SCHEDULED', homeScore: null, awayScore: null },
+// ===== Admin-editable match state in demo mode =====
+// Overrides patch status/score onto built-in matches; custom matches are added by admin.
+const MATCH_OVERRIDES_KEY = 'demo-match-overrides-v1'
+const CUSTOM_MATCHES_KEY = 'demo-custom-matches-v1'
 
-  // === GROUP STAGE — Matchday 3 (June 22-27) ===
-  { id: 'm13', home: 'por', away: 'ned', stage: 'GROUP', group: 'G', month: 6, day: 24, hour: 22, status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 'm14', home: 'mar', away: 'usa', stage: 'GROUP', group: 'G', month: 6, day: 25, hour: 22, status: 'SCHEDULED', homeScore: null, awayScore: null },
+interface MatchOverride { status?: MatchStatus; homeScore?: number | null; awayScore?: number | null; manualLock?: boolean }
+interface CustomMatchSpec {
+  id: string
+  home: { name: string; code: string; flag: string }
+  away: { name: string; code: string; flag: string }
+  kickoffMs: number
+  stage: MatchStage
+  group: string | null
+  status: MatchStatus
+  homeScore: number | null
+  awayScore: number | null
+}
 
-  // === KNOCKOUT ===
-  { id: 'm15', home: 'bra', away: 'jpn', stage: 'R16', group: null, month: 6, day: 29, hour: 22, status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 'm16', home: 'fra', away: 'sen', stage: 'R16', group: null, month: 6, day: 30, hour: 22, status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 'm17', home: 'arg', away: 'esp', stage: 'QF',  group: null, month: 7, day: 5,  hour: 22, status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 'm18', home: 'eng', away: 'ger', stage: 'SF',  group: null, month: 7, day: 9,  hour: 22, status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 'm19', home: 'bra', away: 'fra', stage: 'F',   group: null, month: 7, day: 19, hour: 22, status: 'SCHEDULED', homeScore: null, awayScore: null }
-]
-
-function kickoffDate(month: number, day: number, hour: number): Date {
-  // month is 1-12 here; JS Date wants 0-11
-  return new Date(YEAR, month - 1, day, hour, 0, 0, 0)
+function loadOverrides(): Record<string, MatchOverride> {
+  try { return JSON.parse(localStorage.getItem(MATCH_OVERRIDES_KEY) || '{}') } catch { return {} }
+}
+function loadCustomMatches(): CustomMatchSpec[] {
+  try { return JSON.parse(localStorage.getItem(CUSTOM_MATCHES_KEY) || '[]') } catch { return [] }
 }
 
 export function getDemoMatches(): Match[] {
-  return SPECS.map((s) => ({
-    id: s.id,
-    homeTeam: T[s.home],
-    awayTeam: T[s.away],
-    kickoff: Timestamp.fromDate(kickoffDate(s.month, s.day, s.hour)),
-    stage: s.stage,
-    group: s.group,
-    status: s.status,
-    homeScore: s.homeScore,
-    awayScore: s.awayScore
-  }))
+  const ov = loadOverrides()
+  const builtIn: Match[] = SCHEDULE.map((s) => {
+    const o = ov[s.id] || {}
+    return {
+      id: s.id,
+      homeTeam: s.home,
+      awayTeam: s.away,
+      kickoff: Timestamp.fromMillis(new Date(s.kickoff).getTime()),
+      stage: s.stage,
+      group: s.group,
+      status: o.status ?? s.status,
+      homeScore: o.homeScore !== undefined ? o.homeScore : s.homeScore,
+      awayScore: o.awayScore !== undefined ? o.awayScore : s.awayScore
+    }
+  })
+  const custom: Match[] = loadCustomMatches().map((c) => {
+    const o = ov[c.id] || {}
+    return {
+      id: c.id,
+      homeTeam: c.home,
+      awayTeam: c.away,
+      kickoff: Timestamp.fromMillis(c.kickoffMs),
+      stage: c.stage,
+      group: c.group,
+      status: o.status ?? c.status,
+      homeScore: o.homeScore !== undefined ? o.homeScore : c.homeScore,
+      awayScore: o.awayScore !== undefined ? o.awayScore : c.awayScore
+    }
+  })
+  return [...builtIn, ...custom].sort((a, b) => a.kickoff.toMillis() - b.kickoff.toMillis())
+}
+
+/** Admin (demo): patch a match's status/score. */
+export function setDemoMatchResult(matchId: string, patch: MatchOverride): void {
+  const ov = loadOverrides()
+  ov[matchId] = { ...ov[matchId], ...patch }
+  localStorage.setItem(MATCH_OVERRIDES_KEY, JSON.stringify(ov))
+  window.dispatchEvent(new Event('demo-matches-changed'))
+}
+
+/** Admin (demo): add a new custom match. */
+export function addDemoMatch(spec: CustomMatchSpec): void {
+  const list = loadCustomMatches()
+  list.push(spec)
+  localStorage.setItem(CUSTOM_MATCHES_KEY, JSON.stringify(list))
+  window.dispatchEvent(new Event('demo-matches-changed'))
 }
 
 // משתמשי דמו ללוח הדירוג
 export function getDemoLeaderboard(currentUid: string, currentDisplayName: string): UserDoc[] {
-  return [
-    { uid: 'u-ronen', displayName: 'רונן ל.', email: '', photoURL: null, totalPoints: 47, predictionsCount: 14, joinedAt: Timestamp.now() },
-    { uid: 'u-sharon', displayName: 'שרון ק.', email: '', photoURL: null, totalPoints: 41, predictionsCount: 14, joinedAt: Timestamp.now() },
-    { uid: 'u-amit', displayName: 'עמית ב.', email: '', photoURL: null, totalPoints: 38, predictionsCount: 13, joinedAt: Timestamp.now() },
-    { uid: currentUid, displayName: currentDisplayName || 'אני', email: '', photoURL: null, totalPoints: getCurrentUserPoints(), predictionsCount: getCurrentUserPredictionCount(), joinedAt: Timestamp.now() },
-    { uid: 'u-nadav', displayName: 'נדב ש.', email: '', photoURL: null, totalPoints: 22, predictionsCount: 11, joinedAt: Timestamp.now() },
-    { uid: 'u-tal', displayName: 'טל ר.', email: '', photoURL: null, totalPoints: 19, predictionsCount: 10, joinedAt: Timestamp.now() },
-    { uid: 'u-yael', displayName: 'יעל ד.', email: '', photoURL: null, totalPoints: 15, predictionsCount: 8, joinedAt: Timestamp.now() },
-    { uid: 'u-eitan', displayName: 'איתן מ.', email: '', photoURL: null, totalPoints: 9,  predictionsCount: 5, joinedAt: Timestamp.now() }
-  ].sort((a, b) => b.totalPoints - a.totalPoints)
+  const depts = loadDepts()
+  const base: (UserDoc & { _d: string })[] = [
+    { uid: 'u-ronen', displayName: 'רונן ל.', email: '', photoURL: null, totalPoints: 47, predictionsCount: 14, joinedAt: Timestamp.now(), department: null, _d: 'שיווק' },
+    { uid: 'u-sharon', displayName: 'שרון ק.', email: '', photoURL: null, totalPoints: 41, predictionsCount: 14, joinedAt: Timestamp.now(), department: null, _d: 'פיתוח' },
+    { uid: 'u-amit', displayName: 'עמית ב.', email: '', photoURL: null, totalPoints: 38, predictionsCount: 13, joinedAt: Timestamp.now(), department: null, _d: 'מכירות' },
+    { uid: currentUid, displayName: currentDisplayName || 'אני', email: '', photoURL: null, totalPoints: getCurrentUserPoints(), predictionsCount: getCurrentUserPredictionCount(), joinedAt: Timestamp.now(), department: null, _d: 'שיווק' },
+    { uid: 'u-nadav', displayName: 'נדב ש.', email: '', photoURL: null, totalPoints: 22, predictionsCount: 11, joinedAt: Timestamp.now(), department: null, _d: 'פיתוח' },
+    { uid: 'u-tal', displayName: 'טל ר.', email: '', photoURL: null, totalPoints: 19, predictionsCount: 10, joinedAt: Timestamp.now(), department: null, _d: 'תפעול' },
+    { uid: 'u-yael', displayName: 'יעל ד.', email: '', photoURL: null, totalPoints: 15, predictionsCount: 8, joinedAt: Timestamp.now(), department: null, _d: 'מכירות' },
+    { uid: 'u-eitan', displayName: 'איתן מ.', email: '', photoURL: null, totalPoints: 9,  predictionsCount: 5, joinedAt: Timestamp.now(), department: null, _d: 'תפעול' }
+  ]
+  return base
+    .map(({ _d, ...u }) => ({ ...u, department: depts[u.uid] ?? _d }))
+    .sort((a, b) => b.totalPoints - a.totalPoints)
 }
 
 // ===== Predictions stored in localStorage in demo mode =====
@@ -120,6 +128,7 @@ interface StoredPrediction {
   awayScore: number
   submittedAt: number
   points: number | null
+  joker?: boolean
 }
 
 function loadStored(): Record<string, StoredPrediction> {
@@ -148,10 +157,51 @@ export function getDemoPredictions(uid: string): Record<string, Prediction> {
       homeScore: s.homeScore,
       awayScore: s.awayScore,
       submittedAt: Timestamp.fromMillis(s.submittedAt),
-      points: m.status === 'FINISHED' ? computePoints(s, m) : null
+      points: m.status === 'FINISHED' ? computePoints(s, m) : null,
+      joker: s.joker
     }
   }
   return out
+}
+
+/**
+ * Dev/preview helper: seed a couple of predictions on the showcase matches so the
+ * fun layer (live points-in-flight + confetti on a correct finished match) is
+ * visible immediately. Triggered by `?sim=1` in demo mode; never overwrites
+ * predictions the user already made.
+ */
+export function seedDemoSimulation(): void {
+  const ids = SCHEDULE.slice(0, 2).map((m) => m.id)
+  if (ids.length < 2) return
+  const [liveId, finishedId] = ids
+  // Showcase a live game (2-1) and a finished game (3-1) on the first two fixtures.
+  setDemoMatchResult(liveId, { status: 'LIVE', homeScore: 2, awayScore: 1 })
+  setDemoMatchResult(finishedId, { status: 'FINISHED', homeScore: 3, awayScore: 1 })
+  const stored = loadStored()
+  if (!stored[liveId]) stored[liveId] = { matchId: liveId, homeScore: 2, awayScore: 1, submittedAt: Date.now(), points: null }
+  if (!stored[finishedId]) stored[finishedId] = { matchId: finishedId, homeScore: 3, awayScore: 1, submittedAt: Date.now(), points: null }
+  // a prediction on an upcoming (scheduled) match so the Joker toggle is visible
+  const upcomingId = SCHEDULE[2]?.id
+  if (upcomingId && !stored[upcomingId]) stored[upcomingId] = { matchId: upcomingId, homeScore: 1, awayScore: 1, submittedAt: Date.now(), points: null }
+  saveStored(stored)
+  window.dispatchEvent(new Event('demo-predictions-changed'))
+  seedDemoGoldenBoot()
+}
+
+// ===== Golden Boot goal tallies (keyed by player name) =====
+const GOLDEN_BOOT_KEY = 'demo-golden-boot-v1'
+
+export function getDemoGoldenBoot(): Record<string, number> {
+  try { return JSON.parse(localStorage.getItem(GOLDEN_BOOT_KEY) || '{}') } catch { return {} }
+}
+
+function seedDemoGoldenBoot(): void {
+  const goals: Record<string, number> = {
+    'קיליאן מבאפה': 5, 'הארי קיין': 4, 'ויניסיוס ג׳וניור': 3,
+    'לאמין יאמאל': 3, 'ג׳וד בלינגהאם': 2, 'לאוטרו מרטינס': 2
+  }
+  localStorage.setItem(GOLDEN_BOOT_KEY, JSON.stringify(goals))
+  window.dispatchEvent(new Event('demo-golden-boot-changed'))
 }
 
 export function setDemoPrediction(matchId: string, homeScore: number, awayScore: number): void {
@@ -161,11 +211,22 @@ export function setDemoPrediction(matchId: string, homeScore: number, awayScore:
     homeScore,
     awayScore,
     submittedAt: Date.now(),
-    points: null
+    points: null,
+    joker: stored[matchId]?.joker // preserve Joker if already armed
   }
   saveStored(stored)
   // event so hooks can re-read
   window.dispatchEvent(new Event('demo-predictions-changed'))
+}
+
+/** Arm/disarm the Joker on a demo prediction. */
+export function setDemoJoker(matchId: string, on: boolean): void {
+  const stored = loadStored()
+  if (stored[matchId]) {
+    stored[matchId].joker = on
+    saveStored(stored)
+    window.dispatchEvent(new Event('demo-predictions-changed'))
+  }
 }
 
 function computePoints(s: StoredPrediction, m: Match): number {
@@ -179,7 +240,8 @@ function computePoints(s: StoredPrediction, m: Match): number {
       cfg = parsed?.scoring
     }
   } catch { /* default */ }
-  return scorePrediction(s.homeScore, s.awayScore, m.homeScore, m.awayScore, cfg)
+  const base = scorePrediction(s.homeScore, s.awayScore, m.homeScore, m.awayScore, cfg)
+  return s.joker ? base * 2 : base
 }
 
 function getCurrentUserPoints(): number {
@@ -199,12 +261,27 @@ function getCurrentUserPredictionCount(): number {
   return Object.keys(loadStored()).length
 }
 
+// ===== Department assignment (demo) — map of uid → department =====
+const DEPT_KEY = 'demo-departments-v1'
+function loadDepts(): Record<string, string> {
+  try { return JSON.parse(localStorage.getItem(DEPT_KEY) || '{}') } catch { return {} }
+}
+export function getDemoDepartment(uid: string): string | null {
+  return loadDepts()[uid] ?? null
+}
+export function setDemoDepartment(uid: string, department: string): void {
+  const m = loadDepts(); m[uid] = department
+  localStorage.setItem(DEPT_KEY, JSON.stringify(m))
+  window.dispatchEvent(new Event('demo-department-changed'))
+}
+
 export function getDemoUser(uid: string, displayName: string): UserDoc {
   return {
     uid,
     displayName: displayName || 'משתמש דמו',
     email: '',
     photoURL: null,
+    department: getDemoDepartment(uid),
     totalPoints: getCurrentUserPoints(),
     predictionsCount: getCurrentUserPredictionCount(),
     joinedAt: Timestamp.now()

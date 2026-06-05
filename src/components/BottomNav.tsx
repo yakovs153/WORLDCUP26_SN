@@ -1,8 +1,9 @@
 import { NavLink } from 'react-router-dom'
 import { useAppConfig } from '../hooks/useAppConfig'
 
-const ITEMS: { to: string; label: string; key: keyof import('../types').NavIconsConfig }[] = [
+const ITEMS: { to: string; label: string; key?: keyof import('../types').NavIconsConfig; icon?: string }[] = [
   { to: '/',            label: 'משחקים', key: 'matches' },
+  { to: '/teams',       label: 'בתים',   icon: '🌍' },
   { to: '/bonus',       label: 'בונוס',  key: 'bonus' },
   { to: '/my',          label: 'שלי',    key: 'my' },
   { to: '/leaderboard', label: 'דירוג',  key: 'leaderboard' },
@@ -16,17 +17,19 @@ export default function BottomNav() {
       style={{
         position: 'sticky',
         bottom: 0,
-        zIndex: 10,
+        zIndex: 20,
         height: 'var(--bottom-nav-height)',
-        background: 'var(--color-bg-elevated)',
-        borderTop: '1px solid var(--color-border)',
+        background: 'var(--glass-bg)',
+        WebkitBackdropFilter: 'blur(var(--glass-blur))',
+        backdropFilter: 'blur(var(--glass-blur))',
+        borderTop: '1px solid var(--glass-border)',
         display: 'grid',
         gridTemplateColumns: `repeat(${ITEMS.length}, 1fr)`,
         paddingBottom: 'env(safe-area-inset-bottom, 0px)'
       }}
     >
       {ITEMS.map((it) => {
-        const icon = cfg.navIcons[it.key]
+        const icon = it.icon ?? cfg.navIcons[it.key!]
         return (
           <NavLink
             key={it.to}

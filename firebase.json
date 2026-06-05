@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "storenext-wc2026",
     "public": "dist",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [{ "source": "**", "destination": "/index.html" }],
@@ -22,14 +23,7 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "default",
-      "runtime": "nodejs20",
-      "ignore": ["node_modules", ".git", "*.log"]
-    }
-  ],
+  "_comment_functions": "Cloud Functions are NOT deployed on the free (Spark) plan. Live-sync runs via GitHub Actions instead (.github/workflows/live-sync.yml). If you later enable Blaze, restore the 'functions' block here and deploy the functions/ codebase.",
   "emulators": {
     "auth":      { "port": 9099 },
     "firestore": { "port": 8080 },
