@@ -9,6 +9,7 @@ import NextMatchHero from '../components/NextMatchHero'
 import { MatchCardSkeleton } from '../components/Skeleton'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { dateKey, formatDateHe } from '../lib/format'
+import { tipOfTheDay } from '../lib/tips'
 import type { Match } from '../types'
 
 export default function Matches() {
@@ -59,6 +60,14 @@ export default function Matches() {
         </div>
       )}
       {nextMatch && <NextMatchHero match={nextMatch} />}
+
+      <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px' }}>
+        <span style={{ fontSize: 22 }}>💡</span>
+        <div>
+          <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>טיפ היום</div>
+          <div style={{ fontWeight: 600, fontSize: 14 }}>{tipOfTheDay()}</div>
+        </div>
+      </div>
 
       {needsBonus && (
         <Link

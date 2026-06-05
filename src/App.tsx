@@ -7,6 +7,7 @@ import Register from './pages/Register'
 import Matches from './pages/Matches'
 import Lobby from './pages/Lobby'
 import OctopusPreview from './pages/OctopusPreview'
+import Playground from './pages/Playground'
 import Teams from './pages/Teams'
 import BracketPage from './pages/Bracket'
 import MatchRoom from './pages/MatchRoom'
@@ -38,6 +39,7 @@ export default function App() {
               <Route path="/rules" element={<Rules />} />
               <Route path="/tv" element={<Lobby />} />
               <Route path="/octopus" element={<OctopusPreview />} />
+              <Route path="/playground" element={<Playground />} />
               <Route
                 element={
                   <ProtectedRoute>

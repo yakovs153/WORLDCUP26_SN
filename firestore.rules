@@ -53,6 +53,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ===== Playground (live-pipeline test) — written by the playground sync only =====
+    match /playgroundMatches/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /playgroundMeta/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // ===== Polls =====
     match /pollVotes/{voteId} {
       allow read: if isSignedIn();

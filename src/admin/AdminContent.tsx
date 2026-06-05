@@ -3,6 +3,14 @@ import { useAppConfig } from '../hooks/useAppConfig'
 import { patchAppConfig } from '../lib/appConfig'
 import { useToast } from '../components/Toast'
 
+const ANN_TEMPLATES = [
+  '⏰ הדדליין לניחושים היום ב-22:00!',
+  '🎁 יש פרסים שווים למנצחים!',
+  '🐙 סטורי התמנון כבר ניחש — תצליחו לנצח אותו?',
+  '🔥 הקרב על המקום הראשון מתחמם!',
+  '⚽ המונדיאל יוצא לדרך — בהצלחה לכולם!'
+]
+
 export default function AdminContent() {
   const cfg = useAppConfig()
   const toast = useToast()
@@ -63,6 +71,14 @@ export default function AdminContent() {
         </div>
         <p className="text-muted" style={{ fontSize: 12 }}>באנר שמופיע לכל המשתמשים בראש האפליקציה. למשל: «הדדליין הערב 22:00!» או «יש פרסים 🎁».</p>
         <textarea rows={2} value={annText} onChange={(e) => setAnnText(e.target.value)} placeholder="טקסט ההודעה…" style={fld} />
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {ANN_TEMPLATES.map((t) => (
+            <button key={t} type="button" onClick={() => { setAnnText(t); setAnnActive(true) }}
+              style={{ padding: '6px 10px', fontSize: 12, borderRadius: 'var(--radius-full)', border: '1px dashed var(--color-border-strong)', background: 'var(--glass-bg-hi)', color: 'var(--color-text)' }}>
+              {t}
+            </button>
+          ))}
+        </div>
       </section>
 
       {/* Branding */}

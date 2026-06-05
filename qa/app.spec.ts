@@ -31,7 +31,8 @@ const ROUTES: Record<string, string> = {
   Rules: '/?demo=1&sim=1#/rules',
   Lobby: '/tv',
   LobbyLight: '/?theme=light#/tv', // hash route still resolves via HashRouter
-  Octopus: '/?demo=1#/octopus'
+  Octopus: '/?demo=1#/octopus',
+  Playground: '/?demo=1#/playground'
 }
 
 test.describe('every screen renders without errors', () => {

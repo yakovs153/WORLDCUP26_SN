@@ -1,16 +1,31 @@
 import { useMemo, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { useLeaderboard } from '../hooks/useLeaderboard'
+import { useMatches } from '../hooks/useMatches'
+import { useAppConfig } from '../hooks/useAppConfig'
 import { LeaderboardRowSkeleton } from '../components/Skeleton'
 import HallOfFame from '../components/HallOfFame'
+import OctopusMark from '../components/OctopusMark'
+import { octopusEntry, OCTOPUS_UID } from '../lib/octopus'
 import type { LeaderboardEntry } from '../types'
 
 export default function Leaderboard() {
   const { user } = useAuth()
   const { entries, loading } = useLeaderboard(200)
+  const { matches } = useMatches()
+  const cfg = useAppConfig()
   const [tab, setTab] = useState<'personal' | 'departments'>('personal')
 
-  const deptRows = useMemo(() => aggregateDepartments(entries), [entries])
+  // Inject the Octopus as a competing player (scored from its own picks).
+  const ranked = useMemo(() => {
+    const octo = octopusEntry(matches, cfg.scoring)
+    const all = [...entries.filter((e) => e.uid !== OCTOPUS_UID), octo]
+    all.sort((a, b) => b.totalPoints - a.totalPoints)
+    return all.map((e, i) => ({ ...e, rank: i + 1 }))
+  }, [entries, matches, cfg.scoring])
+
+  // Departments exclude the Octopus (it isn't an employee).
+  const deptRows = useMemo(() => aggregateDepartments(ranked.filter((e) => e.uid !== OCTOPUS_UID)), [ranked])
 
   return (
     <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
@@ -24,9 +39,9 @@ export default function Leaderboard() {
       {loading ? (
         <div className="card" style={{ padding: 0 }}>{[0, 1, 2, 3, 4].map((i) => <LeaderboardRowSkeleton key={i} />)}</div>
       ) : tab === 'personal' ? (
-        <Personal entries={entries} meUid={user?.uid} />
+        <Personal entries={ranked} meUid={user?.uid} />
       ) : (
-        <Departments rows={deptRows} myDept={entries.find((e) => e.uid === user?.uid)?.department ?? null} />
+        <Departments rows={deptRows} myDept={ranked.find((e) => e.uid === user?.uid)?.department ?? null} />
       )}
 
       <HallOfFame />
@@ -63,7 +78,8 @@ function Personal({ entries, meUid }: { entries: LeaderboardEntry[]; meUid?: str
               {king ? '👑' : medal(e.rank) || e.rank}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              {e.photoURL ? <img src={e.photoURL} alt="" width={32} height={32} style={{ borderRadius: '50%' }} />
+              {e.uid === OCTOPUS_UID ? <OctopusMark size={32} />
+                : e.photoURL ? <img src={e.photoURL} alt="" width={32} height={32} style={{ borderRadius: '50%' }} />
                 : <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--glass-bg-hi)', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 14 }}>{e.displayName.charAt(0).toUpperCase()}</div>}
               <div>
                 <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>

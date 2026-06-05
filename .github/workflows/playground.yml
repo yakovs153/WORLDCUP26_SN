@@ -1,0 +1,56 @@
+name: Playground sync
+
+# Mirrors a currently-live competition into `playgroundMatches` so /playground
+# can show live results before the World Cup. Manual only.
+on:
+  workflow_dispatch:
+    inputs:
+      comp:
+        description: 'Competition code (CL, PL, BL1, PD, SA, FL1, WC…). Empty = today across your plan.'
+        required: false
+        default: ''
+      live_minutes:
+        description: 'Keep polling every 60s for N minutes (0 = run once)'
+        required: false
+        default: '0'
+
+concurrency:
+  group: playground-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      GOOGLE_CLOUD_PROJECT: world-cup-2026-c145b
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/adc.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install firebase-admin@^12 --no-save
+      - name: Write credentials from refresh token
+        env:
+          RT: ${{ secrets.FIREBASE_REFRESH_TOKEN }}
+        run: |
+          printf '{"type":"authorized_user","client_id":"563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com","client_secret":"j9iVZfS8kkCEFUPaAeJV0sAi","refresh_token":"%s"}' "$RT" > "$GOOGLE_APPLICATION_CREDENTIALS"
+      - name: Run playground sync (loops in live mode)
+        env:
+          FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
+          COMP: ${{ github.event.inputs.comp }}
+          LIVE_MINUTES: ${{ github.event.inputs.live_minutes || '0' }}
+        run: |
+          END=$(( SECONDS + 60 * LIVE_MINUTES ))
+          while : ; do
+            node scripts/playground-sync.mjs || true
+            if [ "$SECONDS" -ge "$END" ]; then break; fi
+            sleep 60
+          done
+      - name: Clean up credentials
+        if: always()
+        run: rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
