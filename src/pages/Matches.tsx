@@ -10,7 +10,6 @@ import PollCard from '../components/PollCard'
 import { MatchCardSkeleton } from '../components/Skeleton'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { dateKey, formatDateHe } from '../lib/format'
-import { setJoker } from '../lib/jokers'
 import type { Match } from '../types'
 
 export default function Matches() {
@@ -30,23 +29,6 @@ export default function Matches() {
       matches.find((m) => m.status === 'SCHEDULED' && m.kickoff.toMillis() > now) ?? null
     )
   }, [matches])
-
-  // Joker: one per matchday (calendar day). Arming clears any other Joker that day.
-  const toggleJoker = async (match: Match) => {
-    if (!user) return
-    const pred = byMatchId[match.id]
-    if (!pred) return
-    const turningOn = !pred.joker
-    if (turningOn) {
-      const dk = dateKey(match.kickoff.toDate())
-      for (const m of matches) {
-        if (m.id !== match.id && dateKey(m.kickoff.toDate()) === dk && byMatchId[m.id]?.joker) {
-          await setJoker(user.uid, m.id, false)
-        }
-      }
-    }
-    await setJoker(user.uid, match.id, turningOn)
-  }
 
   if (loading)
     return (
@@ -144,7 +126,7 @@ export default function Matches() {
             <div className="stagger" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
               {group.matches.map((m) => (
                 <div key={m.id} className="animate-in">
-                  <MatchCard match={m} prediction={byMatchId[m.id]} uid={user!.uid} onToggleJoker={() => toggleJoker(m)} />
+                  <MatchCard match={m} prediction={byMatchId[m.id]} uid={user!.uid} />
                 </div>
               ))}
             </div>

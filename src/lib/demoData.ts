@@ -128,7 +128,6 @@ interface StoredPrediction {
   awayScore: number
   submittedAt: number
   points: number | null
-  joker?: boolean
 }
 
 function loadStored(): Record<string, StoredPrediction> {
@@ -157,8 +156,7 @@ export function getDemoPredictions(uid: string): Record<string, Prediction> {
       homeScore: s.homeScore,
       awayScore: s.awayScore,
       submittedAt: Timestamp.fromMillis(s.submittedAt),
-      points: m.status === 'FINISHED' ? computePoints(s, m) : null,
-      joker: s.joker
+      points: m.status === 'FINISHED' ? computePoints(s, m) : null
     }
   }
   return out
@@ -180,7 +178,7 @@ export function seedDemoSimulation(): void {
   const stored = loadStored()
   if (!stored[liveId]) stored[liveId] = { matchId: liveId, homeScore: 2, awayScore: 1, submittedAt: Date.now(), points: null }
   if (!stored[finishedId]) stored[finishedId] = { matchId: finishedId, homeScore: 3, awayScore: 1, submittedAt: Date.now(), points: null }
-  // a prediction on an upcoming (scheduled) match so the Joker toggle is visible
+  // a prediction on an upcoming (scheduled) match
   const upcomingId = SCHEDULE[2]?.id
   if (upcomingId && !stored[upcomingId]) stored[upcomingId] = { matchId: upcomingId, homeScore: 1, awayScore: 1, submittedAt: Date.now(), points: null }
   saveStored(stored)
@@ -211,22 +209,11 @@ export function setDemoPrediction(matchId: string, homeScore: number, awayScore:
     homeScore,
     awayScore,
     submittedAt: Date.now(),
-    points: null,
-    joker: stored[matchId]?.joker // preserve Joker if already armed
+    points: null
   }
   saveStored(stored)
   // event so hooks can re-read
   window.dispatchEvent(new Event('demo-predictions-changed'))
-}
-
-/** Arm/disarm the Joker on a demo prediction. */
-export function setDemoJoker(matchId: string, on: boolean): void {
-  const stored = loadStored()
-  if (stored[matchId]) {
-    stored[matchId].joker = on
-    saveStored(stored)
-    window.dispatchEvent(new Event('demo-predictions-changed'))
-  }
 }
 
 function computePoints(s: StoredPrediction, m: Match): number {
@@ -240,8 +227,7 @@ function computePoints(s: StoredPrediction, m: Match): number {
       cfg = parsed?.scoring
     }
   } catch { /* default */ }
-  const base = scorePrediction(s.homeScore, s.awayScore, m.homeScore, m.awayScore, cfg)
-  return s.joker ? base * 2 : base
+  return scorePrediction(s.homeScore, s.awayScore, m.homeScore, m.awayScore, cfg)
 }
 
 function getCurrentUserPoints(): number {
@@ -294,13 +280,13 @@ const BONUS_KEY = 'demo-bonus-v1'
 interface StoredBonus {
   championTeamCode: string | null
   topScorer: string | null
-  finalistCodes?: string[]
+  runnerUpCode?: string | null
   surpriseTeamCode?: string | null
   updatedAt: number
 }
 
 function emptyBonus(uid: string) {
-  return { uid, championTeamCode: null, topScorer: null, finalistCodes: [], surpriseTeamCode: null, championPoints: null, topScorerPoints: null, updatedAt: Timestamp.now() }
+  return { uid, championTeamCode: null, topScorer: null, runnerUpCode: null, surpriseTeamCode: null, championPoints: null, topScorerPoints: null, updatedAt: Timestamp.now() }
 }
 
 export function getDemoBonus(uid: string) {
@@ -312,7 +298,7 @@ export function getDemoBonus(uid: string) {
       uid,
       championTeamCode: s.championTeamCode,
       topScorer: s.topScorer,
-      finalistCodes: s.finalistCodes || [],
+      runnerUpCode: s.runnerUpCode ?? null,
       surpriseTeamCode: s.surpriseTeamCode ?? null,
       championPoints: null,
       topScorerPoints: null,
@@ -326,10 +312,10 @@ export function getDemoBonus(uid: string) {
 export function setDemoBonus(
   championTeamCode: string | null,
   topScorer: string | null,
-  finalistCodes: string[] = [],
+  runnerUpCode: string | null = null,
   surpriseTeamCode: string | null = null
 ): void {
-  const stored: StoredBonus = { championTeamCode, topScorer, finalistCodes, surpriseTeamCode, updatedAt: Date.now() }
+  const stored: StoredBonus = { championTeamCode, topScorer, runnerUpCode, surpriseTeamCode, updatedAt: Date.now() }
   localStorage.setItem(BONUS_KEY, JSON.stringify(stored))
   window.dispatchEvent(new Event('demo-bonus-changed'))
 }

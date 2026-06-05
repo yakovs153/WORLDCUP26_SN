@@ -77,15 +77,14 @@ test('leaderboard departments toggle works', async ({ page }) => {
   expect(errs).toEqual([])
 })
 
-test('bonus: pick champion, finalists, surprise and save', async ({ page }) => {
+test('bonus: pick champion, runner-up, surprise and save', async ({ page }) => {
   const errs = watchErrors(page)
   await page.goto('/?demo=1&sim=1#/bonus', { waitUntil: 'networkidle' })
   await page.waitForTimeout(1200)
   // champion: first team button under the champion section
   await page.locator('section', { hasText: 'הזוכה במונדיאל' }).locator('button').first().click()
-  // finalists: first two team buttons
-  const fin = page.locator('section', { hasText: 'שתי הפיינליסטיות' }).locator('button')
-  await fin.nth(0).click(); await fin.nth(1).click()
+  // runner-up: second team button (first may be the disabled champion)
+  await page.locator('section', { hasText: 'הסגנית' }).locator('button:not([disabled])').first().click()
   // surprise: first team
   await page.locator('section', { hasText: 'הפתעת הטורניר' }).locator('button').first().click()
   await page.getByRole('button', { name: /שמירת ניחושי הבונוס/ }).click()

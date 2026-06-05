@@ -17,12 +17,11 @@ interface Props {
   match: Match
   prediction?: Prediction
   uid: string
-  onToggleJoker?: () => void
 }
 
 type Backed = 'home' | 'away' | null
 
-export default function MatchCard({ match, prediction, uid, onToggleJoker }: Props) {
+export default function MatchCard({ match, prediction, uid }: Props) {
   const [home, setHome] = useState<number | null>(prediction?.homeScore ?? null)
   const [away, setAway] = useState<number | null>(prediction?.awayScore ?? null)
   const [saving, setSaving] = useState(false)
@@ -72,7 +71,7 @@ export default function MatchCard({ match, prediction, uid, onToggleJoker }: Pro
   const scoreKnown = match.homeScore !== null && match.awayScore !== null
   const potential =
     prediction && scoreKnown
-      ? prediction.points ?? scorePrediction(prediction.homeScore, prediction.awayScore, match.homeScore!, match.awayScore!, cfg.scoring) * (prediction.joker ? 2 : 1)
+      ? prediction.points ?? scorePrediction(prediction.homeScore, prediction.awayScore, match.homeScore!, match.awayScore!, cfg.scoring)
       : null
 
   // Confetti once when a finished match rewards the user.
@@ -159,23 +158,6 @@ export default function MatchCard({ match, prediction, uid, onToggleJoker }: Pro
         {!locked && (
           <button className="btn btn-block" disabled={!dirty || saving || home === null || away === null} onClick={handleSave}>
             {saving ? 'שומר…' : savedAt ? 'נשמר ✓' : prediction ? 'עדכון ניחוש' : 'שמירת ניחוש'}
-          </button>
-        )}
-
-        {!locked && prediction && onToggleJoker && (
-          <button
-            onClick={onToggleJoker}
-            title="ג'וקר מכפיל ×2 — אחד ליום משחקים"
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              padding: '9px 12px', borderRadius: 'var(--radius-md)', fontWeight: 800, fontSize: 13,
-              color: prediction.joker ? '#fff' : 'var(--color-text-muted)',
-              background: prediction.joker ? 'linear-gradient(135deg, var(--color-accent), var(--color-primary))' : 'transparent',
-              border: prediction.joker ? 'none' : '1px dashed var(--color-border-strong)',
-              boxShadow: prediction.joker ? '0 4px 16px rgba(225,29,72,0.4)' : 'none'
-            }}
-          >
-            🃏 {prediction.joker ? "ג'וקר פעיל · ×2" : "הפעל ג'וקר (×2)"}
           </button>
         )}
 

@@ -13,7 +13,7 @@ export default function AdminScoring() {
   const [winOnly, setWinOnly] = useState(cfg.scoring.winnerOnly)
   const [champion, setChampion] = useState(cfg.bonus.champion)
   const [topScorer, setTopScorer] = useState(cfg.bonus.topScorer)
-  const [finalist, setFinalist] = useState(cfg.bonus.finalist)
+  const [runnerUp, setRunnerUp] = useState(cfg.bonus.runnerUp)
   const [surprise, setSurprise] = useState(cfg.bonus.surprise)
   const [saving, setSaving] = useState(false)
 
@@ -23,7 +23,7 @@ export default function AdminScoring() {
     setWinOnly(cfg.scoring.winnerOnly)
     setChampion(cfg.bonus.champion)
     setTopScorer(cfg.bonus.topScorer)
-    setFinalist(cfg.bonus.finalist)
+    setRunnerUp(cfg.bonus.runnerUp)
     setSurprise(cfg.bonus.surprise)
   }, [cfg])
 
@@ -33,7 +33,7 @@ export default function AdminScoring() {
     winOnly !== cfg.scoring.winnerOnly ||
     champion !== cfg.bonus.champion ||
     topScorer !== cfg.bonus.topScorer ||
-    finalist !== cfg.bonus.finalist ||
+    runnerUp !== cfg.bonus.runnerUp ||
     surprise !== cfg.bonus.surprise
 
   const save = async () => {
@@ -41,7 +41,7 @@ export default function AdminScoring() {
     try {
       await patchAppConfig({
         scoring: { exact, winnerAndDiff: winDiff, winnerOnly: winOnly },
-        bonus: { champion, topScorer, finalist, surprise }
+        bonus: { champion, topScorer, runnerUp, surprise }
       })
       toast.show('ניקוד עודכן ✓', 'success')
     } catch (e) {
@@ -57,7 +57,7 @@ export default function AdminScoring() {
     setWinOnly(DEFAULT_APP_CONFIG.scoring.winnerOnly)
     setChampion(DEFAULT_APP_CONFIG.bonus.champion)
     setTopScorer(DEFAULT_APP_CONFIG.bonus.topScorer)
-    setFinalist(DEFAULT_APP_CONFIG.bonus.finalist)
+    setRunnerUp(DEFAULT_APP_CONFIG.bonus.runnerUp)
     setSurprise(DEFAULT_APP_CONFIG.bonus.surprise)
   }
 
@@ -77,7 +77,7 @@ export default function AdminScoring() {
           🏆 ניקוד בונוס
         </h3>
         <PointInput label="🏆 זוכה המונדיאל" value={champion}  onChange={setChampion} />
-        <PointInput label="🎽 פיינליסטית (לכל אחת)" value={finalist} onChange={setFinalist} />
+        <PointInput label="🥈 סגנית (מפסידת הגמר)" value={runnerUp} onChange={setRunnerUp} />
         <PointInput label="🐎 הפתעת הטורניר" value={surprise} onChange={setSurprise} />
         <PointInput label="⚽ מלך השערים"     value={topScorer} onChange={setTopScorer} />
       </section>

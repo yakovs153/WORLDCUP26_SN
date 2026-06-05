@@ -100,8 +100,7 @@ async function main() {
       for (const d of preds.docs) {
         const p = d.data()
         if (p.points !== null && p.points !== undefined) continue
-        const raw = scorePrediction(p.homeScore, p.awayScore, fm.h, fm.a, scoringCfg)
-        const pts = p.joker ? raw * 2 : raw
+        const pts = scorePrediction(p.homeScore, p.awayScore, fm.h, fm.a, scoringCfg)
         tx.update(d.ref, { points: pts })
         userDelta.set(p.uid, (userDelta.get(p.uid) || 0) + pts)
       }

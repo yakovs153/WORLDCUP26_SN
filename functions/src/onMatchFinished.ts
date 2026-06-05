@@ -44,8 +44,7 @@ export const onMatchFinished = onDocumentUpdated('matches/{matchId}', async (eve
       const p = doc.data()
       if (p.points !== null && p.points !== undefined) continue // already scored
 
-      const raw = scorePrediction(p.homeScore, p.awayScore, after.homeScore, after.awayScore, scoringCfg)
-      const pts = p.joker ? raw * 2 : raw
+      const pts = scorePrediction(p.homeScore, p.awayScore, after.homeScore, after.awayScore, scoringCfg)
       tx.update(doc.ref, { points: pts })
       userDelta.set(p.uid, (userDelta.get(p.uid) || 0) + pts)
     }

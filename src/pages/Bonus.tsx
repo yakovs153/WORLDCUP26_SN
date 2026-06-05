@@ -27,7 +27,7 @@ export default function Bonus() {
 
   const [championCode, setChampionCode] = useState<string | null>(null)
   const [topScorer, setTopScorer] = useState<string | null>(null)
-  const [finalistCodes, setFinalistCodes] = useState<string[]>([])
+  const [runnerUpCode, setRunnerUpCode] = useState<string | null>(null)
   const [surpriseCode, setSurpriseCode] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -35,16 +35,10 @@ export default function Bonus() {
     if (bonus) {
       setChampionCode(bonus.championTeamCode)
       setTopScorer(bonus.topScorer)
-      setFinalistCodes(bonus.finalistCodes || [])
+      setRunnerUpCode(bonus.runnerUpCode ?? null)
       setSurpriseCode(bonus.surpriseTeamCode ?? null)
     }
-  }, [bonus?.championTeamCode, bonus?.topScorer, bonus?.finalistCodes, bonus?.surpriseTeamCode])
-
-  const toggleFinalist = (code: string) => {
-    setFinalistCodes((prev) =>
-      prev.includes(code) ? prev.filter((c) => c !== code) : prev.length >= 2 ? prev : [...prev, code]
-    )
-  }
+  }, [bonus?.championTeamCode, bonus?.topScorer, bonus?.runnerUpCode, bonus?.surpriseTeamCode])
 
   // Unique teams from matches data, sorted A-Z (Hebrew)
   const teams = useMemo<TeamRef[]>(() => {
@@ -71,7 +65,7 @@ export default function Bonus() {
     championCode !== (bonus?.championTeamCode ?? null) ||
     topScorer !== (bonus?.topScorer ?? null) ||
     surpriseCode !== (bonus?.surpriseTeamCode ?? null) ||
-    [...finalistCodes].sort().join(',') !== [...(bonus?.finalistCodes ?? [])].sort().join(',')
+    runnerUpCode !== (bonus?.runnerUpCode ?? null)
 
   // Combine hard-coded candidates with admin-added custom players
   const allPlayers = useMemo<PlayerOption[]>(() => {
@@ -90,7 +84,7 @@ export default function Bonus() {
     if (!user) return
     setSaving(true)
     try {
-      await saveBonus(user.uid, championCode, topScorer, finalistCodes, surpriseCode)
+      await saveBonus(user.uid, championCode, topScorer, runnerUpCode, surpriseCode)
       toast.show('בונוס נשמר ✓', 'success')
     } catch (e) {
       toast.show(e instanceof Error ? e.message : 'שמירה נכשלה', 'error')
@@ -109,7 +103,7 @@ export default function Bonus() {
 
   const selectedTeam = teams.find((t) => t.code === championCode)
   const selectedPlayer = allPlayers.find((p) => p.name === topScorer)
-  const finalistTeams = finalistCodes.map((c) => teams.find((t) => t.code === c)).filter(Boolean) as TeamRef[]
+  const runnerUpTeam = teams.find((t) => t.code === runnerUpCode)
   const surpriseTeam = teams.find((t) => t.code === surpriseCode)
 
   return (
@@ -148,10 +142,10 @@ export default function Bonus() {
             icon={selectedPlayer && <PlayerAvatar name={selectedPlayer.name} countryCode={selectedPlayer.countryCode} photoUrl={photoFor(selectedPlayer.name, selectedPlayer.photoUrl)} size={36} shape="logo" />}
           />
           <SummaryCell
-            title="🎽 פיינליסטיות"
-            value={finalistTeams.length ? finalistTeams.map((t) => t.name).join(' · ') : 'לא נבחר'}
-            badge="10 נק׳"
-            icon={finalistTeams[0] && <span style={{ display: 'flex', gap: 4 }}>{finalistTeams.map((t) => <FlagIcon key={t.code} flag={t.flag} code={t.code} size={24} />)}</span>}
+            title="🥈 סגנית (מפסידת הגמר)"
+            value={runnerUpTeam ? runnerUpTeam.name : 'לא נבחר'}
+            badge={`${cfg.bonus.runnerUp} נק׳`}
+            icon={runnerUpTeam && <FlagIcon flag={runnerUpTeam.flag} code={runnerUpTeam.code} size={28} />}
           />
           <SummaryCell
             title="🐎 הפתעה"
@@ -182,7 +176,12 @@ export default function Bonus() {
             return (
               <button
                 key={t.code}
-                onClick={() => !locked && setChampionCode(selected ? null : t.code)}
+                onClick={() => {
+                  if (locked) return
+                  const next = selected ? null : t.code
+                  setChampionCode(next)
+                  if (next && runnerUpCode === next) setRunnerUpCode(null)
+                }}
                 disabled={locked}
                 style={{
                   display: 'flex',
@@ -205,23 +204,24 @@ export default function Bonus() {
         </div>
       </section>
 
-      {/* Finalists */}
+      {/* Runner-up (loser of the final) */}
       <section className="card animate-in">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 18 }}>🎽 שתי הפיינליסטיות</h2>
-          <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>{finalistCodes.length}/2 · 10 נק׳ לכל אחת</span>
+          <h2 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 18 }}>🥈 הסגנית</h2>
+          <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>{cfg.bonus.runnerUp} נק׳</span>
         </div>
-        <p className="text-muted" style={{ fontSize: 12, marginBottom: 12 }}>בחר את שתי הנבחרות שיגיעו לגמר.</p>
+        <p className="text-muted" style={{ fontSize: 12, marginBottom: 12 }}>בחר את הנבחרת שתפסיד בגמר (הזוכה כבר נבחר למעלה).</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(86px, 1fr))', gap: 8 }}>
           {teams.map((t) => {
-            const sel = finalistCodes.includes(t.code)
-            const dim = !sel && finalistCodes.length >= 2
+            const sel = runnerUpCode === t.code
+            const isChampion = championCode === t.code
             return (
-              <button key={t.code} onClick={() => !locked && toggleFinalist(t.code)} disabled={locked || dim}
+              <button key={t.code} onClick={() => !locked && !isChampion && setRunnerUpCode(sel ? null : t.code)} disabled={locked || isChampion}
+                title={isChampion ? 'כבר נבחרה כזוכה' : undefined}
                 style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '10px 6px', borderRadius: 'var(--radius-md)',
                   background: sel ? 'color-mix(in srgb, var(--color-primary) 18%, transparent)' : 'var(--color-bg-elevated)',
                   border: sel ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-                  opacity: dim ? 0.4 : 1, cursor: locked ? 'not-allowed' : 'pointer', transition: 'all 0.15s ease' }}>
+                  opacity: isChampion ? 0.35 : 1, cursor: locked || isChampion ? 'not-allowed' : 'pointer', transition: 'all 0.15s ease' }}>
                 <FlagIcon flag={t.flag} code={t.code} size={32} />
                 <span style={{ fontSize: 12, fontWeight: sel ? 800 : 600 }}>{t.name}</span>
               </button>

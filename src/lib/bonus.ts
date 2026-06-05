@@ -6,11 +6,11 @@ export async function saveBonus(
   uid: string,
   championTeamCode: string | null,
   topScorer: string | null,
-  finalistCodes: string[] = [],
+  runnerUpCode: string | null = null,
   surpriseTeamCode: string | null = null
 ): Promise<void> {
   if (DEMO_MODE) {
-    setDemoBonus(championTeamCode, topScorer, finalistCodes, surpriseTeamCode)
+    setDemoBonus(championTeamCode, topScorer, runnerUpCode, surpriseTeamCode)
     return
   }
   const ref = doc(db, 'bonusPredictions', uid)
@@ -20,7 +20,7 @@ export async function saveBonus(
       uid,
       championTeamCode,
       topScorer,
-      finalistCodes,
+      runnerUpCode,
       surpriseTeamCode,
       championPoints: null,
       topScorerPoints: null,

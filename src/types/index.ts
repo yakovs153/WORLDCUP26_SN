@@ -30,7 +30,7 @@ export interface Prediction {
   awayScore: number
   submittedAt: Timestamp
   points: number | null
-  joker?: boolean   // ×2 points — one per matchday
+  auto?: boolean    // filled automatically by the Octopus when the user forgot to predict
 }
 
 export interface UserDoc {
@@ -52,7 +52,7 @@ export interface BonusPrediction {
   uid: string
   championTeamCode: string | null
   topScorer: string | null
-  finalistCodes: string[]          // up to 2 teams predicted to reach the final
+  runnerUpCode: string | null      // the team predicted to LOSE the final (runner-up)
   surpriseTeamCode: string | null  // "dark horse" predicted to reach the quarter-finals
   championPoints: number | null   // computed after tournament ends
   topScorerPoints: number | null  // computed after tournament ends
@@ -69,7 +69,7 @@ export interface ScoringConfig {
 export interface BonusScoringConfig {
   champion: number
   topScorer: number
-  finalist: number   // points per correctly predicted finalist
+  runnerUp: number   // points if the predicted runner-up indeed loses the final
   surprise: number   // points if the "surprise" team reaches the quarter-finals
 }
 
@@ -155,7 +155,7 @@ export interface AppConfig {
 
 export const DEFAULT_APP_CONFIG: AppConfig = {
   scoring: { exact: 5, winnerAndDiff: 3, winnerOnly: 1 },
-  bonus:   { champion: 20, topScorer: 15, finalist: 10, surprise: 15 },
+  bonus:   { champion: 20, topScorer: 15, runnerUp: 10, surprise: 15 },
   content: {
     tournamentName: 'מונדיאל 2026',
     tagline: 'משחק ניחושים פנימי של StoreNext',
