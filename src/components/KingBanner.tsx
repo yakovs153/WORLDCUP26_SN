@@ -13,7 +13,7 @@ export default function KingBanner() {
   const [busy, setBusy] = useState(false)
 
   useEffect(() => watchKing(setKing), [])
-  if (!king) return null
+  if (!king || !king.uid || king.totalPoints <= 0) return null
   const isKing = !!user && user.uid === king.uid
 
   const save = async () => {

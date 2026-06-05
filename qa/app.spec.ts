@@ -29,8 +29,6 @@ const ROUTES: Record<string, string> = {
   Profile: '/?demo=1&sim=1#/profile',
   Admin: '/?demo=1&sim=1#/admin',
   Rules: '/?demo=1&sim=1#/rules',
-  Lobby: '/tv',
-  LobbyLight: '/?theme=light#/tv', // hash route still resolves via HashRouter
   Octopus: '/?demo=1#/octopus',
   Playground: '/?demo=1#/playground'
 }
@@ -137,7 +135,7 @@ test('survey: admin creates a survey, user fills it and sees public results', as
 test('admin: open each tab without errors', async ({ page }) => {
   const errs = watchErrors(page)
   await page.goto('/?demo=1&sim=1#/admin', { waitUntil: 'networkidle' })
-  for (const tab of ['תוכן', 'מחלקות', 'ניקוד', 'שחקנים', 'סקרים', 'ניחושים', 'גישה', 'משחקים']) {
+  for (const tab of ['תוכן', 'מחלקות', 'ניקוד', 'שחקנים', 'סקרים', 'ניחושים', 'גישה']) {
     await page.getByRole('button', { name: tab, exact: false }).first().click().catch(() => {})
     await page.waitForTimeout(400)
   }

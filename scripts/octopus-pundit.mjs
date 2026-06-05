@@ -31,14 +31,14 @@ const now = Date.now(), DAY = 86_400_000
 const standings = top.length ? top.map((t) => `${t.name} ${t.pts}`).join(', ') : 'אין עדיין נקודות'
 const summary = `מובילים: ${standings}. חי כעת: ${live}. הסתיימו היום: ${finishedToday}. צפויים היום: ${upcomingToday}.`
 
-const prompt = `אתה "סטורי התמנון", פרשן כדורגל שנון, עוקצני ומצחיק של StoreNext — כלי ניחושים פנימי לעובדים. ` +
-  `כתוב משפט אחד עד שניים בעברית, קצרים וכיפיים, שמגיבים למצב התחרות ומקנטרים בחיוך. ` +
-  `בלי האשטגים, בלי מרכאות, עד 200 תווים.\nנתונים: ${summary}`
+const prompt = `אתה "סטורי התמנון", מנחה שולחן פרשנים שנון, עוקצני ומצחיק של StoreNext — כלי ניחושים פנימי לעובדים. ` +
+  `כתוב "מבזק יומי" קצר בעברית: 2–3 שורות קצרות (שורה לכל נקודה), כל שורה מתחילה באימוג'י. ` +
+  `התייחס למוביל/ים, לעקיצה קלה על מי שמפגר, ולמה שמעניין היום. שנון וקליל, בלי האשטגים, בלי מרכאות, עד 300 תווים סה"כ.\nנתונים: ${summary}`
 
 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${KEY}`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 120, temperature: 1.0 } })
+  body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 220, temperature: 1.0 } })
 })
 if (!res.ok) { console.error('gemini error', res.status, await res.text()); process.exit(1) }
 const data = await res.json()

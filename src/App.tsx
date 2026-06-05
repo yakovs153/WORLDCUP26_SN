@@ -5,7 +5,6 @@ import Layout from './components/Layout'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Matches from './pages/Matches'
-import Lobby from './pages/Lobby'
 import OctopusPreview from './pages/OctopusPreview'
 import Playground from './pages/Playground'
 import Teams from './pages/Teams'
@@ -37,7 +36,6 @@ export default function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/rules" element={<Rules />} />
-              <Route path="/tv" element={<Lobby />} />
               <Route path="/octopus" element={<OctopusPreview />} />
               <Route path="/playground" element={<Playground />} />
               <Route

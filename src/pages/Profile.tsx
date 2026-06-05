@@ -6,6 +6,8 @@ import { useMatches } from '../hooks/useMatches'
 import { usePredictions } from '../hooks/usePredictions'
 import { useToast } from '../components/Toast'
 import StatsBreakdown from '../components/StatsBreakdown'
+import NemesisCard from '../components/NemesisCard'
+import StreaksBadges from '../components/StreaksBadges'
 import { useIsAdmin } from '../admin/AdminGate'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { setDepartment } from '../lib/departments'
@@ -119,6 +121,10 @@ export default function Profile() {
           <div className="text-muted" style={{ fontSize: 13 }}>סך ניחושים</div>
         </div>
       </div>
+
+      <NemesisCard />
+
+      <StreaksBadges matches={matches} byMatchId={byMatchId} />
 
       <StatsBreakdown matches={matches} byMatchId={byMatchId} />
 

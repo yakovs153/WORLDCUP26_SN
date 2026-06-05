@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import AdminMatches from '../admin/AdminMatches'
 import AdminContent from '../admin/AdminContent'
 import AdminDepartments from '../admin/AdminDepartments'
 import AdminScoring from '../admin/AdminScoring'
@@ -9,10 +8,9 @@ import AdminPlayers from '../admin/AdminPlayers'
 import AdminPredictions from '../admin/AdminPredictions'
 import AdminAccess from '../admin/AdminAccess'
 
-type Tab = 'matches' | 'content' | 'departments' | 'scoring' | 'players' | 'polls' | 'predictions' | 'access'
+type Tab = 'content' | 'departments' | 'scoring' | 'players' | 'polls' | 'predictions' | 'access'
 
 const TABS: { key: Tab; label: string; icon: string }[] = [
-  { key: 'matches', label: 'משחקים',  icon: '🗓️' },
   { key: 'content', label: 'תוכן',     icon: '📝' },
   { key: 'departments', label: 'מחלקות', icon: '🏢' },
   { key: 'scoring', label: 'ניקוד',    icon: '🧮' },
@@ -23,7 +21,7 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
 ]
 
 export default function Admin() {
-  const [tab, setTab] = useState<Tab>('matches')
+  const [tab, setTab] = useState<Tab>('content')
 
   return (
     <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -81,7 +79,6 @@ export default function Admin() {
         ))}
       </div>
 
-      {tab === 'matches' && <AdminMatches />}
       {tab === 'content' && <AdminContent />}
       {tab === 'departments' && <AdminDepartments />}
       {tab === 'scoring' && <AdminScoring />}
