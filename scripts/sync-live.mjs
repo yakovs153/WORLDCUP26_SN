@@ -77,56 +77,41 @@ async function main() {
   const overrides = cfgSnap.exists ? (cfgSnap.data()?.analystOverrides || {}) : {}
   const applyStage = (base, stage) => Math.round(base * ((stage && stageMult && stageMult[stage]) || 1))
 
-  // Existing match docs (manualLock + scored flags).
-  const existingSnap = await db.collection('matches').get()
-  const existing = new Map(existingSnap.docs.map((d) => [d.id, d.data()]))
+  // Lightweight sync state (scored/autofilled flags) — ONE doc instead of reading
+  // all 104 matches every run (keeps us under the free read quota).
+  const stateSnap = await db.collection('appState').doc('syncState').get()
+  const sState = stateSnap.exists ? (stateSnap.data() || {}) : {}
+  const scoredFlag = sState.scored || {}
+  const autofilledFlag = sState.autofilled || {}
 
   const batch = db.batch()
-  let upserts = 0, skipped = 0
-  const finishedToScore = [] // { id, home, away }
+  let upserts = 0
+  const finishedToScore = [] // { id, h, a, stage }
   const snap = new Map() // id -> lightweight item for the public snapshot doc
 
   for (const m of apiMatches) {
     const id = String(m.id)
-    const cur = existing.get(id)
     const status = statusOf(m.status)
     const hs = m.score?.fullTime?.home ?? null
     const as = m.score?.fullTime?.away ?? null
     const homeTeam = { name: heName(m.homeTeam.tla, m.homeTeam.shortName || m.homeTeam.name), code: m.homeTeam.tla || '', flag: '' }
     const awayTeam = { name: heName(m.awayTeam.tla, m.awayTeam.shortName || m.awayTeam.name), code: m.awayTeam.tla || '', flag: '' }
-    const group = m.group ? String(m.group).replace('GROUP_', '') : (cur?.group ?? null)
-    const stage = STAGE[m.stage] || cur?.stage || 'GROUP'
+    const group = m.group ? String(m.group).replace('GROUP_', '') : null
+    const stage = STAGE[m.stage] || 'GROUP'
 
-    if (cur?.manualLock === true) { skipped++; }
-    else {
-      batch.set(db.collection('matches').doc(id), {
-        homeTeam, awayTeam,
-        kickoff: Timestamp.fromDate(new Date(m.utcDate)),
-        stage, group, status, homeScore: hs, awayScore: as,
-        minute: m.minute ?? null,
-        lastUpdated: Timestamp.now()
-      }, { merge: true })
-      upserts++
-    }
-    // snapshot entry (final values; manual-locked matches keep their stored state)
-    const locked = cur?.manualLock === true
-    snap.set(id, {
-      id, homeTeam, awayTeam,
-      kickoffMs: new Date(m.utcDate).getTime(),
-      stage, group,
-      status: locked ? (cur.status ?? status) : status,
-      homeScore: locked ? (cur.homeScore ?? null) : hs,
-      awayScore: locked ? (cur.awayScore ?? null) : as,
-      minute: m.minute ?? cur?.minute ?? null,
-      scorers: cur?.scorers ?? []
-    })
+    batch.set(db.collection('matches').doc(id), {
+      homeTeam, awayTeam,
+      kickoff: Timestamp.fromDate(new Date(m.utcDate)),
+      stage, group, status, homeScore: hs, awayScore: as,
+      minute: m.minute ?? null,
+      lastUpdated: Timestamp.now()
+    }, { merge: true })
+    upserts++
 
-    // Score when finished (auto OR manually-locked-finished) and not yet scored.
-    const effStatus = cur?.manualLock === true ? cur.status : status
-    const effH = cur?.manualLock === true ? cur.homeScore : hs
-    const effA = cur?.manualLock === true ? cur.awayScore : as
-    if (effStatus === 'FINISHED' && typeof effH === 'number' && typeof effA === 'number' && cur?.scored !== true) {
-      finishedToScore.push({ id, h: effH, a: effA, stage: STAGE[m.stage] || cur?.stage || 'GROUP' })
+    snap.set(id, { id, homeTeam, awayTeam, kickoffMs: new Date(m.utcDate).getTime(), stage, group, status, homeScore: hs, awayScore: as, minute: m.minute ?? null, scorers: [] })
+
+    if (status === 'FINISHED' && typeof hs === 'number' && typeof as === 'number' && scoredFlag[id] !== true) {
+      finishedToScore.push({ id, h: hs, a: as, stage })
     }
   }
   await batch.commit()
@@ -160,7 +145,7 @@ async function main() {
   for (const m of apiMatches) {
     if (!analystAutofill) break
     const id = String(m.id)
-    if (existing.get(id)?.autofilled === true) continue
+    if (autofilledFlag[id] === true) continue
     if (new Date(m.utcDate).getTime() > nowMs) continue // not locked yet
     const have = new Set((await db.collection('predictions').where('matchId', '==', id).get()).docs.map((d) => d.data().uid))
     const [oh, oa] = tomPick(m.homeTeam.tla, m.awayTeam.tla, id, overrides)
@@ -171,8 +156,8 @@ async function main() {
         uid, matchId: id, homeScore: oh, awayScore: oa, points: null, auto: true, submittedAt: Timestamp.now()
       })
     }
-    fb.set(db.collection('matches').doc(id), { autofilled: true }, { merge: true })
     await fb.commit()
+    autofilledFlag[id] = true
   }
 
   // Score finished matches.
@@ -188,8 +173,8 @@ async function main() {
         tx.update(d.ref, { points: pts })
         userDelta.set(p.uid, (userDelta.get(p.uid) || 0) + pts)
       }
-      tx.set(db.collection('matches').doc(fm.id), { scored: true }, { merge: true })
     })
+    scoredFlag[fm.id] = true
   }
   for (const [uid, delta] of userDelta) {
     await db.collection('users').doc(uid).set({ totalPoints: FieldValue.increment(delta) }, { merge: true })
@@ -220,7 +205,10 @@ async function main() {
     updatedAt: Timestamp.now()
   })
 
-  console.log(`sync ok: upserts=${upserts}, skipped(locked)=${skipped}, scored matches=${finishedToScore.length}, users updated=${userDelta.size}`)
+  // Persist scored/autofilled flags for next run (read as ONE doc).
+  await db.collection('appState').doc('syncState').set({ scored: scoredFlag, autofilled: autofilledFlag, updatedAt: Timestamp.now() }, { merge: true })
+
+  console.log(`sync ok: upserts=${upserts}, scored matches=${finishedToScore.length}, users updated=${userDelta.size}`)
 }
 
 main().catch((e) => { console.error(e); process.exit(1) })

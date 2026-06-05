@@ -14,6 +14,7 @@ import Leaderboard from './pages/Leaderboard'
 import MyPredictions from './pages/MyPredictions'
 import Profile from './pages/Profile'
 import Bonus from './pages/Bonus'
+import Wrap from './pages/Wrap'
 import Surveys from './pages/Surveys'
 import Survey from './pages/Survey'
 import Rules from './pages/Rules'
@@ -50,6 +51,7 @@ export default function App() {
                 <Route path="bracket" element={<BracketPage />} />
                 <Route path="match/:id" element={<MatchRoom />} />
                 <Route path="bonus" element={<Bonus />} />
+                <Route path="wrap" element={<Wrap />} />
                 <Route path="surveys" element={<Surveys />} />
                 <Route path="survey/:id" element={<Survey />} />
                 <Route path="my" element={<MyPredictions />} />

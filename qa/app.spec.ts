@@ -9,6 +9,11 @@ import { test, expect, type Page } from '@playwright/test'
 // Console noise that isn't an app bug.
 const IGNORE = [/icon-192/i, /manifest/i, /react devtools/i, /favicon/i, /404 \(Not Found\)/i]
 
+// Skip the first-login onboarding overlay so it doesn't intercept clicks in tests.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => { try { localStorage.setItem('wc26-onboarded-v1', '1') } catch { /* ignore */ } })
+})
+
 function watchErrors(page: Page): string[] {
   const errs: string[] = []
   page.on('pageerror', (e) => errs.push(`pageerror: ${e.message}`))

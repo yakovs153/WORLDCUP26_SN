@@ -26,6 +26,17 @@ export function tomPick(homeCode: string, awayCode: string, matchId: string, ove
   return [0, 2]
 }
 
+/** Rough win/draw/win probabilities from team strength (for the match-center bar). */
+export function winProb(homeCode: string, awayCode: string): { home: number; draw: number; away: number } {
+  const gap = strengthOf(homeCode) + 0.3 - strengthOf(awayCode)
+  const homeShare = 1 / (1 + Math.exp(-gap))            // 0..1
+  const draw = Math.max(0.12, 0.30 - Math.abs(gap) * 0.06)
+  const h = homeShare * (1 - draw)
+  const a = (1 - homeShare) * (1 - draw)
+  const tot = h + draw + a || 1
+  return { home: Math.round((h / tot) * 100), draw: Math.round((draw / tot) * 100), away: Math.round((a / tot) * 100) }
+}
+
 /** Synthetic leaderboard entry for Tom, scored from his picks vs finished results. */
 export function octopusEntry(matches: Match[], scoring: ScoringConfig, stageMult?: StageMultipliers, overrides?: AnalystOverrides): LeaderboardEntry {
   let total = 0

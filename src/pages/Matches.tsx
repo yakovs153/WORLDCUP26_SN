@@ -24,6 +24,12 @@ export default function Matches() {
 
   const grouped = useMemo(() => groupByDate(matches), [matches])
 
+  // Nudge: today's scheduled matches the user hasn't predicted yet.
+  const unpredictedToday = useMemo(() => {
+    const now = Date.now(), DAY = 86_400_000
+    return matches.filter((m) => m.status === 'SCHEDULED' && m.kickoff.toMillis() > now && m.kickoff.toMillis() - now < DAY && !byMatchId[m.id]).length
+  }, [matches, byMatchId])
+
   const nextMatch = useMemo(() => {
     const now = Date.now()
     return (
@@ -54,6 +60,11 @@ export default function Matches() {
   return (
     <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
       <LiveStrip />
+      {unpredictedToday > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'color-mix(in srgb, var(--color-accent) 18%, var(--color-bg-elevated))', border: '1px solid color-mix(in srgb, var(--color-accent) 50%, var(--color-border-strong))', fontWeight: 700, fontSize: 14 }}>
+          ⏰ יש לך {unpredictedToday} {unpredictedToday === 1 ? 'משחק' : 'משחקים'} היום שעדיין לא ניחשת — אל תיתן לטום לנחש במקומך!
+        </div>
+      )}
       {cfg.content.prize && (
         <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px' }}>
           <span style={{ fontSize: 24 }}>🎁</span>

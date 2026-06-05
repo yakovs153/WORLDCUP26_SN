@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import Header from './Header'
 import BottomNav from './BottomNav'
+import Onboarding from './Onboarding'
 import { useAppConfig } from '../hooks/useAppConfig'
 
 export default function Layout() {
@@ -8,6 +9,7 @@ export default function Layout() {
   const ann = cfg.announcement
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Onboarding />
       <div className="glow-bg" aria-hidden />
       <Header />
       {ann.active && ann.text && (

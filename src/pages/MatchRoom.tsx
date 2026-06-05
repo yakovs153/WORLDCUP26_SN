@@ -9,6 +9,8 @@ import LiveBadge from '../components/LiveBadge'
 import { formatTimeHe, stageLabel } from '../lib/format'
 import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
+import { useAppConfig } from '../hooks/useAppConfig'
+import { tomPick, winProb } from '../lib/octopus'
 import type { Prediction, UserDoc } from '../types'
 
 interface PeerPred { name: string; home: number; away: number; auto: boolean }
@@ -25,6 +27,7 @@ const REACTIONS = ['🔥', '⚽', '😱', '🎉', '👏', '😂', '💪', '😭'
 export default function MatchRoom() {
   const { id = '' } = useParams()
   const { user } = useAuth()
+  const cfg = useAppConfig()
   const { matches } = useMatches()
   const { byMatchId } = usePredictions(user?.uid ?? null)
   const match = useMemo(() => matches.find((m) => m.id === id), [matches, id])
@@ -63,6 +66,15 @@ export default function MatchRoom() {
     return () => { cancelled = true }
   }, [id, revealed])
 
+  const wp = match ? winProb(match.homeTeam.code, match.awayTeam.code) : null
+  const tom = match ? tomPick(match.homeTeam.code, match.awayTeam.code, id, cfg.analystOverrides) : null
+  const consensus = useMemo(() => {
+    if (!peers.length) return null
+    const counts = new Map<string, number>()
+    for (const p of peers) { const k = `${p.home}-${p.away}`; counts.set(k, (counts.get(k) || 0) + 1) }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1])[0] // [scoreline, count]
+  }, [peers])
+
   return (
     <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', height: 'calc(100vh - var(--header-height) - var(--bottom-nav-height) - 8px)' }}>
       <Link to="/" className="btn-ghost" style={{ alignSelf: 'flex-start', padding: '6px 14px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', fontSize: 13 }}>← חזרה</Link>
@@ -83,6 +95,36 @@ export default function MatchRoom() {
           {revealed && myPred && (
             <div style={{ textAlign: 'center', marginTop: 8, fontSize: 12, color: 'var(--color-text-muted)' }}>
               הניחוש שלך: <b style={{ color: 'var(--color-text)' }}>{myPred.homeScore}–{myPred.awayScore}</b>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Match center — win probability, Tom's pick, goals, room consensus */}
+      {match && (
+        <div className="glass" style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {wp && (
+            <div>
+              <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700, marginBottom: 4 }}>סיכויי ניצחון (הערכת טום)</div>
+              <div style={{ display: 'flex', height: 10, borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+                <span style={{ width: `${wp.home}%`, background: 'var(--color-primary)' }} title={`${match.homeTeam.name} ${wp.home}%`} />
+                <span style={{ width: `${wp.draw}%`, background: 'var(--color-border-strong)' }} title={`תיקו ${wp.draw}%`} />
+                <span style={{ width: `${wp.away}%`, background: 'var(--color-accent)' }} title={`${match.awayTeam.name} ${wp.away}%`} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginTop: 4 }}>
+                <span>{match.homeTeam.name} {wp.home}%</span><span>תיקו {wp.draw}%</span><span>{wp.away}% {match.awayTeam.name}</span>
+              </div>
+            </div>
+          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, flexWrap: 'wrap' }}>
+            {tom && <span style={{ fontWeight: 700 }}>🤖 טום מנחש: {tom[0]}–{tom[1]}</span>}
+            {consensus && <span className="text-muted">· הכי נפוץ בקרב המשתתפים: {consensus[0]} ({consensus[1]})</span>}
+          </div>
+          {match.scorers && match.scorers.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px', fontSize: 12, color: 'var(--color-text-muted)' }}>
+              {[...match.scorers].sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0)).map((s, i) => (
+                <span key={i}>⚽ {s.minute != null ? `${s.minute}' ` : ''}{s.name}</span>
+              ))}
             </div>
           )}
         </div>

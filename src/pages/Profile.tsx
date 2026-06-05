@@ -130,6 +130,14 @@ export default function Profile() {
       <StatsBreakdown matches={matches} byMatchId={byMatchId} />
 
       <Link
+        to="/wrap"
+        className="btn-ghost btn-block"
+        style={{ padding: '12px 16px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', textAlign: 'center', color: 'var(--color-text)' }}
+      >
+        📊 סיכום העונה שלי ←
+      </Link>
+
+      <Link
         to="/rules"
         className="btn-ghost btn-block"
         style={{
