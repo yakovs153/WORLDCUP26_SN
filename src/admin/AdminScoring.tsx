@@ -33,6 +33,7 @@ export default function AdminScoring() {
   const [topScorer, setTopScorer] = useState(cfg.bonus.topScorer)
   const [runnerUp, setRunnerUp] = useState(cfg.bonus.runnerUp)
   const [surprise, setSurprise] = useState(cfg.bonus.surprise)
+  const [flop, setFlop] = useState(cfg.bonus.flop)
   const [stageMult, setStageMult] = useState<StageMultipliers>(cfg.stageMultipliers)
   const [hof, setHof] = useState<HofCategory[]>(cfg.hallOfFame)
   const [saving, setSaving] = useState(false)
@@ -45,6 +46,7 @@ export default function AdminScoring() {
     setTopScorer(cfg.bonus.topScorer)
     setRunnerUp(cfg.bonus.runnerUp)
     setSurprise(cfg.bonus.surprise)
+    setFlop(cfg.bonus.flop)
     setStageMult(cfg.stageMultipliers)
     setHof(cfg.hallOfFame)
   }, [cfg])
@@ -57,6 +59,7 @@ export default function AdminScoring() {
     topScorer !== cfg.bonus.topScorer ||
     runnerUp !== cfg.bonus.runnerUp ||
     surprise !== cfg.bonus.surprise ||
+    flop !== cfg.bonus.flop ||
     JSON.stringify(stageMult) !== JSON.stringify(cfg.stageMultipliers) ||
     JSON.stringify(hof) !== JSON.stringify(cfg.hallOfFame)
 
@@ -66,7 +69,7 @@ export default function AdminScoring() {
       await patchAppConfig({
         scoring: { exact, winnerAndDiff: winDiff, winnerOnly: winOnly },
         stageMultipliers: stageMult,
-        bonus: { champion, topScorer, runnerUp, surprise },
+        bonus: { champion, topScorer, runnerUp, surprise, flop },
         hallOfFame: hof
       })
       toast.show('ניקוד עודכן ✓', 'success')
@@ -85,6 +88,7 @@ export default function AdminScoring() {
     setTopScorer(DEFAULT_APP_CONFIG.bonus.topScorer)
     setRunnerUp(DEFAULT_APP_CONFIG.bonus.runnerUp)
     setSurprise(DEFAULT_APP_CONFIG.bonus.surprise)
+    setFlop(DEFAULT_APP_CONFIG.bonus.flop)
     setStageMult(DEFAULT_APP_CONFIG.stageMultipliers)
     setHof(DEFAULT_APP_CONFIG.hallOfFame)
   }
@@ -107,6 +111,7 @@ export default function AdminScoring() {
         <PointInput label="🏆 זוכה המונדיאל" value={champion}  onChange={setChampion} />
         <PointInput label="🥈 סגנית (מפסידת הגמר)" value={runnerUp} onChange={setRunnerUp} />
         <PointInput label="🐎 הפתעת הטורניר" value={surprise} onChange={setSurprise} />
+        <PointInput label="📉 האכזבה הגדולה" value={flop} onChange={setFlop} />
         <PointInput label="⚽ מלך השערים"     value={topScorer} onChange={setTopScorer} />
       </section>
 

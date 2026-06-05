@@ -104,6 +104,24 @@ export default function Rules() {
           points={b.topScorer}
           highlight
         />
+        <ScoringRow
+          icon="🥈"
+          label="הסגנית (מפסידת הגמר)"
+          example="הנבחרת שתפסיד בגמר"
+          points={b.runnerUp}
+        />
+        <ScoringRow
+          icon="🐎"
+          label="הפתעת הטורניר"
+          example="אאוטסיידרית שתגיע לפחות לרבע הגמר"
+          points={b.surprise}
+        />
+        <ScoringRow
+          icon="📉"
+          label="האכזבה הגדולה"
+          example="אחת מ-8 הגדולות שתיפול ותודח מוקדם"
+          points={b.flop}
+        />
         <div
           style={{
             marginTop: 10,
@@ -113,7 +131,7 @@ export default function Rules() {
             fontSize: 13
           }}
         >
-          <span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>סה״כ בונוס מקסימלי: {b.champion + b.topScorer} נקודות</span>
+          <span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>סה״כ בונוס מקסימלי: {b.champion + b.topScorer + b.runnerUp + b.surprise + b.flop} נקודות</span>
         </div>
       </Section>
 
@@ -123,7 +141,7 @@ export default function Rules() {
         <Bullet>ברגע שהמשחק מתחיל, הניחוש <strong>ננעל</strong> ולא ניתן לשינוי.</Bullet>
         <Bullet>תוצאות מתעדכנות אוטומטית מתוצאות חיות — אין צורך לרענן.</Bullet>
         <Bullet>הניקוד מחושב מיד בסיום המשחק; הנקודות מתעדכנות אוטומטית בפרופיל ובדירוג.</Bullet>
-        <Bullet>אם לא הוזן ניחוש למשחק — לא תקבל ניקוד עליו.</Bullet>
+        <Bullet>שכחת לנחש? סטורי התמנון ינחש עבורך אוטומטית עם פתיחת המשחק 🐙 — אז תמיד יש לך ניחוש.</Bullet>
         <Bullet>ניחושי הבונוס ננעלים לפני תחילת המשחק הראשון, ואינם ניתנים לשינוי לאחר מכן.</Bullet>
       </Section>
 
@@ -136,13 +154,6 @@ export default function Rules() {
         <StagePill name="חצי הגמר" detail="4 → 2" />
         <StagePill name="המקום ה־3" detail="המפסידות בחצי הגמר" />
         <StagePill name="הגמר 🏆" detail="המשחק על הגביע" />
-      </Section>
-
-      {/* Tip */}
-      <Section title="טיפים אסטרטגיים" icon="💡">
-        <Bullet>תוצאות נמוכות (1-0, 2-1) יחסית בטוחות — סיכוי גבוה לפחות לנקודה אחת.</Bullet>
-        <Bullet>הימור על תוצאה מדויקת בהפרש 2 (3-1, 2-0) מאזן סיכוי וסיכון.</Bullet>
-        <Bullet>בבונוס — בחר מועדף עם פוטנציאל הצגה לאורך הטורניר, לא רק לפי "מי הכי טוב כרגע".</Bullet>
       </Section>
 
       {cfg.content.rulesNotes && (

@@ -3,11 +3,11 @@ import { useAppConfig } from '../hooks/useAppConfig'
 
 const ITEMS: { to: string; label: string; key?: keyof import('../types').NavIconsConfig; icon?: string }[] = [
   { to: '/',            label: 'משחקים', key: 'matches' },
-  { to: '/teams',       label: 'בתים',   icon: '🌍' },
-  { to: '/bonus',       label: 'בונוס',  key: 'bonus' },
-  { to: '/my',          label: 'ניחושים שלי', key: 'my' },
-  { to: '/surveys',     label: 'סקרים',  icon: '🗳️' },
   { to: '/leaderboard', label: 'דירוג',  key: 'leaderboard' },
+  { to: '/my',          label: 'ניחושים שלי', key: 'my' },
+  { to: '/teams',       label: 'בתים',   icon: '🌍' },
+  { to: '/surveys',     label: 'סקרים',  icon: '🗳️' },
+  { to: '/bonus',       label: 'בונוס',  key: 'bonus' },
   { to: '/profile',     label: 'פרופיל', key: 'profile' }
 ]
 

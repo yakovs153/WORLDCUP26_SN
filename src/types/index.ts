@@ -61,7 +61,8 @@ export interface BonusPrediction {
   championTeamCode: string | null
   topScorer: string | null
   runnerUpCode: string | null      // the team predicted to LOSE the final (runner-up)
-  surpriseTeamCode: string | null  // "dark horse" predicted to reach the quarter-finals
+  surpriseTeamCode: string | null  // "dark horse" (non-favourite) predicted to reach the quarter-finals
+  flopTeamCode: string | null      // the favourite predicted to crash out earliest
   championPoints: number | null   // computed after tournament ends
   topScorerPoints: number | null  // computed after tournament ends
   updatedAt: Timestamp
@@ -78,7 +79,8 @@ export interface BonusScoringConfig {
   champion: number
   topScorer: number
   runnerUp: number   // points if the predicted runner-up indeed loses the final
-  surprise: number   // points if the "surprise" team reaches the quarter-finals
+  surprise: number   // points if the "surprise" (non-favourite) team reaches the quarter-finals
+  flop: number       // points if the predicted favourite indeed crashes out earliest
 }
 
 export interface ThemeConfig {
@@ -179,7 +181,7 @@ export interface AppConfig {
 export const DEFAULT_APP_CONFIG: AppConfig = {
   scoring: { exact: 5, winnerAndDiff: 3, winnerOnly: 1 },
   stageMultipliers: { GROUP: 1, R32: 1, R16: 2, QF: 2, SF: 3, TP: 1, F: 3 },
-  bonus:   { champion: 20, topScorer: 15, runnerUp: 10, surprise: 15 },
+  bonus:   { champion: 20, topScorer: 15, runnerUp: 10, surprise: 10, flop: 10 },
   hallOfFame: [
     { key: 'prophet',  emoji: '🔮', title: 'הנביא',       active: true },
     { key: 'optimist', emoji: '🤡', title: 'האופטימי',    active: true },

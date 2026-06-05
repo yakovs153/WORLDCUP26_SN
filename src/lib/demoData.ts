@@ -293,11 +293,12 @@ interface StoredBonus {
   topScorer: string | null
   runnerUpCode?: string | null
   surpriseTeamCode?: string | null
+  flopTeamCode?: string | null
   updatedAt: number
 }
 
 function emptyBonus(uid: string) {
-  return { uid, championTeamCode: null, topScorer: null, runnerUpCode: null, surpriseTeamCode: null, championPoints: null, topScorerPoints: null, updatedAt: Timestamp.now() }
+  return { uid, championTeamCode: null, topScorer: null, runnerUpCode: null, surpriseTeamCode: null, flopTeamCode: null, championPoints: null, topScorerPoints: null, updatedAt: Timestamp.now() }
 }
 
 export function getDemoBonus(uid: string) {
@@ -311,6 +312,7 @@ export function getDemoBonus(uid: string) {
       topScorer: s.topScorer,
       runnerUpCode: s.runnerUpCode ?? null,
       surpriseTeamCode: s.surpriseTeamCode ?? null,
+      flopTeamCode: s.flopTeamCode ?? null,
       championPoints: null,
       topScorerPoints: null,
       updatedAt: Timestamp.fromMillis(s.updatedAt)
@@ -324,9 +326,10 @@ export function setDemoBonus(
   championTeamCode: string | null,
   topScorer: string | null,
   runnerUpCode: string | null = null,
-  surpriseTeamCode: string | null = null
+  surpriseTeamCode: string | null = null,
+  flopTeamCode: string | null = null
 ): void {
-  const stored: StoredBonus = { championTeamCode, topScorer, runnerUpCode, surpriseTeamCode, updatedAt: Date.now() }
+  const stored: StoredBonus = { championTeamCode, topScorer, runnerUpCode, surpriseTeamCode, flopTeamCode, updatedAt: Date.now() }
   localStorage.setItem(BONUS_KEY, JSON.stringify(stored))
   window.dispatchEvent(new Event('demo-bonus-changed'))
 }

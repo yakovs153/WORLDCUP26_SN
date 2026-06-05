@@ -14,6 +14,10 @@ import { MatchCardSkeleton } from '../components/Skeleton'
 import { DEMO_MODE } from '../firebase'
 import type { TeamRef } from '../types'
 
+// The 8 favourites — excluded from the "surprise" pool, and the only options
+// for the "biggest flop" bonus.
+const GIANT_CODES = new Set(['ESP', 'FRA', 'GER', 'NED', 'POR', 'BRA', 'ARG', 'ENG'])
+
 export default function Bonus() {
   const { user } = useAuth()
   const { matches, loading: lm } = useMatches()
@@ -29,6 +33,7 @@ export default function Bonus() {
   const [topScorer, setTopScorer] = useState<string | null>(null)
   const [runnerUpCode, setRunnerUpCode] = useState<string | null>(null)
   const [surpriseCode, setSurpriseCode] = useState<string | null>(null)
+  const [flopCode, setFlopCode] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -37,8 +42,9 @@ export default function Bonus() {
       setTopScorer(bonus.topScorer)
       setRunnerUpCode(bonus.runnerUpCode ?? null)
       setSurpriseCode(bonus.surpriseTeamCode ?? null)
+      setFlopCode(bonus.flopTeamCode ?? null)
     }
-  }, [bonus?.championTeamCode, bonus?.topScorer, bonus?.runnerUpCode, bonus?.surpriseTeamCode])
+  }, [bonus?.championTeamCode, bonus?.topScorer, bonus?.runnerUpCode, bonus?.surpriseTeamCode, bonus?.flopTeamCode])
 
   // Unique teams from matches data, sorted A-Z (Hebrew)
   const teams = useMemo<TeamRef[]>(() => {
@@ -49,6 +55,9 @@ export default function Bonus() {
     }
     return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name, 'he'))
   }, [matches])
+
+  const surpriseTeams = useMemo(() => teams.filter((t) => !GIANT_CODES.has(t.code)), [teams])
+  const giantTeams = useMemo(() => teams.filter((t) => GIANT_CODES.has(t.code)), [teams])
 
   // Lock once tournament starts (first match kickoff in the past).
   // In demo mode we never lock — so the user can explore and edit.
@@ -65,7 +74,8 @@ export default function Bonus() {
     championCode !== (bonus?.championTeamCode ?? null) ||
     topScorer !== (bonus?.topScorer ?? null) ||
     surpriseCode !== (bonus?.surpriseTeamCode ?? null) ||
-    runnerUpCode !== (bonus?.runnerUpCode ?? null)
+    runnerUpCode !== (bonus?.runnerUpCode ?? null) ||
+    flopCode !== (bonus?.flopTeamCode ?? null)
 
   // Combine hard-coded candidates with admin-added custom players
   const allPlayers = useMemo<PlayerOption[]>(() => {
@@ -84,7 +94,7 @@ export default function Bonus() {
     if (!user) return
     setSaving(true)
     try {
-      await saveBonus(user.uid, championCode, topScorer, runnerUpCode, surpriseCode)
+      await saveBonus(user.uid, championCode, topScorer, runnerUpCode, surpriseCode, flopCode)
       toast.show('בונוס נשמר ✓', 'success')
     } catch (e) {
       toast.show(e instanceof Error ? e.message : 'שמירה נכשלה', 'error')
@@ -105,6 +115,7 @@ export default function Bonus() {
   const selectedPlayer = allPlayers.find((p) => p.name === topScorer)
   const runnerUpTeam = teams.find((t) => t.code === runnerUpCode)
   const surpriseTeam = teams.find((t) => t.code === surpriseCode)
+  const flopTeam = teams.find((t) => t.code === flopCode)
 
   return (
     <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -150,8 +161,14 @@ export default function Bonus() {
           <SummaryCell
             title="🐎 הפתעה"
             value={surpriseTeam ? surpriseTeam.name : 'לא נבחר'}
-            badge="15 נק׳"
+            badge={`${cfg.bonus.surprise} נק׳`}
             icon={surpriseTeam && <FlagIcon flag={surpriseTeam.flag} code={surpriseTeam.code} size={28} />}
+          />
+          <SummaryCell
+            title="📉 האכזבה"
+            value={flopTeam ? flopTeam.name : 'לא נבחר'}
+            badge={`${cfg.bonus.flop} נק׳`}
+            icon={flopTeam && <FlagIcon flag={flopTeam.flag} code={flopTeam.code} size={28} />}
           />
         </div>
       </div>
@@ -230,21 +247,45 @@ export default function Bonus() {
         </div>
       </section>
 
-      {/* Surprise of the tournament */}
+      {/* Surprise of the tournament — outsiders only (the 8 favourites are excluded) */}
       <section className="card animate-in">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
           <h2 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 18 }}>🐎 הפתעת הטורניר</h2>
-          <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>15 נק׳</span>
+          <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>{cfg.bonus.surprise} נק׳</span>
         </div>
-        <p className="text-muted" style={{ fontSize: 12, marginBottom: 12 }}>בחר נבחרת «אאוטסיידר» שתפתיע ותגיע לפחות לרבע הגמר.</p>
+        <p className="text-muted" style={{ fontSize: 12, marginBottom: 12 }}>בחר נבחרת «אאוטסיידר» שתפתיע ותגיע לפחות לרבע הגמר. הפייבוריטיות הגדולות לא ברשימה.</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(86px, 1fr))', gap: 8 }}>
-          {teams.map((t) => {
+          {surpriseTeams.map((t) => {
             const sel = surpriseCode === t.code
             return (
               <button key={t.code} onClick={() => !locked && setSurpriseCode(sel ? null : t.code)} disabled={locked}
                 style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '10px 6px', borderRadius: 'var(--radius-md)',
                   background: sel ? 'color-mix(in srgb, var(--color-accent) 22%, transparent)' : 'var(--color-bg-elevated)',
                   border: sel ? '2px solid var(--color-accent)' : '1px solid var(--color-border)',
+                  cursor: locked ? 'not-allowed' : 'pointer', transition: 'all 0.15s ease' }}>
+                <FlagIcon flag={t.flag} code={t.code} size={32} />
+                <span style={{ fontSize: 12, fontWeight: sel ? 800 : 600 }}>{t.name}</span>
+              </button>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* Biggest flop — a favourite that crashes out early (the 8 giants only) */}
+      <section className="card animate-in">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 18 }}>📉 האכזבה הגדולה</h2>
+          <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>{cfg.bonus.flop} נק׳</span>
+        </div>
+        <p className="text-muted" style={{ fontSize: 12, marginBottom: 12 }}>איזו מהנבחרות הגדולות תיפול ראשונה ותודח מוקדם (לפני שלב הנוקאאוט)?</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(86px, 1fr))', gap: 8 }}>
+          {giantTeams.map((t) => {
+            const sel = flopCode === t.code
+            return (
+              <button key={t.code} onClick={() => !locked && setFlopCode(sel ? null : t.code)} disabled={locked}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '10px 6px', borderRadius: 'var(--radius-md)',
+                  background: sel ? 'color-mix(in srgb, var(--color-danger) 20%, transparent)' : 'var(--color-bg-elevated)',
+                  border: sel ? '2px solid var(--color-danger)' : '1px solid var(--color-border)',
                   cursor: locked ? 'not-allowed' : 'pointer', transition: 'all 0.15s ease' }}>
                 <FlagIcon flag={t.flag} code={t.code} size={32} />
                 <span style={{ fontSize: 12, fontWeight: sel ? 800 : 600 }}>{t.name}</span>
