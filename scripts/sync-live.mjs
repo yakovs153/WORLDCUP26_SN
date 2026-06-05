@@ -195,6 +195,13 @@ async function main() {
   if (dis) hof.disaster = { name: nm(dis[0]), detail: `${dis[1].points} נק׳ מ-${dis[1].predCount} משחקים` }
   await db.collection('stats').doc('hallOfFame').set(hof)
 
+  // ===== Bonus lock = first game kickoff (earliest match), enforced by rules =====
+  let earliest = null
+  for (const m of apiMatches) { const t = new Date(m.utcDate).getTime(); if (earliest === null || t < earliest) earliest = t }
+  if (earliest !== null) {
+    await db.collection('appState').doc('timing').set({ bonusLockAt: Timestamp.fromMillis(earliest) }, { merge: true })
+  }
+
   // ===== King of the hill (current leader) — drives the leader perk =====
   const topSnap = await db.collection('users').orderBy('totalPoints', 'desc').limit(1).get()
   if (!topSnap.empty && (topSnap.docs[0].data().totalPoints || 0) > 0) {

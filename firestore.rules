@@ -101,17 +101,16 @@ service cloud.firestore {
     match /bonusPredictions/{uid} {
       allow read: if isSignedIn();
 
-      function tournamentStarted() {
-        // Locked once the earliest match has kicked off.
-        // (Firestore rules don't support cross-collection aggregations cheaply,
-        // so we rely on the Cloud Function to enforce after-deadline writes by
-        // ignoring them. Client-side, the UI also disables editing.)
-        return false;
+      function bonusLocked() {
+        // Locked once the first game kicks off. The sync writes the earliest
+        // kickoff to appState/timing.bonusLockAt; before that doc exists, open.
+        return exists(/databases/$(database)/documents/appState/timing)
+          && request.time >= get(/databases/$(database)/documents/appState/timing).data.bonusLockAt;
       }
 
       allow create, update: if isSelf(uid)
         && request.resource.data.uid == request.auth.uid
-        && !tournamentStarted()
+        && !bonusLocked()
         // championPoints / topScorerPoints can only be set by Functions
         && request.resource.data.championPoints == null
         && request.resource.data.topScorerPoints == null;

@@ -23,7 +23,8 @@ export function octopusEntry(matches: Match[], scoring: ScoringConfig): Leaderbo
   let total = 0
   let count = 0
   for (const m of matches) {
-    if (m.status === 'FINISHED' && m.homeScore != null && m.awayScore != null) {
+    // Finished = final points; live = provisional (so the board moves during a match).
+    if ((m.status === 'FINISHED' || m.status === 'LIVE') && m.homeScore != null && m.awayScore != null) {
       const [h, a] = octoPredict(m.id)
       total += scorePrediction(h, a, m.homeScore, m.awayScore, scoring)
       count++

@@ -3,6 +3,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useLeaderboard } from '../hooks/useLeaderboard'
 import { useMatches } from '../hooks/useMatches'
 import { useAppConfig } from '../hooks/useAppConfig'
+import { useLivePoints } from '../hooks/useLivePoints'
 import { LeaderboardRowSkeleton } from '../components/Skeleton'
 import HallOfFame from '../components/HallOfFame'
 import OctopusMark from '../components/OctopusMark'
@@ -16,20 +17,30 @@ export default function Leaderboard() {
   const cfg = useAppConfig()
   const [tab, setTab] = useState<'personal' | 'departments'>('personal')
 
-  // Inject the Octopus as a competing player (scored from its own picks).
+  const liveUids = useMemo(() => entries.map((e) => e.uid), [entries])
+  const liveDelta = useLivePoints(matches, cfg.scoring, liveUids)
+  const hasLive = useMemo(() => matches.some((m) => m.status === 'LIVE'), [matches])
+
+  // Inject the Octopus + fold in provisional points from any live matches.
   const ranked = useMemo(() => {
-    const octo = octopusEntry(matches, cfg.scoring)
-    const all = [...entries.filter((e) => e.uid !== OCTOPUS_UID), octo]
+    const octo = octopusEntry(matches, cfg.scoring) // includes live, provisional
+    const withLive = entries
+      .filter((e) => e.uid !== OCTOPUS_UID)
+      .map((e) => ({ ...e, totalPoints: e.totalPoints + (liveDelta.get(e.uid) || 0) }))
+    const all = [...withLive, octo]
     all.sort((a, b) => b.totalPoints - a.totalPoints)
     return all.map((e, i) => ({ ...e, rank: i + 1 }))
-  }, [entries, matches, cfg.scoring])
+  }, [entries, matches, cfg.scoring, liveDelta])
 
   // Departments exclude the Octopus (it isn't an employee).
   const deptRows = useMemo(() => aggregateDepartments(ranked.filter((e) => e.uid !== OCTOPUS_UID)), [ranked])
 
   return (
     <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-      <h1 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1 }}>טבלת דירוג</h1>
+      <h1 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
+        טבלת דירוג
+        {hasLive && <span className="points-flight" style={{ fontSize: 12 }}>🔴 מתעדכן בזמן אמת</span>}
+      </h1>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, padding: 4, background: 'var(--glass-bg-hi)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius-full)' }}>
         <Toggle active={tab === 'personal'} onClick={() => setTab('personal')}>👤 אישי</Toggle>

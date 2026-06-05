@@ -12,6 +12,7 @@ import { scorePrediction } from '../lib/scoring'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { ringColors } from '../lib/players'
 import { fireConfetti } from '../lib/confetti'
+import { octoPredict } from '../lib/octopus'
 
 interface Props {
   match: Match
@@ -173,11 +174,18 @@ export default function MatchCard({ match, prediction, uid }: Props) {
           </div>
         )}
 
-        {locked && !prediction && (
-          <div style={{ padding: '8px 12px', background: 'var(--glass-bg-hi)', borderRadius: 'var(--radius-md)', color: 'var(--color-text-muted)', fontSize: 13, textAlign: 'center' }}>
-            לא הוזן ניחוש למשחק זה
-          </div>
-        )}
+        {locked && !prediction && (() => {
+          const [oh, oa] = octoPredict(match.id)
+          const octoPts = scoreKnown ? scorePrediction(oh, oa, match.homeScore!, match.awayScore!, cfg.scoring) : null
+          return (
+            <>
+              <ResultBadge myHome={oh} myAway={oa} points={octoPts} isLive={match.status === 'LIVE'} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-muted)' }}>
+                🐙 שכחת לנחש — סטורי התמנון ניחש בשבילך
+              </div>
+            </>
+          )
+        })()}
 
         {error && <div style={{ color: 'var(--color-danger)', fontSize: 13 }}>{error}</div>}
       </div>
