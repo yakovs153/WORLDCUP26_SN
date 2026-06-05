@@ -11,6 +11,13 @@
 import { initializeApp, applicationDefault } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 
+// Safety gate: must pass CONFIRM equal to the shared RESET_PHRASE secret.
+const PHRASE = process.env.RESET_PHRASE || ''
+if (!PHRASE || process.env.CONFIRM !== PHRASE) {
+  console.error('Refusing to reset: CONFIRM must equal the RESET_PHRASE secret. Aborting.')
+  process.exit(1)
+}
+
 initializeApp({ credential: applicationDefault(), projectId: process.env.GOOGLE_CLOUD_PROJECT })
 const db = getFirestore()
 

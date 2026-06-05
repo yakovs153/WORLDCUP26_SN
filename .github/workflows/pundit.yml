@@ -1,0 +1,37 @@
+name: Octopus pundit (daily)
+
+# Generates סטורי התמנון's daily one-liner via Gemini and stores it for the app.
+# Once a day → negligible token usage (fits the Gemini free tier).
+on:
+  schedule:
+    - cron: '0 6 * * *' # ~09:00 Israel
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  pundit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GOOGLE_CLOUD_PROJECT: world-cup-2026-c145b
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/adc.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install firebase-admin@^12 --no-save
+      - name: Write credentials from refresh token
+        env:
+          RT: ${{ secrets.FIREBASE_REFRESH_TOKEN }}
+        run: |
+          printf '{"type":"authorized_user","client_id":"563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com","client_secret":"j9iVZfS8kkCEFUPaAeJV0sAi","refresh_token":"%s"}' "$RT" > "$GOOGLE_APPLICATION_CREDENTIALS"
+      - name: Generate pundit line
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node scripts/octopus-pundit.mjs
+      - name: Clean up credentials
+        if: always()
+        run: rm -f "$GOOGLE_APPLICATION_CREDENTIALS"

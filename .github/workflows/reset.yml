@@ -1,0 +1,42 @@
+name: Reset competition (DANGER)
+
+# Wipes ALL predictions + points + Hall of Fame to start production empty.
+# Gated: only repo collaborators can run it, AND you must type the reset
+# password (which must match the RESET_PHRASE secret). Keeps schedule,
+# accounts and the playground.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type the reset password to confirm wiping all predictions & points'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GOOGLE_CLOUD_PROJECT: world-cup-2026-c145b
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/adc.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install firebase-admin@^12 --no-save
+      - name: Write credentials from refresh token
+        env:
+          RT: ${{ secrets.FIREBASE_REFRESH_TOKEN }}
+        run: |
+          printf '{"type":"authorized_user","client_id":"563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com","client_secret":"j9iVZfS8kkCEFUPaAeJV0sAi","refresh_token":"%s"}' "$RT" > "$GOOGLE_APPLICATION_CREDENTIALS"
+      - name: Reset
+        env:
+          CONFIRM: ${{ github.event.inputs.confirm }}
+          RESET_PHRASE: ${{ secrets.RESET_PHRASE }}
+        run: node scripts/reset-competition.mjs
+      - name: Clean up credentials
+        if: always()
+        run: rm -f "$GOOGLE_APPLICATION_CREDENTIALS"

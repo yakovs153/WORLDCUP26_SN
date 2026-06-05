@@ -89,6 +89,19 @@ export default function Admin() {
       {tab === 'polls' && <AdminSurveys />}
       {tab === 'predictions' && <AdminPredictions />}
       {tab === 'access' && <AdminAccess />}
+
+      {tab === 'predictions' && (
+        <section className="card" style={{ border: '1px solid var(--color-danger)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16, color: 'var(--color-danger)' }}>⚠️ אזור מסוכן — איפוס התחרות</h3>
+          <p className="text-muted" style={{ fontSize: 13 }}>
+            מחיקת כל הניחושים והנקודות והתחלה מאפס (לוח המשחקים, החשבונות והפלייגראונד נשמרים). מוגן בסיסמה ומתבצע רק מ-GitHub Actions כדי שלא יקרה בטעות.
+          </p>
+          <a href="https://github.com/yakovs153/WORLDCUP26_SN/actions/workflows/reset.yml" target="_blank" rel="noopener noreferrer"
+            className="btn-ghost" style={{ alignSelf: 'flex-start', padding: '8px 14px', fontSize: 13, border: '1px solid var(--color-danger)', borderRadius: 'var(--radius-md)', color: 'var(--color-danger)', textDecoration: 'none' }}>
+            פתח את מסך האיפוס (Run workflow → הקלד סיסמה) ↗
+          </a>
+        </section>
+      )}
     </div>
   )
 }

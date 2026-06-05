@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom'
 import MatchCard from '../components/MatchCard'
 import NextMatchHero from '../components/NextMatchHero'
 import KingBanner from '../components/KingBanner'
+import PunditCard from '../components/PunditCard'
 import { MatchCardSkeleton } from '../components/Skeleton'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { dateKey, formatDateHe } from '../lib/format'
@@ -63,6 +64,8 @@ export default function Matches() {
       {nextMatch && <NextMatchHero match={nextMatch} />}
 
       <KingBanner />
+
+      <PunditCard />
 
       {cfg.tipsEnabled && (
         <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px' }}>
