@@ -132,10 +132,13 @@ async function main() {
     } catch { /* ignore detail errors */ }
   }
 
-  // ===== Octopus auto-fill: anyone who forgot gets סטורי's pick at kickoff =====
+  // ===== Tom the Analyst auto-fill: anyone who forgot gets Tom's pick at kickoff =====
+  // Admin can disable this via appConfig.features.analystAutofill === false.
+  const analystAutofill = cfgSnap.exists ? cfgSnap.data()?.features?.analystAutofill !== false : true
   const nowMs = Date.now()
-  const allUserIds = (await db.collection('users').get()).docs.map((d) => d.id)
+  const allUserIds = analystAutofill ? (await db.collection('users').get()).docs.map((d) => d.id) : []
   for (const m of apiMatches) {
+    if (!analystAutofill) break
     const id = String(m.id)
     if (existing.get(id)?.autofilled === true) continue
     if (new Date(m.utcDate).getTime() > nowMs) continue // not locked yet
@@ -160,7 +163,8 @@ async function main() {
       for (const d of preds.docs) {
         const p = d.data()
         if (p.points !== null && p.points !== undefined) continue
-        const pts = applyStage(scorePrediction(p.homeScore, p.awayScore, fm.h, fm.a, scoringCfg), fm.stage)
+        let pts = applyStage(scorePrediction(p.homeScore, p.awayScore, fm.h, fm.a, scoringCfg), fm.stage)
+        if (p.auto) pts = Math.round(pts * 0.7) // Tom's auto-fill scores 70%
         tx.update(d.ref, { points: pts })
         userDelta.set(p.uid, (userDelta.get(p.uid) || 0) + pts)
       }

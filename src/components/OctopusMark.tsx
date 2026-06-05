@@ -6,9 +6,8 @@ import CubeMark from './CubeMark'
 export const OCTOPUS_IMG = '/octopus.png'
 
 /**
- * The Octopus mascot avatar — "פאול הקוביה", the StoreNext analytics octopus.
- * Renders the illustration when available, otherwise a CSS/emoji fallback so
- * the app never breaks if the asset is missing.
+ * Avatar for "טום האנליסט" — the StoreNext AI analyst. Renders the illustration
+ * when available, otherwise a CSS/emoji (🤖 + cube) fallback.
  */
 export default function OctopusMark({ size = 56, crowned = false }: { size?: number; crowned?: boolean }) {
   const [broken, setBroken] = useState(false)
@@ -35,7 +34,7 @@ export default function OctopusMark({ size = 56, crowned = false }: { size?: num
           <span style={{ position: 'absolute', opacity: 0.55, transform: 'translateY(2px)' }}>
             <CubeMark size={Math.round(size * 0.46)} />
           </span>
-          <span style={{ position: 'relative', fontSize: size * 0.62, lineHeight: 1, filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.4))' }}>🐙</span>
+          <span style={{ position: 'relative', fontSize: size * 0.62, lineHeight: 1, filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.4))' }}>🤖</span>
         </>
       ) : (
         <img

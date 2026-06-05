@@ -12,7 +12,7 @@ import { scorePrediction, applyStage } from '../lib/scoring'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { ringColors } from '../lib/players'
 import { fireConfetti } from '../lib/confetti'
-import { octoPredict } from '../lib/octopus'
+import { octoPredict, AUTO_FACTOR } from '../lib/octopus'
 
 interface Props {
   match: Match
@@ -75,7 +75,7 @@ export default function MatchCard({ match, prediction, uid }: Props) {
   const scoreKnown = match.homeScore !== null && match.awayScore !== null
   const potential =
     prediction && scoreKnown
-      ? prediction.points ?? applyStage(scorePrediction(prediction.homeScore, prediction.awayScore, match.homeScore!, match.awayScore!, cfg.scoring), match.stage, cfg.stageMultipliers)
+      ? prediction.points ?? Math.round(applyStage(scorePrediction(prediction.homeScore, prediction.awayScore, match.homeScore!, match.awayScore!, cfg.scoring), match.stage, cfg.stageMultipliers) * (prediction.auto ? AUTO_FACTOR : 1))
       : null
 
   // Confetti once when a finished match rewards the user.
@@ -179,18 +179,18 @@ export default function MatchCard({ match, prediction, uid }: Props) {
 
         {locked && prediction?.auto && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-muted)' }}>
-            🐙 סטורי התמנון ניחש בשבילך
+            🤖 טום האנליסט ניחש בשבילך · 70% מהנקודות
           </div>
         )}
 
         {locked && !prediction && (() => {
           const [oh, oa] = octoPredict(match.id)
-          const octoPts = scoreKnown ? applyStage(scorePrediction(oh, oa, match.homeScore!, match.awayScore!, cfg.scoring), match.stage, cfg.stageMultipliers) : null
+          const octoPts = scoreKnown ? Math.round(applyStage(scorePrediction(oh, oa, match.homeScore!, match.awayScore!, cfg.scoring), match.stage, cfg.stageMultipliers) * AUTO_FACTOR) : null
           return (
             <>
               <ResultBadge myHome={oh} myAway={oa} points={octoPts} isLive={match.status === 'LIVE'} />
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-muted)' }}>
-                🐙 שכחת לנחש — סטורי התמנון ניחש בשבילך
+                🤖 שכחת לנחש — טום האנליסט ניחש בשבילך · 70% מהנקודות
               </div>
             </>
           )

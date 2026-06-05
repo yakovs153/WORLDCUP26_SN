@@ -63,14 +63,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // ===== Leader perk =====
-    // appState/king is written by the sync worker (admin) only.
-    // appState/kingMessage may be set by its author (the UI shows it only to the king).
+    // ===== App state (king, kingMessage, pundit) =====
+    // Sync worker writes via admin SDK (bypasses rules). Admins can edit/override
+    // any of these from the automation panel. The king may post their own message.
     match /appState/{docId} {
       allow read: if true;
-      allow write: if docId == 'kingMessage'
-                   && isSignedIn()
-                   && request.resource.data.byUid == request.auth.uid;
+      allow write: if isAdmin()
+                   || (docId == 'kingMessage' && isSignedIn() && request.resource.data.byUid == request.auth.uid);
     }
 
     // ===== Polls =====

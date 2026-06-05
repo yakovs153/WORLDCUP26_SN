@@ -119,7 +119,7 @@ export default function AdminPredictions() {
                     <td style={{ padding: '7px 10px', color: 'var(--color-text-muted)' }}>{r.kickoff}</td>
                     <td style={{ padding: '7px 10px', fontWeight: 800, textAlign: 'center' }}>{r.pred}</td>
                     <td style={{ padding: '7px 10px', textAlign: 'center' }}>{r.points}</td>
-                    <td style={{ padding: '7px 10px', textAlign: 'center' }}>{r.auto && '🐙'}</td>
+                    <td style={{ padding: '7px 10px', textAlign: 'center' }}>{r.auto && '🤖'}</td>
                   </tr>
                 ))}
               </tbody>

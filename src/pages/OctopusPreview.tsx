@@ -7,7 +7,7 @@ function OctoHero() {
   if (broken) return null
   return (
     <div style={{ borderRadius: 'var(--radius-lg)', overflow: 'hidden', background: '#eef6fb', border: '1px solid var(--glass-border)' }}>
-      <img src={OCTOPUS_IMG} alt="התמנון" onError={() => setBroken(true)} style={{ display: 'block', width: '100%', height: 'auto' }} />
+      <img src={OCTOPUS_IMG} alt="האנליסט" onError={() => setBroken(true)} style={{ display: 'block', width: '100%', height: 'auto' }} />
     </div>
   )
 }
@@ -38,7 +38,7 @@ const SAMPLE = [
 
 const LEADER = [
   { rank: 1, name: 'רונן ל.', pts: 47, dept: 'שיווק' },
-  { rank: 2, name: 'סטורי התמנון 🐙', pts: 44, dept: 'האורקל', octo: true },
+  { rank: 2, name: 'טום האנליסט 🤖', pts: 44, dept: 'אנליסט AI', octo: true },
   { rank: 3, name: 'שרון ק.', pts: 41, dept: 'פיתוח' },
   { rank: 4, name: 'אני', pts: 38, dept: 'דאטה', me: true }
 ]
@@ -59,8 +59,8 @@ export default function OctopusPreview() {
         <section className="card" style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 20%, var(--color-bg-elevated)), var(--color-bg-elevated))' }}>
           <OctopusMark size={84} />
           <div>
-            <h1 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 26 }}>סטורי התמנון 🐙</h1>
-            <p className="text-muted" style={{ fontSize: 13, marginTop: 4 }}>האורקל של StoreNext — מנחש כל משחק, ומחליף אותך אם שכחת.</p>
+            <h1 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 26 }}>טום האנליסט 🤖</h1>
+            <p className="text-muted" style={{ fontSize: 13, marginTop: 4 }}>האנליסט מבוסס-ה-AI של StoreNext — מנתח ומנחש כל משחק, ומחליף אותך אם שכחת.</p>
           </div>
         </section>
 
@@ -69,9 +69,9 @@ export default function OctopusPreview() {
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 16, marginBottom: 10 }}>איך זה עובד</h2>
           <ul style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14, listStyle: 'none', padding: 0 }}>
             <li>🎲 <b>ניחוש לכל משחק</b> — תוצאה אקראית אך הגיונית (למשל 2-1, 3-0, 1-1), זהה לכל מי שלא ניחש.</li>
-            <li>😴 <b>שכחת לנחש?</b> התמנון ממלא בשבילך אוטומטית ברגע שהמשחק נעול.</li>
-            <li>💯 <b>נקודות מלאות</b> — ניחוש של התמנון שווה בדיוק כמו ניחוש שלך.</li>
-            <li>🏆 <b>משתתף בדירוג</b> — התמנון הוא שחקן לכל דבר. תצליח לנצח אותו?</li>
+            <li>😴 <b>שכחת לנחש?</b> האנליסט ממלא בשבילך אוטומטית ברגע שהמשחק נעול.</li>
+            <li>🎯 <b>70% מהנקודות</b> — אם שכחת, ניחוש של טום שווה 70% מניחוש שלך.</li>
+            <li>🏆 <b>משתתף בדירוג</b> — האנליסט הוא שחקן לכל דבר. תצליח לנצח אותו?</li>
           </ul>
         </section>
 
@@ -98,7 +98,7 @@ export default function OctopusPreview() {
             ))}
           </div>
           <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 'var(--radius-md)', background: 'color-mix(in srgb, var(--color-accent) 16%, transparent)', fontSize: 13, fontWeight: 700 }}>
-            😜 אתה 6 נקודות מאחורי התמנון. באמת תיתן ל-🐙 לנצח אותך?
+            😜 אתה 6 נקודות מאחורי האנליסט. באמת תיתן ל-🤖 לנצח אותך?
           </div>
         </section>
 
@@ -112,14 +112,14 @@ export default function OctopusPreview() {
               <div style={{ textAlign: 'center' }}><div style={{ fontSize: 30 }}>🇭🇷</div><div style={{ fontWeight: 800, fontSize: 13 }}>קרואטיה</div></div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: 'color-mix(in srgb, var(--color-primary) 14%, transparent)', borderTop: '1px solid var(--glass-border)', fontSize: 13, fontWeight: 700 }}>
-              <OctopusMark size={26} /> סטורי התמנון ניחש בשבילך
+              <OctopusMark size={26} /> סטורי האנליסט ניחש בשבילך
             </div>
           </div>
         </section>
 
         {/* Octopus picks for today */}
         <section className="card">
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 16, marginBottom: 10 }}>תחזיות התמנון להיום</h2>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 16, marginBottom: 10 }}>תחזיות האנליסט להיום</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {SAMPLE.map((m) => {
               const [h, a] = octoPredict(m.id)
@@ -140,7 +140,7 @@ export default function OctopusPreview() {
         {/* Chosen name */}
         <section className="card" style={{ textAlign: 'center' }}>
           <div className="text-muted" style={{ fontSize: 12, fontWeight: 700 }}>השם נבחר</div>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, marginTop: 4 }}>סטורי התמנון 🐙</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, marginTop: 4 }}>טום האנליסט 🤖</div>
         </section>
 
       </div>

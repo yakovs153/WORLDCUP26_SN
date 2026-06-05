@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { watchKing, setKingMessage, type KingState } from '../lib/king'
+import { useAppConfig } from '../hooks/useAppConfig'
 import { useToast } from './Toast'
 
 /** Leader perk: spotlights the current king and lets them broadcast one line. */
 export default function KingBanner() {
   const { user } = useAuth()
+  const cfg = useAppConfig()
   const toast = useToast()
   const [king, setKing] = useState<KingState | null>(null)
   const [editing, setEditing] = useState(false)
@@ -13,7 +15,7 @@ export default function KingBanner() {
   const [busy, setBusy] = useState(false)
 
   useEffect(() => watchKing(setKing), [])
-  if (!king || !king.uid || king.totalPoints <= 0) return null
+  if (!cfg.features.leaderPerk || !king || !king.uid || king.totalPoints <= 0) return null
   const isKing = !!user && user.uid === king.uid
 
   const save = async () => {

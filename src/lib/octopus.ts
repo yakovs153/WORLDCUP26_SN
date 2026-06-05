@@ -1,13 +1,13 @@
 import { scorePrediction, applyStage } from './scoring'
 import type { Match, ScoringConfig, StageMultipliers, LeaderboardEntry } from '../types'
 
-export const OCTOPUS_UID = 'octopus'
-export const OCTOPUS_NAME = 'סטורי התמנון'
+export const OCTOPUS_UID = 'octopus'        // internal id (kept stable)
+export const OCTOPUS_NAME = 'טום האנליסט'    // display name — the AI analyst
+export const AUTO_FACTOR = 0.7              // forgot to predict? Tom's pick scores 70%
 
 /**
- * The Octopus's pick for a match — deterministic from the match id, so it's the
- * same for everyone and reproducible. Random but plausible: 0–3 per side,
- * total ≤ 5 (never 6-6 or 9-1).
+ * Tom the Analyst's pick for a match — deterministic from the match id, so it's
+ * the same for everyone and reproducible. Plausible: 0–3 per side, total ≤ 5.
  */
 export function octoPredict(matchId: string): [number, number] {
   let h = 0
@@ -35,7 +35,7 @@ export function octopusEntry(matches: Match[], scoring: ScoringConfig, stageMult
     displayName: OCTOPUS_NAME,
     email: '',
     photoURL: null,
-    department: null,
+    department: '🤖 אנליסט AI',
     totalPoints: total,
     predictionsCount: count,
     joinedAt: { toDate: () => new Date() } as never,

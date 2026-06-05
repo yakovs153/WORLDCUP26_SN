@@ -17,7 +17,7 @@ const DEMO_PEERS: PeerPred[] = [
   { name: 'רונן ל.', home: 2, away: 1, auto: false },
   { name: 'שרון ק.', home: 1, away: 1, auto: false },
   { name: 'עמית ב.', home: 0, away: 2, auto: false },
-  { name: 'סטורי התמנון', home: 2, away: 0, auto: true }
+  { name: 'טום האנליסט', home: 2, away: 0, auto: true }
 ]
 
 const REACTIONS = ['🔥', '⚽', '😱', '🎉', '👏', '😂', '💪', '😭']
@@ -99,7 +99,7 @@ export default function MatchRoom() {
           <div style={{ marginTop: 8, maxHeight: 160, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
             {peers.map((p, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '3px 0' }}>
-                <span>{p.auto ? '🐙 ' : ''}{p.name}</span>
+                <span>{p.auto ? '🤖 ' : ''}{p.name}</span>
                 <b>{p.home}–{p.away}</b>
               </div>
             ))}

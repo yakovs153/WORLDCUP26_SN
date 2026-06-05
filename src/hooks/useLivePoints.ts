@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
 import { scorePrediction, applyStage } from '../lib/scoring'
-import { octoPredict } from '../lib/octopus'
+import { octoPredict, AUTO_FACTOR } from '../lib/octopus'
 import type { Match, Prediction, ScoringConfig, StageMultipliers } from '../types'
 
 /**
@@ -37,7 +37,9 @@ export function useLivePoints(matches: Match[], scoring: ScoringConfig, uids: st
         const p = pm[uid]
         const ph = p ? p.homeScore : oh
         const pa = p ? p.awayScore : oa
-        delta.set(uid, (delta.get(uid) || 0) + applyStage(scorePrediction(ph, pa, m.homeScore, m.awayScore, scoring), m.stage, stageMult))
+        const isAuto = !p || p.auto // Tom filled it (live) or it was auto-filled
+        const base = applyStage(scorePrediction(ph, pa, m.homeScore, m.awayScore, scoring), m.stage, stageMult)
+        delta.set(uid, (delta.get(uid) || 0) + Math.round(base * (isAuto ? AUTO_FACTOR : 1)))
       }
     }
     return delta

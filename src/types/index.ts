@@ -149,6 +149,12 @@ export type StageMultipliers = Record<MatchStage, number>
 
 export type HofMetric = 'prophet' | 'optimist' | 'draw' | 'disaster'
 
+export interface FeatureFlags {
+  pundit: boolean          // טום's daily AI recap card
+  leaderPerk: boolean      // king banner + megaphone
+  analystAutofill: boolean // Tom auto-fills forgotten predictions (admin override)
+}
+
 export interface HofCategory {
   key: HofMetric       // which computed metric drives this award
   title: string        // admin-editable label
@@ -162,6 +168,7 @@ export interface AppConfig {
   bonus: BonusScoringConfig
   content: ContentConfig
   hallOfFame: HofCategory[]            // admin-managed Hall of Fame & Shame categories
+  features: FeatureFlags               // admin on/off switches for automatic features
   tips: string[]                       // admin-managed "tip of the day" rotation
   tipsEnabled: boolean
   announcement: AnnouncementConfig
@@ -188,6 +195,7 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
     { key: 'draw',     emoji: '🤝', title: 'מלך התיקו',   active: true },
     { key: 'disaster', emoji: '💔', title: 'אסון השבוע',  active: true }
   ],
+  features: { pundit: true, leaderPerk: true, analystAutofill: true },
   tips: [],
   tipsEnabled: true,
   content: {
