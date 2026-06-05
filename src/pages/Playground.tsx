@@ -1,38 +1,38 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { collection, doc, onSnapshot } from 'firebase/firestore'
+import { doc, onSnapshot } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
 import LiveBadge from '../components/LiveBadge'
 import FlagIcon from '../components/FlagIcon'
 import type { Match } from '../types'
 
 /**
- * Hidden live-results playground (/playground). Watches a `playgroundMatches`
- * collection populated by scripts/playground-sync.mjs from a currently-live
- * competition — a safe way to verify the live pipeline before the World Cup.
+ * Hidden live-results playground (/playground). Reads ONE snapshot doc
+ * (playgroundSnapshot/current) written by the playground scripts — overwritten
+ * each run, so it always shows the current slate with no stale leftovers.
  */
+type PG = Match & { competition?: string }
+const shim = (ms: number) => ({ toDate: () => new Date(ms), toMillis: () => ms } as never)
+const reconstruct = (it: { kickoffMs?: number }): PG => ({ stage: 'GROUP', group: null, ...(it as Record<string, unknown>), kickoff: shim(it.kickoffMs ?? Date.now()) } as unknown as PG)
 
-const DEMO_SAMPLE: (Match & { competition?: string })[] = [
-  { id: 'd1', homeTeam: { name: 'ריאל מדריד', code: '', flag: '🇪🇸' }, awayTeam: { name: 'מנצ׳סטר סיטי', code: '', flag: '🏴' }, kickoff: { toDate: () => new Date() } as never, stage: 'GROUP', group: null, status: 'LIVE', homeScore: 2, awayScore: 1, competition: 'ליגת האלופות (דמו)' },
-  { id: 'd2', homeTeam: { name: 'באיירן', code: '', flag: '🇩🇪' }, awayTeam: { name: 'פ.ס.ז׳', code: '', flag: '🇫🇷' }, kickoff: { toDate: () => new Date() } as never, stage: 'GROUP', group: null, status: 'SCHEDULED', homeScore: null, awayScore: null, competition: 'ליגת האלופות (דמו)' }
+const DEMO_SAMPLE: PG[] = [
+  reconstruct({ id: 'd1', homeTeam: { name: 'ריאל מדריד', code: '', flag: '🇪🇸' }, awayTeam: { name: 'מנצ׳סטר סיטי', code: '', flag: '🏴' }, kickoffMs: Date.now(), status: 'LIVE', homeScore: 2, awayScore: 1, competition: 'ליגת האלופות (דמו)' } as never),
+  reconstruct({ id: 'd2', homeTeam: { name: 'באיירן', code: '', flag: '🇩🇪' }, awayTeam: { name: 'פ.ס.ז׳', code: '', flag: '🇫🇷' }, kickoffMs: Date.now(), status: 'SCHEDULED', homeScore: null, awayScore: null, competition: 'ליגת האלופות (דמו)' } as never)
 ]
 
 export default function Playground() {
-  const [matches, setMatches] = useState<(Match & { competition?: string })[]>(DEMO_MODE ? DEMO_SAMPLE : [])
+  const [matches, setMatches] = useState<PG[]>(DEMO_MODE ? DEMO_SAMPLE : [])
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
 
   useEffect(() => {
     if (DEMO_MODE) return
-    const unsubM = onSnapshot(collection(db, 'playgroundMatches'), (snap) => {
-      const rows = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Match, 'id'>) })) as (Match & { competition?: string })[]
-      rows.sort((a, b) => a.kickoff.toMillis() - b.kickoff.toMillis())
+    return onSnapshot(doc(db, 'playgroundSnapshot', 'current'), (s) => {
+      const items = (s.data()?.items as Array<{ kickoffMs?: number }> | undefined) || []
+      const rows = items.map(reconstruct).sort((a, b) => a.kickoff.toMillis() - b.kickoff.toMillis())
       setMatches(rows)
-    })
-    const unsubMeta = onSnapshot(doc(db, 'playgroundMeta', 'main'), (s) => {
       const ts = s.data()?.updatedAt
       setUpdatedAt(ts?.toDate ? ts.toDate() : null)
     })
-    return () => { unsubM(); unsubMeta() }
   }, [])
 
   return (

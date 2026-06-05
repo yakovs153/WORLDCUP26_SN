@@ -19,10 +19,15 @@ const LEAGUES = [
 ]
 const stateMap = (s) => (s === 'in' ? 'LIVE' : s === 'post' ? 'FINISHED' : 'SCHEDULED')
 
+// Query a SPECIFIC date (today) — otherwise ESPN returns a league's most recent
+// matchday, which for off-season leagues (e.g. EPL in June) is stale old games.
+const d = new Date()
+const today = `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(d.getUTCDate()).padStart(2, '0')}`
+
 const all = []
 for (const [path, label] of LEAGUES) {
   try {
-    const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${path}/scoreboard`)
+    const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${path}/scoreboard?dates=${today}`)
     if (!r.ok) continue
     const j = await r.json()
     for (const ev of (j.events || [])) {
@@ -35,7 +40,7 @@ for (const [path, label] of LEAGUES) {
         id: `espn-${ev.id}`,
         homeTeam: { name: home.team?.shortDisplayName || home.team?.displayName || '?', code: home.team?.abbreviation || '', flag: '' },
         awayTeam: { name: away.team?.shortDisplayName || away.team?.displayName || '?', code: away.team?.abbreviation || '', flag: '' },
-        kickoff: Timestamp.fromDate(new Date(ev.date || Date.now())),
+        kickoffMs: new Date(ev.date || Date.now()).getTime(),
         status,
         homeScore: home.score != null && home.score !== '' ? parseInt(home.score, 10) : null,
         awayScore: away.score != null && away.score !== '' ? parseInt(away.score, 10) : null,
@@ -49,12 +54,8 @@ for (const [path, label] of LEAGUES) {
 }
 
 const live = all.filter((x) => x.live)
-const pick = (live.length ? live : all).slice(0, 12)
-const batch = db.batch()
-for (const m of pick) {
-  const { live: _l, ...doc } = m
-  batch.set(db.collection('playgroundMatches').doc(m.id), { ...doc, lastUpdated: Timestamp.now() }, { merge: true })
-}
-batch.set(db.collection('playgroundMeta').doc('main'), { updatedAt: Timestamp.now(), count: pick.length, competition: live.length ? 'חי (ESPN)' : 'ESPN — משחקי היום' }, { merge: true })
-await batch.commit()
+const pick = (live.length ? live : all).slice(0, 12).map(({ live: _l, ...doc }) => doc)
+
+// ONE snapshot doc (overwritten each run → no stale leftovers, no reads).
+await db.collection('playgroundSnapshot').doc('current').set({ items: pick, updatedAt: Timestamp.now() })
 console.log(`livetest: ${all.length} events, ${live.length} live, wrote ${pick.length}`)

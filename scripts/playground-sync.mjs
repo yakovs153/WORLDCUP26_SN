@@ -35,24 +35,17 @@ if (!res.ok) { console.error(`API ${res.status}: ${await res.text()}`); process.
 const { matches = [] } = await res.json()
 
 // Keep it to today + live/recent so the page stays focused.
-const batch = db.batch()
-let n = 0
-for (const m of matches) {
-  const id = String(m.id)
-  batch.set(db.collection('playgroundMatches').doc(id), {
-    homeTeam: { name: m.homeTeam.shortName || m.homeTeam.name || 'TBD', code: m.homeTeam.tla || '', flag: '' },
-    awayTeam: { name: m.awayTeam.shortName || m.awayTeam.name || 'TBD', code: m.awayTeam.tla || '', flag: '' },
-    kickoff: Timestamp.fromDate(new Date(m.utcDate)),
-    status: statusOf(m.status),
-    homeScore: m.score?.fullTime?.home ?? null,
-    awayScore: m.score?.fullTime?.away ?? null,
-    competition: m.competition?.name || COMP || '',
-    lastUpdated: Timestamp.now()
-  }, { merge: true })
-  n++
-}
-batch.set(db.collection('playgroundMeta').doc('main'), {
-  updatedAt: Timestamp.now(), count: n, competition: COMP || 'today'
-}, { merge: true })
-await batch.commit()
-console.log(`playground sync ok: ${n} matches (comp=${COMP || 'today'})`)
+const items = matches.slice(0, 20).map((m) => ({
+  id: String(m.id),
+  homeTeam: { name: m.homeTeam.shortName || m.homeTeam.name || 'TBD', code: m.homeTeam.tla || '', flag: '' },
+  awayTeam: { name: m.awayTeam.shortName || m.awayTeam.name || 'TBD', code: m.awayTeam.tla || '', flag: '' },
+  kickoffMs: new Date(m.utcDate).getTime(),
+  status: statusOf(m.status),
+  homeScore: m.score?.fullTime?.home ?? null,
+  awayScore: m.score?.fullTime?.away ?? null,
+  minute: m.minute ?? null,
+  scorers: [],
+  competition: m.competition?.name || COMP || ''
+}))
+await db.collection('playgroundSnapshot').doc('current').set({ items, updatedAt: Timestamp.now() })
+console.log(`playground sync ok: ${items.length} matches (comp=${COMP || 'today'})`)

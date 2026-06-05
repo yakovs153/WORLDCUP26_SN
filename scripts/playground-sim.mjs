@@ -16,7 +16,6 @@ const STEP = Math.max(2, parseInt(process.env.STEP_SECONDS || '8', 10))
 const WALL = Math.max(1, parseInt(process.env.SIM_MINUTES || '5', 10)) * 60
 const STEPS = Math.max(6, Math.floor(WALL / STEP))
 const sleep = (s) => new Promise((r) => setTimeout(r, s * 1000))
-const ref = db.collection('playgroundMatches').doc('sim-1')
 
 const HOME = { name: 'ברזיל', code: 'BRA', flag: '' }
 const AWAY = { name: 'ארגנטינה', code: 'ARG', flag: '' }
@@ -38,17 +37,14 @@ for (let i = 0; i <= STEPS; i++) {
     scorers.push({ name: s.name, team: s.team, minute })
   }
   const finished = i === STEPS
-  await ref.set({
-    homeTeam: HOME, awayTeam: AWAY,
-    kickoff: Timestamp.now(),
-    status: finished ? 'FINISHED' : 'LIVE',
-    homeScore: hs, awayScore: as,
-    minute: finished ? 90 : minute,
-    scorers,
-    competition: 'סימולציה — בדיקת חיבור',
-    lastUpdated: Timestamp.now()
-  }, { merge: true })
-  await db.collection('playgroundMeta').doc('main').set({ updatedAt: Timestamp.now(), count: 1, competition: 'SIM' }, { merge: true })
+  await db.collection('playgroundSnapshot').doc('current').set({
+    items: [{
+      id: 'sim-1', homeTeam: HOME, awayTeam: AWAY, kickoffMs: Date.now(),
+      status: finished ? 'FINISHED' : 'LIVE', homeScore: hs, awayScore: as,
+      minute: finished ? 90 : minute, scorers, competition: 'סימולציה — בדיקת חיבור'
+    }],
+    updatedAt: Timestamp.now()
+  })
   console.log(`  ${minute}'  ${hs}-${as}${finished ? '  (FT)' : ''}`)
   if (!finished) await sleep(STEP)
 }

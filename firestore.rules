@@ -59,7 +59,11 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // ===== Playground (live-pipeline test) — written by the playground sync only =====
+    // ===== Playground (live-pipeline test) — written by the playground scripts only =====
+    match /playgroundSnapshot/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
     match /playgroundMatches/{docId} {
       allow read: if true;
       allow write: if false;
