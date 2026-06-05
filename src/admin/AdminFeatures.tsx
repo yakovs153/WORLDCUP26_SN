@@ -99,6 +99,18 @@ export default function AdminFeatures() {
         </button>
       </section>
 
+      {/* Trigger Tom's daily run on demand (real Gemini call) */}
+      <section className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>✨ הרץ את טום עכשיו</h3>
+        <p className="text-muted" style={{ fontSize: 12 }}>
+          רוצה לראות את שולחן הפרשנים, האימון האישי וההצעות לסקרים מבלי לחכות לבוקר? פתח את ה-Action ולחץ "Run workflow".
+        </p>
+        <a href="https://github.com/yakovs153/WORLDCUP26_SN/actions/workflows/pundit.yml" target="_blank" rel="noopener noreferrer"
+          className="btn-ghost" style={{ alignSelf: 'flex-start', padding: '8px 14px', fontSize: 13, border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', color: 'var(--color-text)', textDecoration: 'none' }}>
+          פתח את ה-Action ↗
+        </a>
+      </section>
+
       {/* Override Tom's daily recap */}
       <section className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>🤖 מבזק טום (עקיפה ידנית)</h3>

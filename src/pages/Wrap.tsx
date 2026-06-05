@@ -9,6 +9,15 @@ import { useAppConfig } from '../hooks/useAppConfig'
 import { scorePrediction, applyStage } from '../lib/scoring'
 import { tomPick, OCTOPUS_NAME } from '../lib/octopus'
 
+// Preview lines shown before the tournament starts (or before Tom has data to coach on).
+// Once finished matches exist, the daily job replaces this with a real, personalized line.
+const PREVIEW_LINES = [
+  'עוד אין נתונים אמיתיים לאמן עליהם — אבל ברגע שהמשחקים יתחילו, הנה תקבל טיפ אישי על סמך הניחושים שלך.',
+  'אחרי שלושה משחקים אקח את הסטטיסטיקה שלך ואגיד לך איפה אתה מרוויח נקודות ואיפה אתה מאבד.',
+  'תכניס ניחושים מגוונים — אם תמיד תנחש 1-0, אני ארדוף אותך עם הנתונים אחרי המשחק הראשון.',
+  'אני אנליסט AI, לא חשבונאי. בקרוב אגיד לך בדיוק כמה נקודות הפסדת בגלל ניחושי תיקו זהירים מדי.'
+]
+
 /** "סיכום העונה" — a per-user season review (best call, vs-Tom, rank). */
 export default function Wrap() {
   const { user } = useAuth()
@@ -47,11 +56,24 @@ export default function Wrap() {
         <h1 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 26 }}>📊 סיכום העונה שלי</h1>
       </div>
 
+      {/* AI coach card — always visible (real line if available, else a preview) */}
+      <div className="card" style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: 'linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-elevated)), var(--color-bg-elevated))' }}>
+        <span style={{ fontSize: 22 }}>🤖</span>
+        <div>
+          <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>
+            טום האנליסט · אימון אישי{!userDoc?.coach?.text && ' · תצוגה מקדימה'}
+          </div>
+          <div style={{ fontWeight: 600, fontSize: 14, lineHeight: 1.6 }}>
+            {userDoc?.coach?.text || PREVIEW_LINES[(user?.uid || 'a').charCodeAt(0) % PREVIEW_LINES.length]}
+          </div>
+        </div>
+      </div>
+
       {stats.finishedCount === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: 28 }}>
           <div style={{ fontSize: 40, marginBottom: 8 }}>⏳</div>
           <h3>הסיכום ייבנה תוך כדי הטורניר</h3>
-          <p className="text-muted" style={{ marginTop: 8, fontSize: 13 }}>חזור לכאן אחרי שיתחילו המשחקים.</p>
+          <p className="text-muted" style={{ marginTop: 8, fontSize: 13 }}>חזור לכאן אחרי שיתחילו המשחקים. סטטיסטיקות, "אתה מול טום" וטיפים אישיים יופיעו כאן.</p>
         </div>
       ) : (
         <>
@@ -61,16 +83,6 @@ export default function Wrap() {
             <Stat label="ניחושים שהוכרעו" value={String(stats.predicted)} />
             <Stat label="תוצאות בול 🎯" value={String(stats.exact)} />
           </div>
-
-          {userDoc?.coach?.text && (
-            <div className="card" style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: 'linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-elevated)), var(--color-bg-elevated))' }}>
-              <span style={{ fontSize: 22 }}>🤖</span>
-              <div>
-                <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>טום האנליסט · אימון אישי</div>
-                <div style={{ fontWeight: 600, fontSize: 14, lineHeight: 1.6 }}>{userDoc.coach.text}</div>
-              </div>
-            </div>
-          )}
 
           {stats.best && (
             <div className="card">
