@@ -6,6 +6,7 @@ import { useMatches } from '../hooks/useMatches'
 import { usePredictions } from '../hooks/usePredictions'
 import { useToast } from '../components/Toast'
 import StatsBreakdown from '../components/StatsBreakdown'
+import CountUp from '../components/CountUp'
 import NemesisCard from '../components/NemesisCard'
 import StreaksBadges from '../components/StreaksBadges'
 import { useIsAdmin } from '../admin/AdminGate'
@@ -110,7 +111,7 @@ export default function Profile() {
       <div className="card" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', textAlign: 'center', gap: 8 }}>
         <div>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, color: 'var(--color-primary)' }}>
-            {data?.totalPoints ?? 0}
+            <CountUp value={data?.totalPoints ?? 0} />
           </div>
           <div className="text-muted" style={{ fontSize: 13 }}>סך נקודות</div>
         </div>

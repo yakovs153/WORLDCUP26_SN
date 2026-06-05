@@ -7,6 +7,7 @@ import { useLivePoints } from '../hooks/useLivePoints'
 import { LeaderboardRowSkeleton } from '../components/Skeleton'
 import HallOfFame from '../components/HallOfFame'
 import OctopusMark from '../components/OctopusMark'
+import CountUp from '../components/CountUp'
 import { octopusEntry, OCTOPUS_UID } from '../lib/octopus'
 import type { LeaderboardEntry } from '../types'
 
@@ -101,7 +102,7 @@ function Personal({ entries, meUid }: { entries: LeaderboardEntry[]; meUid?: str
                 <div className="text-muted" style={{ fontSize: 12 }}>{e.department || `${e.predictionsCount} ניחושים`}</div>
               </div>
             </div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--color-primary)' }}>{e.totalPoints}</div>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--color-primary)' }}><CountUp value={e.totalPoints} /></div>
           </div>
         )
       })}

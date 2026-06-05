@@ -159,12 +159,29 @@ a:hover { text-decoration: underline; }
 }
 
 .page-fade {
-  animation: fadeIn 0.25s ease both;
+  animation: fadeInUp 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .pop {
   animation: pop 0.3s ease both;
 }
+
+/* Wrong final result — quick shake */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+.shake { animation: shake 0.5s ease both; }
+
+/* Live strip pulse */
+@keyframes livePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(225,29,72,0.45); }
+  50% { box-shadow: 0 0 14px 2px rgba(225,29,72,0.55); }
+}
+.live-strip { animation: livePulse 1.8s ease-in-out infinite; }
 
 /* Stagger helper - apply alongside .animate-in */
 .stagger > *:nth-child(1)  { animation-delay: 0.02s; }
@@ -179,7 +196,7 @@ a:hover { text-decoration: underline; }
 .stagger > *:nth-child(n+10) { animation-delay: 0.30s; }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-in, .page-fade, .pop, .skeleton-shimmer { animation: none !important; }
+  .animate-in, .page-fade, .pop, .skeleton-shimmer, .shake, .live-strip { animation: none !important; }
 }
 
 @keyframes shimmer {

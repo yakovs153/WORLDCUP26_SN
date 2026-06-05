@@ -87,10 +87,16 @@ export default function MatchCard({ match, prediction, uid }: Props) {
     }
   }, [match.status, potential])
 
+  const homeRing = ringColors(match.homeTeam.code)
+  const awayRing = ringColors(match.awayTeam.code)
+
   return (
     <div
       className="card card-3d match-card"
-      style={{ position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0 }}
+      style={{
+        position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0,
+        background: `linear-gradient(135deg, color-mix(in srgb, ${homeRing.a} 9%, var(--color-surface)) 0%, var(--color-surface) 45%, color-mix(in srgb, ${awayRing.a} 9%, var(--color-surface)) 100%)`
+      }}
     >
       {/* Header strip */}
       <div
@@ -174,7 +180,7 @@ export default function MatchCard({ match, prediction, uid }: Props) {
         )}
 
         {locked && prediction && (
-          <ResultBadge myHome={prediction.homeScore} myAway={prediction.awayScore} points={potential} isLive={match.status === 'LIVE'} />
+          <ResultBadge myHome={prediction.homeScore} myAway={prediction.awayScore} points={potential} isLive={match.status === 'LIVE'} wrong={match.status === 'FINISHED' && (potential ?? 0) === 0} />
         )}
 
         {locked && prediction?.auto && (
@@ -269,10 +275,11 @@ function ScorersRow({ scorers, homeCode }: { scorers: NonNullable<Match['scorers
   )
 }
 
-function ResultBadge({ myHome, myAway, points, isLive }: { myHome: number; myAway: number; points: number | null | undefined; isLive: boolean }) {
+function ResultBadge({ myHome, myAway, points, isLive, wrong }: { myHome: number; myAway: number; points: number | null | undefined; isLive: boolean; wrong?: boolean }) {
   const good = (points ?? 0) > 0
   return (
     <div
+      className={wrong ? 'shake' : undefined}
       style={{
         display: 'flex',
         justifyContent: 'space-between',

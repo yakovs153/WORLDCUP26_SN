@@ -6,6 +6,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { Link } from 'react-router-dom'
 import MatchCard from '../components/MatchCard'
 import NextMatchHero from '../components/NextMatchHero'
+import LiveStrip from '../components/LiveStrip'
 import KingBanner from '../components/KingBanner'
 import PunditCard from '../components/PunditCard'
 import { MatchCardSkeleton } from '../components/Skeleton'
@@ -52,6 +53,7 @@ export default function Matches() {
 
   return (
     <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <LiveStrip />
       {cfg.content.prize && (
         <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px' }}>
           <span style={{ fontSize: 24 }}>🎁</span>
