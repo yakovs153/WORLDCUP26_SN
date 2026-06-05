@@ -15,6 +15,14 @@
  */
 import { initializeApp, cert, applicationDefault } from 'firebase-admin/app'
 import { getFirestore, Timestamp, FieldValue } from 'firebase-admin/firestore'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
+
+// Hebrew team names keyed by FIFA code — the API serves English, we display Hebrew.
+const __dir = dirname(fileURLToPath(import.meta.url))
+const HE_TEAMS = JSON.parse(readFileSync(join(__dir, '..', 'src', 'data', 'heTeams.json'), 'utf8'))
+const heName = (tla, fallback) => (tla && HE_TEAMS[tla.toUpperCase()]) || fallback || ''
 
 const TOKEN = process.env.FOOTBALL_DATA_TOKEN
 if (!TOKEN) { console.error('FOOTBALL_DATA_TOKEN missing'); process.exit(1) }
@@ -69,8 +77,8 @@ async function main() {
     if (cur?.manualLock === true) { skipped++; }
     else {
       batch.set(db.collection('matches').doc(id), {
-        homeTeam: { name: m.homeTeam.shortName || m.homeTeam.name || '', code: m.homeTeam.tla || '', flag: '' },
-        awayTeam: { name: m.awayTeam.shortName || m.awayTeam.name || '', code: m.awayTeam.tla || '', flag: '' },
+        homeTeam: { name: heName(m.homeTeam.tla, m.homeTeam.shortName || m.homeTeam.name), code: m.homeTeam.tla || '', flag: '' },
+        awayTeam: { name: heName(m.awayTeam.tla, m.awayTeam.shortName || m.awayTeam.name), code: m.awayTeam.tla || '', flag: '' },
         kickoff: Timestamp.fromDate(new Date(m.utcDate)),
         stage: STAGE[m.stage] || 'GROUP',
         group: m.group ? String(m.group).replace('GROUP_', '') : (cur?.group ?? null),

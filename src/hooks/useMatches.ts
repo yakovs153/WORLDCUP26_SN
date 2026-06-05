@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
 import { getDemoMatches } from '../lib/demoData'
+import { localizeTeam } from '../lib/teamNames'
 import type { Match } from '../types'
 
 export function useMatches() {
@@ -27,7 +28,10 @@ export function useMatches() {
     const unsub = onSnapshot(
       q,
       (snap) => {
-        const out: Match[] = snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Match, 'id'>) }))
+        const out: Match[] = snap.docs.map((d) => {
+          const m = { id: d.id, ...(d.data() as Omit<Match, 'id'>) }
+          return { ...m, homeTeam: localizeTeam(m.homeTeam), awayTeam: localizeTeam(m.awayTeam) }
+        })
         setMatches(out)
         setLoading(false)
       },

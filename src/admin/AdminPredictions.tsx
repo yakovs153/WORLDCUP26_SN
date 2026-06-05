@@ -4,6 +4,7 @@ import { db, DEMO_MODE } from '../firebase'
 import { useAuth } from '../auth/AuthProvider'
 import { getDemoMatches, getDemoPredictions, getDemoUser } from '../lib/demoData'
 import { useToast } from '../components/Toast'
+import { heName } from '../lib/teamNames'
 import type { Match, Prediction, UserDoc } from '../types'
 
 interface Row {
@@ -18,7 +19,7 @@ function toRow(p: Prediction, m: Match | undefined, u: UserDoc | undefined): Row
     user: u?.displayName ?? p.uid,
     email: u?.email ?? '',
     dept: u?.department ?? '',
-    match: m ? `${m.homeTeam.name} - ${m.awayTeam.name}` : p.matchId,
+    match: m ? `${heName(m.homeTeam.code, m.homeTeam.name)} - ${heName(m.awayTeam.code, m.awayTeam.name)}` : p.matchId,
     kickoff: m ? m.kickoff.toDate().toLocaleString('he-IL') : '',
     pred: `${p.homeScore}-${p.awayScore}`,
     points: p.points == null ? '' : String(p.points),
