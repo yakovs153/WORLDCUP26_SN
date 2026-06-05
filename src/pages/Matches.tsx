@@ -21,7 +21,6 @@ export default function Matches() {
 
   const grouped = useMemo(() => groupByDate(matches), [matches])
   const activePolls = useMemo(() => cfg.polls.filter((p) => p.active), [cfg.polls])
-  const activeSurveys = useMemo(() => cfg.surveys.filter((s) => s.active && s.questions.length > 0), [cfg.surveys])
 
   const nextMatch = useMemo(() => {
     const now = Date.now()
@@ -65,24 +64,6 @@ export default function Matches() {
 
       {activePolls.map((p) => (
         <PollCard key={p.id} poll={p} />
-      ))}
-
-      {activeSurveys.map((s) => (
-        <Link
-          key={s.id}
-          to={`/survey/${s.id}`}
-          className="glass animate-in"
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', textDecoration: 'none', color: 'inherit' }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 24 }}>📋</span>
-            <div>
-              <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>סקר · {s.questions.length} שאלות</div>
-              <div style={{ fontWeight: 800 }}>{s.title}</div>
-            </div>
-          </div>
-          <span style={{ fontSize: 20, color: 'var(--color-primary)' }}>←</span>
-        </Link>
       ))}
 
       {needsBonus && (

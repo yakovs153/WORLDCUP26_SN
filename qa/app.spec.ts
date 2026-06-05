@@ -23,6 +23,7 @@ const ROUTES: Record<string, string> = {
   Teams: '/?demo=1&sim=1#/teams',
   Bracket: '/?demo=1&sim=1#/bracket',
   Bonus: '/?demo=1&sim=1#/bonus',
+  Surveys: '/?demo=1&sim=1#/surveys',
   MyPredictions: '/?demo=1&sim=1#/my',
   Leaderboard: '/?demo=1&sim=1#/leaderboard',
   Profile: '/?demo=1&sim=1#/profile',
@@ -119,8 +120,8 @@ test('survey: admin creates a survey, user fills it and sees public results', as
   await page.getByRole('button', { name: 'פרסום' }).click()
   await page.waitForTimeout(500)
 
-  // User opens the survey from the home card
-  await page.goto('/?demo=1&sim=1#/', { waitUntil: 'networkidle' })
+  // User opens the survey from the dedicated Surveys tab
+  await page.goto('/?demo=1&sim=1#/surveys', { waitUntil: 'networkidle' })
   await page.waitForTimeout(800)
   await page.locator('a[href*="/survey/"]').first().click()
   await page.waitForTimeout(500)

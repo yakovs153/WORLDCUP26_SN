@@ -196,7 +196,7 @@ export function getDemoGoldenBoot(): Record<string, number> {
 function seedDemoGoldenBoot(): void {
   const goals: Record<string, number> = {
     'קיליאן מבאפה': 5, 'הארי קיין': 4, 'ויניסיוס ג׳וניור': 3,
-    'לאמין יאמאל': 3, 'ג׳וד בלינגהאם': 2, 'לאוטרו מרטינס': 2
+    'לאמין יאמאל': 3, 'ליאו מסי': 2, 'לאוטרו מרטינס': 2
   }
   localStorage.setItem(GOLDEN_BOOT_KEY, JSON.stringify(goals))
   window.dispatchEvent(new Event('demo-golden-boot-changed'))

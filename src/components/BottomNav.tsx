@@ -6,6 +6,7 @@ const ITEMS: { to: string; label: string; key?: keyof import('../types').NavIcon
   { to: '/teams',       label: 'בתים',   icon: '🌍' },
   { to: '/bonus',       label: 'בונוס',  key: 'bonus' },
   { to: '/my',          label: 'ניחושים שלי', key: 'my' },
+  { to: '/surveys',     label: 'סקרים',  icon: '🗳️' },
   { to: '/leaderboard', label: 'דירוג',  key: 'leaderboard' },
   { to: '/profile',     label: 'פרופיל', key: 'profile' }
 ]
