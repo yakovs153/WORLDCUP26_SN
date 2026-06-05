@@ -16,6 +16,7 @@ export function getDemoConfig(): AppConfig {
       stageMultipliers: { ...DEFAULT_APP_CONFIG.stageMultipliers, ...(parsed.stageMultipliers || {}) },
       bonus: { ...DEFAULT_APP_CONFIG.bonus, ...(parsed.bonus || {}) },
       content: { ...DEFAULT_APP_CONFIG.content, ...(parsed.content || {}) },
+      hallOfFame: Array.isArray(parsed.hallOfFame) ? parsed.hallOfFame : DEFAULT_APP_CONFIG.hallOfFame,
       tips: parsed.tips || [],
       tipsEnabled: parsed.tipsEnabled !== false,
       announcement: { ...DEFAULT_APP_CONFIG.announcement, ...(parsed.announcement || {}) },

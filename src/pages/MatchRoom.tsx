@@ -7,6 +7,18 @@ import { watchRoom, sendRoomMessage, type RoomMsg } from '../lib/matchRoom'
 import FlagIcon from '../components/FlagIcon'
 import LiveBadge from '../components/LiveBadge'
 import { formatTimeHe, stageLabel } from '../lib/format'
+import { collection, getDocs, query, where } from 'firebase/firestore'
+import { db, DEMO_MODE } from '../firebase'
+import type { Prediction, UserDoc } from '../types'
+
+interface PeerPred { name: string; home: number; away: number; auto: boolean }
+
+const DEMO_PEERS: PeerPred[] = [
+  { name: 'רונן ל.', home: 2, away: 1, auto: false },
+  { name: 'שרון ק.', home: 1, away: 1, auto: false },
+  { name: 'עמית ב.', home: 0, away: 2, auto: false },
+  { name: 'סטורי התמנון', home: 2, away: 0, auto: true }
+]
 
 const REACTIONS = ['🔥', '⚽', '😱', '🎉', '👏', '😂', '💪', '😭']
 
@@ -29,7 +41,27 @@ export default function MatchRoom() {
   }
 
   const myPred = byMatchId[id]
-  const revealed = match && match.status !== 'SCHEDULED'
+  const revealed = !!match && match.status !== 'SCHEDULED'
+
+  // Everyone's predictions — only revealed once the match has kicked off.
+  const [peers, setPeers] = useState<PeerPred[]>([])
+  useEffect(() => {
+    if (!revealed) { setPeers([]); return }
+    if (DEMO_MODE) { setPeers(DEMO_PEERS); return }
+    let cancelled = false
+    Promise.all([
+      getDocs(query(collection(db, 'predictions'), where('matchId', '==', id))),
+      getDocs(collection(db, 'users'))
+    ]).then(([pSnap, uSnap]) => {
+      const names = new Map(uSnap.docs.map((d) => [d.id, (d.data() as UserDoc).displayName || 'משתמש']))
+      const rows = pSnap.docs.map((d) => {
+        const p = d.data() as Prediction
+        return { name: names.get(p.uid) || 'משתמש', home: p.homeScore, away: p.awayScore, auto: !!p.auto }
+      }).sort((a, b) => a.name.localeCompare(b.name, 'he'))
+      if (!cancelled) setPeers(rows)
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [id, revealed])
 
   return (
     <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', height: 'calc(100vh - var(--header-height) - var(--bottom-nav-height) - 8px)' }}>
@@ -55,6 +87,25 @@ export default function MatchRoom() {
           )}
         </div>
       )}
+
+      {/* Everyone's predictions — locked until kickoff */}
+      {!revealed ? (
+        <div className="glass" style={{ padding: '10px 14px', textAlign: 'center', fontSize: 13, color: 'var(--color-text-muted)' }}>
+          🔒 ניחושי המשתתפים ייחשפו עם שריקת הפתיחה
+        </div>
+      ) : peers.length > 0 ? (
+        <details className="glass" style={{ padding: '8px 14px' }}>
+          <summary style={{ cursor: 'pointer', fontWeight: 800, fontSize: 14 }}>👀 ניחושי המשתתפים ({peers.length})</summary>
+          <div style={{ marginTop: 8, maxHeight: 160, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {peers.map((p, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '3px 0' }}>
+                <span>{p.auto ? '🐙 ' : ''}{p.name}</span>
+                <b>{p.home}–{p.away}</b>
+              </div>
+            ))}
+          </div>
+        </details>
+      ) : null}
 
       {/* Reactions */}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>

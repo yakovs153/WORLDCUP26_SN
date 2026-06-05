@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import type { Match, Prediction } from '../types'
 import FlagIcon from './FlagIcon'
 import LiveBadge from './LiveBadge'
@@ -30,6 +30,7 @@ export default function MatchCard({ match, prediction, uid }: Props) {
   const [error, setError] = useState<string | null>(null)
   const toast = useToast()
   const cfg = useAppConfig()
+  const navigate = useNavigate()
 
   useEffect(() => {
     setHome(prediction?.homeScore ?? null)
@@ -119,7 +120,11 @@ export default function MatchCard({ match, prediction, uid }: Props) {
 
       {/* Body */}
       <div style={{ padding: '14px 16px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 12 }}>
+        <div
+          onClick={() => navigate(`/match/${match.id}`)}
+          title="פתח חדר משחק וניחושים"
+          style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 12, cursor: 'pointer' }}
+        >
           <TeamSide team={match.homeTeam} backed={backed === 'home'} />
           <CenterScore match={match} locked={locked} />
           <TeamSide team={match.awayTeam} backed={backed === 'away'} />

@@ -35,6 +35,7 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
           stageMultipliers: { ...DEFAULT_APP_CONFIG.stageMultipliers, ...(data.stageMultipliers || {}) },
           bonus: { ...DEFAULT_APP_CONFIG.bonus, ...(data.bonus || {}) },
           content: { ...DEFAULT_APP_CONFIG.content, ...(data.content || {}) },
+          hallOfFame: Array.isArray(data.hallOfFame) ? data.hallOfFame : DEFAULT_APP_CONFIG.hallOfFame,
           tips: data.tips || [],
           tipsEnabled: data.tipsEnabled !== false,
           announcement: { ...DEFAULT_APP_CONFIG.announcement, ...(data.announcement || {}) },

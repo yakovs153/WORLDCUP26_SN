@@ -145,11 +145,21 @@ export interface AnnouncementConfig {
 
 export type StageMultipliers = Record<MatchStage, number>
 
+export type HofMetric = 'prophet' | 'optimist' | 'draw' | 'disaster'
+
+export interface HofCategory {
+  key: HofMetric       // which computed metric drives this award
+  title: string        // admin-editable label
+  emoji: string        // admin-editable icon
+  active: boolean       // show/hide
+}
+
 export interface AppConfig {
   scoring: ScoringConfig
   stageMultipliers: StageMultipliers   // points multiplier per stage (group, R32…final)
   bonus: BonusScoringConfig
   content: ContentConfig
+  hallOfFame: HofCategory[]            // admin-managed Hall of Fame & Shame categories
   tips: string[]                       // admin-managed "tip of the day" rotation
   tipsEnabled: boolean
   announcement: AnnouncementConfig
@@ -170,6 +180,12 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
   scoring: { exact: 5, winnerAndDiff: 3, winnerOnly: 1 },
   stageMultipliers: { GROUP: 1, R32: 1, R16: 2, QF: 2, SF: 3, TP: 1, F: 3 },
   bonus:   { champion: 20, topScorer: 15, runnerUp: 10, surprise: 15 },
+  hallOfFame: [
+    { key: 'prophet',  emoji: '🔮', title: 'הנביא',       active: true },
+    { key: 'optimist', emoji: '🤡', title: 'האופטימי',    active: true },
+    { key: 'draw',     emoji: '🤝', title: 'מלך התיקו',   active: true },
+    { key: 'disaster', emoji: '💔', title: 'אסון השבוע',  active: true }
+  ],
   tips: [],
   tipsEnabled: true,
   content: {

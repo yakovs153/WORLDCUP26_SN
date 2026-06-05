@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { patchAppConfig } from '../lib/appConfig'
 import { useToast } from '../components/Toast'
-import { DEFAULT_APP_CONFIG, type MatchStage, type StageMultipliers } from '../types'
+import { DEFAULT_APP_CONFIG, type MatchStage, type StageMultipliers, type HofCategory } from '../types'
 
 const STAGES: { key: MatchStage; label: string }[] = [
   { key: 'GROUP', label: '🏟️ שלב הבתים' },
@@ -13,6 +13,14 @@ const STAGES: { key: MatchStage; label: string }[] = [
   { key: 'TP', label: '🥉 המקום השלישי' },
   { key: 'F', label: '🏆 הגמר' }
 ]
+
+// The metric behind each Hall-of-Fame category (fixed; label/emoji are editable).
+const HOF_DESC: Record<string, string> = {
+  prophet: 'הכי מדויק',
+  optimist: 'הכי הרבה שערים',
+  draw: 'הכי הרבה תיקו',
+  disaster: 'הכי מעט נק׳'
+}
 
 export default function AdminScoring() {
   const cfg = useAppConfig()
@@ -26,6 +34,7 @@ export default function AdminScoring() {
   const [runnerUp, setRunnerUp] = useState(cfg.bonus.runnerUp)
   const [surprise, setSurprise] = useState(cfg.bonus.surprise)
   const [stageMult, setStageMult] = useState<StageMultipliers>(cfg.stageMultipliers)
+  const [hof, setHof] = useState<HofCategory[]>(cfg.hallOfFame)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -37,6 +46,7 @@ export default function AdminScoring() {
     setRunnerUp(cfg.bonus.runnerUp)
     setSurprise(cfg.bonus.surprise)
     setStageMult(cfg.stageMultipliers)
+    setHof(cfg.hallOfFame)
   }, [cfg])
 
   const dirty =
@@ -47,7 +57,8 @@ export default function AdminScoring() {
     topScorer !== cfg.bonus.topScorer ||
     runnerUp !== cfg.bonus.runnerUp ||
     surprise !== cfg.bonus.surprise ||
-    JSON.stringify(stageMult) !== JSON.stringify(cfg.stageMultipliers)
+    JSON.stringify(stageMult) !== JSON.stringify(cfg.stageMultipliers) ||
+    JSON.stringify(hof) !== JSON.stringify(cfg.hallOfFame)
 
   const save = async () => {
     setSaving(true)
@@ -55,7 +66,8 @@ export default function AdminScoring() {
       await patchAppConfig({
         scoring: { exact, winnerAndDiff: winDiff, winnerOnly: winOnly },
         stageMultipliers: stageMult,
-        bonus: { champion, topScorer, runnerUp, surprise }
+        bonus: { champion, topScorer, runnerUp, surprise },
+        hallOfFame: hof
       })
       toast.show('ניקוד עודכן ✓', 'success')
     } catch (e) {
@@ -74,6 +86,7 @@ export default function AdminScoring() {
     setRunnerUp(DEFAULT_APP_CONFIG.bonus.runnerUp)
     setSurprise(DEFAULT_APP_CONFIG.bonus.surprise)
     setStageMult(DEFAULT_APP_CONFIG.stageMultipliers)
+    setHof(DEFAULT_APP_CONFIG.hallOfFame)
   }
 
   return (
@@ -106,6 +119,28 @@ export default function AdminScoring() {
         </p>
         {STAGES.map((s) => (
           <PointInput key={s.key} label={s.label} value={stageMult[s.key]} onChange={(v) => setStageMult((p) => ({ ...p, [s.key]: v }))} />
+        ))}
+      </section>
+
+      <section className="card">
+        <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16, marginBottom: 4 }}>
+          🏆🤡 היכל התהילה והבושה
+        </h3>
+        <p className="text-muted" style={{ fontSize: 12, marginBottom: 8 }}>
+          קטגוריות שמוענקות אוטומטית בסוף כל יום. אפשר לשנות שם וסמל, להפעיל או להסתיר כל קטגוריה.
+        </p>
+        {hof.map((c, i) => (
+          <div key={c.key} style={{ display: 'flex', gap: 6, alignItems: 'center', padding: '6px 0', borderTop: '1px solid var(--color-border)' }}>
+            <input value={c.emoji} onChange={(e) => setHof(hof.map((x, j) => (j === i ? { ...x, emoji: e.target.value } : x)))}
+              style={{ width: 44, textAlign: 'center', padding: '8px 4px', background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', fontSize: 18 }} />
+            <input value={c.title} onChange={(e) => setHof(hof.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))}
+              style={{ flex: 1, padding: '8px 10px', background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', color: 'var(--color-text)', fontSize: 14 }} />
+            <span style={{ fontSize: 10, color: 'var(--color-text-muted)', width: 64 }}>{HOF_DESC[c.key]}</span>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700 }}>
+              <input type="checkbox" checked={c.active} onChange={(e) => setHof(hof.map((x, j) => (j === i ? { ...x, active: e.target.checked } : x)))} />
+              פעיל
+            </label>
+          </div>
         ))}
       </section>
 

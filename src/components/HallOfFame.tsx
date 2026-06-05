@@ -1,16 +1,11 @@
 import { useHallOfFame } from '../hooks/useHallOfFame'
+import { useAppConfig } from '../hooks/useAppConfig'
 
-const ROWS: { key: 'prophet' | 'optimist' | 'draw' | 'disaster'; emoji: string; title: string }[] = [
-  { key: 'prophet', emoji: '🔮', title: 'הנביא' },
-  { key: 'optimist', emoji: '🤡', title: 'האופטימי' },
-  { key: 'draw', emoji: '🤝', title: 'מלך התיקו' },
-  { key: 'disaster', emoji: '💔', title: 'אסון השבוע' }
-]
-
-/** Hall of Fame & Shame — auto-awarded superlatives. Renders nothing if empty. */
+/** Hall of Fame & Shame — admin-configured superlatives. Renders nothing if empty. */
 export default function HallOfFame() {
   const hof = useHallOfFame()
-  const rows = ROWS.filter((r) => hof[r.key])
+  const cfg = useAppConfig()
+  const rows = cfg.hallOfFame.filter((c) => c.active && hof[c.key])
   if (rows.length === 0) return null
 
   return (
