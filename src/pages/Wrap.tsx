@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
+import { useUserDoc } from '../hooks/useUserDoc'
 import { useMatches } from '../hooks/useMatches'
 import { usePredictions } from '../hooks/usePredictions'
 import { useLeaderboard } from '../hooks/useLeaderboard'
@@ -11,6 +12,7 @@ import { tomPick, OCTOPUS_NAME } from '../lib/octopus'
 /** "סיכום העונה" — a per-user season review (best call, vs-Tom, rank). */
 export default function Wrap() {
   const { user } = useAuth()
+  const { data: userDoc } = useUserDoc(user?.uid ?? null)
   const { matches } = useMatches()
   const { byMatchId } = usePredictions(user?.uid ?? null)
   const { entries } = useLeaderboard(200)
@@ -59,6 +61,16 @@ export default function Wrap() {
             <Stat label="ניחושים שהוכרעו" value={String(stats.predicted)} />
             <Stat label="תוצאות בול 🎯" value={String(stats.exact)} />
           </div>
+
+          {userDoc?.coach?.text && (
+            <div className="card" style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: 'linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-elevated)), var(--color-bg-elevated))' }}>
+              <span style={{ fontSize: 22 }}>🤖</span>
+              <div>
+                <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>טום האנליסט · אימון אישי</div>
+                <div style={{ fontWeight: 600, fontSize: 14, lineHeight: 1.6 }}>{userDoc.coach.text}</div>
+              </div>
+            </div>
+          )}
 
           {stats.best && (
             <div className="card">

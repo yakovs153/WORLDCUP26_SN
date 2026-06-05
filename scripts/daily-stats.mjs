@@ -53,6 +53,29 @@ const dis = arr.filter(([, a]) => a.predCount >= 3).sort((x, y) => x[1].points -
 if (dis) hof.disaster = { name: nm(dis[0]), detail: `${dis[1].points} נק׳ מ-${dis[1].predCount} משחקים` }
 await db.collection('stats').doc('hallOfFame').set(hof, { merge: true })
 
+// ===== Personal AI coach (Tom) — a tailored line per active user =====
+// Bounded: only users with predictions, capped, sequential (stays in free tier).
+const GKEY = process.env.GEMINI_API_KEY
+const GMODEL = process.env.GEMINI_MODEL || 'gemini-flash-lite-latest'
+if (GKEY) {
+  const coachable = arr.filter(([, a]) => a.predCount >= 1).slice(0, 25)
+  let done = 0
+  for (const [uid, a] of coachable) {
+    const summary = `דיוק: ${a.exact} תוצאות בול, ${a.points} נק' מ-${a.predCount} משחקים, ${a.draws} ניחושי תיקו, ממוצע ${(a.predGoals / Math.max(1, a.predCount)).toFixed(1)} שערים למשחק`
+    const prompt = `אתה "טום האנליסט". כתוב משפט אחד בעברית (עד 140 תווים), עוקצני אך מועיל, עם טיפ קונקרטי אחד, לשחקן לפי הנתונים. בלי מרכאות.\n${summary}`
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GMODEL}:generateContent?key=${GKEY}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 90, temperature: 1.0 } })
+      })
+      if (!res.ok) continue
+      const text = (await res.json())?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
+      if (text) { await db.collection('users').doc(uid).set({ coach: { text } }, { merge: true }); done++ }
+    } catch { /* skip */ }
+  }
+  console.log(`coach lines written: ${done}`)
+}
+
 // ===== Bonus awarding — champion / runner-up / surprise / flop / top scorer =====
 // Idempotent: recomputes each user's earned bonus and applies only the delta vs
 // what was already awarded. Components activate as the data becomes available

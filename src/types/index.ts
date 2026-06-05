@@ -50,6 +50,7 @@ export interface UserDoc {
   totalPoints: number
   predictionsCount: number
   joinedAt: Timestamp
+  coach?: { text: string }   // Tom's daily personalized AI coaching line
 }
 
 export interface LeaderboardEntry extends UserDoc {

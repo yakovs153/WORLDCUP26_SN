@@ -1,29 +1,34 @@
+import { lazy, Suspense } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthProvider'
 import ProtectedRoute from './auth/ProtectedRoute'
 import Layout from './components/Layout'
 import Login from './pages/Login'
-import Register from './pages/Register'
 import Matches from './pages/Matches'
-import OctopusPreview from './pages/OctopusPreview'
-import Playground from './pages/Playground'
-import Teams from './pages/Teams'
-import BracketPage from './pages/Bracket'
-import MatchRoom from './pages/MatchRoom'
-import Leaderboard from './pages/Leaderboard'
-import MyPredictions from './pages/MyPredictions'
-import Profile from './pages/Profile'
-import Bonus from './pages/Bonus'
-import Wrap from './pages/Wrap'
-import Surveys from './pages/Surveys'
-import Survey from './pages/Survey'
-import Rules from './pages/Rules'
-import Admin from './pages/Admin'
 import { ToastProvider } from './components/Toast'
 import { AppConfigProvider } from './hooks/useAppConfig'
 import ThemeApplier from './components/ThemeApplier'
 import { ThemeModeProvider } from './hooks/useThemeMode'
 import AdminGate from './admin/AdminGate'
+
+// Lazy-loaded routes → smaller initial bundle, faster first paint.
+const Register = lazy(() => import('./pages/Register'))
+const OctopusPreview = lazy(() => import('./pages/OctopusPreview'))
+const Playground = lazy(() => import('./pages/Playground'))
+const Teams = lazy(() => import('./pages/Teams'))
+const BracketPage = lazy(() => import('./pages/Bracket'))
+const MatchRoom = lazy(() => import('./pages/MatchRoom'))
+const Leaderboard = lazy(() => import('./pages/Leaderboard'))
+const MyPredictions = lazy(() => import('./pages/MyPredictions'))
+const Profile = lazy(() => import('./pages/Profile'))
+const Bonus = lazy(() => import('./pages/Bonus'))
+const Wrap = lazy(() => import('./pages/Wrap'))
+const Surveys = lazy(() => import('./pages/Surveys'))
+const Survey = lazy(() => import('./pages/Survey'))
+const Rules = lazy(() => import('./pages/Rules'))
+const Admin = lazy(() => import('./pages/Admin'))
+
+const Fallback = () => <div className="page-fade" style={{ padding: 'var(--space-6)', textAlign: 'center', color: 'var(--color-text-muted)' }}>טוען…</div>
 
 export default function App() {
   return (
@@ -33,6 +38,7 @@ export default function App() {
         <ThemeApplier />
         <ToastProvider>
           <HashRouter>
+            <Suspense fallback={<Fallback />}>
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -68,6 +74,7 @@ export default function App() {
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+            </Suspense>
           </HashRouter>
         </ToastProvider>
       </AppConfigProvider>

@@ -37,5 +37,16 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split heavy vendors into separately-cached chunks (firebase is the bulk).
+          'vendor-firebase': ['firebase/app', 'firebase/firestore', 'firebase/auth'],
+          'vendor-react': ['react', 'react-dom', 'react-router-dom']
+        }
+      }
+    }
+  },
   server: { port: 5173, open: true }
 })
