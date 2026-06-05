@@ -30,7 +30,8 @@ const ROUTES: Record<string, string> = {
   Admin: '/?demo=1&sim=1#/admin',
   Rules: '/?demo=1&sim=1#/rules',
   Lobby: '/tv',
-  LobbyLight: '/?theme=light#/tv' // hash route still resolves via HashRouter
+  LobbyLight: '/?theme=light#/tv', // hash route still resolves via HashRouter
+  Octopus: '/?demo=1#/octopus'
 }
 
 test.describe('every screen renders without errors', () => {
