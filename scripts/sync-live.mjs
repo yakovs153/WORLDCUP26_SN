@@ -24,14 +24,19 @@ const __dir = dirname(fileURLToPath(import.meta.url))
 const HE_TEAMS = JSON.parse(readFileSync(join(__dir, '..', 'src', 'data', 'heTeams.json'), 'utf8'))
 const heName = (tla, fallback) => (tla && HE_TEAMS[tla.toUpperCase()]) || fallback || ''
 
-// The Octopus's deterministic, plausible pick for a match (0–3/side, total ≤ 5).
-function octoPredict(matchId) {
-  let h = 0
-  for (let i = 0; i < matchId.length; i++) h = (h * 31 + matchId.charCodeAt(i)) >>> 0
-  let home = h % 4
-  let away = Math.floor(h / 4) % 4
-  while (home + away > 5) { if (home >= away) home--; else away-- }
-  return [home, away]
+// Tom the Analyst: bookmaker-favourite pick — stronger team (with home edge) wins
+// by a typical margin. Admin can override per match via appConfig.analystOverrides.
+const STRENGTH = JSON.parse(readFileSync(join(__dir, '..', 'src', 'data', 'teamStrength.json'), 'utf8'))
+const strengthOf = (code) => STRENGTH[(code || '').toUpperCase()] ?? 3
+function tomPick(homeCode, awayCode, matchId, overrides) {
+  const ov = overrides?.[matchId]
+  if (Array.isArray(ov) && ov.length === 2) return ov
+  const gap = strengthOf(homeCode) + 0.3 - strengthOf(awayCode)
+  if (gap >= 1.5) return [2, 0]
+  if (gap >= 0.5) return [2, 1]
+  if (gap > -0.5) return [1, 1]
+  if (gap > -1.5) return [1, 2]
+  return [0, 2]
 }
 
 const TOKEN = process.env.FOOTBALL_DATA_TOKEN
@@ -69,6 +74,7 @@ async function main() {
   const cfgSnap = await db.collection('appConfig').doc('main').get()
   const scoringCfg = cfgSnap.exists ? cfgSnap.data()?.scoring : undefined
   const stageMult = cfgSnap.exists ? cfgSnap.data()?.stageMultipliers : undefined
+  const overrides = cfgSnap.exists ? (cfgSnap.data()?.analystOverrides || {}) : {}
   const applyStage = (base, stage) => Math.round(base * ((stage && stageMult && stageMult[stage]) || 1))
 
   // Existing match docs (manualLock + scored flags).
@@ -143,7 +149,7 @@ async function main() {
     if (existing.get(id)?.autofilled === true) continue
     if (new Date(m.utcDate).getTime() > nowMs) continue // not locked yet
     const have = new Set((await db.collection('predictions').where('matchId', '==', id).get()).docs.map((d) => d.data().uid))
-    const [oh, oa] = octoPredict(id)
+    const [oh, oa] = tomPick(m.homeTeam.tla, m.awayTeam.tla, id, overrides)
     const fb = db.batch()
     for (const uid of allUserIds) {
       if (have.has(uid)) continue
@@ -175,51 +181,8 @@ async function main() {
     await db.collection('users').doc(uid).set({ totalPoints: FieldValue.increment(delta) }, { merge: true })
   }
 
-  // Recompute predictionsCount per user.
-  const allPreds = await db.collection('predictions').get()
-  const counts = new Map()
-  for (const d of allPreds.docs) {
-    const uid = d.data().uid
-    counts.set(uid, (counts.get(uid) || 0) + 1)
-  }
-  const cBatch = db.batch()
-  for (const [uid, n] of counts) cBatch.set(db.collection('users').doc(uid), { predictionsCount: n }, { merge: true })
-  await cBatch.commit()
-
-  // ===== Hall of Fame & Shame =====
-  const results = new Map()
-  ;(await db.collection('matches').where('status', '==', 'FINISHED').get()).forEach((d) => {
-    const m = d.data()
-    if (typeof m.homeScore === 'number' && typeof m.awayScore === 'number') results.set(d.id, { h: m.homeScore, a: m.awayScore })
-  })
-  const agg = new Map()
-  for (const d of allPreds.docs) {
-    const p = d.data()
-    const a = agg.get(p.uid) || { exact: 0, predGoals: 0, predCount: 0, draws: 0, points: 0 }
-    if (p.homeScore === p.awayScore) a.draws++
-    const res = results.get(p.matchId)
-    if (res) {
-      a.predCount++
-      a.predGoals += p.homeScore + p.awayScore
-      a.points += p.points || 0
-      if (p.homeScore === res.h && p.awayScore === res.a) a.exact++
-    }
-    agg.set(p.uid, a)
-  }
-  const names = new Map()
-  ;(await db.collection('users').get()).forEach((d) => names.set(d.id, d.data().displayName || 'משתמש'))
-  const nm = (uid) => names.get(uid) || 'משתמש'
-  const arr = [...agg.entries()]
-  const hof = {}
-  const prophet = arr.filter(([, a]) => a.exact > 0).sort((x, y) => y[1].exact - x[1].exact)[0]
-  if (prophet) hof.prophet = { name: nm(prophet[0]), detail: `${prophet[1].exact} תוצאות בול` }
-  const opt = arr.filter(([, a]) => a.predCount >= 3).sort((x, y) => y[1].predGoals / y[1].predCount - x[1].predGoals / x[1].predCount)[0]
-  if (opt) hof.optimist = { name: nm(opt[0]), detail: `ממוצע ${(opt[1].predGoals / opt[1].predCount).toFixed(1)} שערים למשחק` }
-  const drw = arr.filter(([, a]) => a.draws >= 2).sort((x, y) => y[1].draws - x[1].draws)[0]
-  if (drw) hof.draw = { name: nm(drw[0]), detail: `${drw[1].draws} ניחושי תיקו` }
-  const dis = arr.filter(([, a]) => a.predCount >= 3).sort((x, y) => x[1].points - y[1].points)[0]
-  if (dis) hof.disaster = { name: nm(dis[0]), detail: `${dis[1].points} נק׳ מ-${dis[1].predCount} משחקים` }
-  await db.collection('stats').doc('hallOfFame').set(hof)
+  // NOTE: predictionsCount + Hall of Fame are recomputed once a day by
+  // scripts/daily-stats.mjs (they read every prediction — too costly per 5-min run).
 
   // ===== Bonus lock = first game kickoff (earliest match), enforced by rules =====
   let earliest = null

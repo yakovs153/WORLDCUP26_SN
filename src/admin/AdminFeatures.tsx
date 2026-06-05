@@ -3,7 +3,9 @@ import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
 import { useAuth } from '../auth/AuthProvider'
 import { useAppConfig } from '../hooks/useAppConfig'
+import { useMatches } from '../hooks/useMatches'
 import { patchAppConfig } from '../lib/appConfig'
+import { tomPick } from '../lib/octopus'
 import { useToast } from '../components/Toast'
 
 const TOGGLES: { key: 'pundit' | 'leaderPerk' | 'analystAutofill'; label: string; desc: string }[] = [
@@ -17,13 +19,30 @@ export default function AdminFeatures() {
   const cfg = useAppConfig()
   const toast = useToast()
 
+  const { matches } = useMatches()
   const [flags, setFlags] = useState(cfg.features)
   const [tipsEnabled, setTipsEnabled] = useState(cfg.tipsEnabled)
   const [savingFlags, setSavingFlags] = useState(false)
   const [pundit, setPundit] = useState('')
   const [savingPundit, setSavingPundit] = useState(false)
+  const [ov, setOv] = useState<Record<string, [number, number]>>(cfg.analystOverrides)
+  const [savingOv, setSavingOv] = useState(false)
 
-  useEffect(() => { setFlags(cfg.features); setTipsEnabled(cfg.tipsEnabled) }, [cfg])
+  useEffect(() => { setFlags(cfg.features); setTipsEnabled(cfg.tipsEnabled); setOv(cfg.analystOverrides) }, [cfg])
+
+  const scheduled = matches.filter((m) => m.status === 'SCHEDULED').slice(0, 60)
+  const ovDirty = JSON.stringify(ov) !== JSON.stringify(cfg.analystOverrides)
+  const setPick = (id: string, idx: 0 | 1, val: string) => {
+    const n = Math.max(0, Math.min(20, parseInt(val || '0', 10)))
+    setOv((p) => { const cur = p[id] || [0, 0]; const next: [number, number] = idx === 0 ? [n, cur[1]] : [cur[0], n]; return { ...p, [id]: next } })
+  }
+  const clearPick = (id: string) => setOv((p) => { const { [id]: _drop, ...rest } = p; return rest })
+  const saveOv = async () => {
+    setSavingOv(true)
+    try { await patchAppConfig({ analystOverrides: ov }); toast.show('עקיפות טום נשמרו ✓', 'success') }
+    catch (e) { toast.show(e instanceof Error ? e.message : 'שמירה נכשלה', 'error') }
+    finally { setSavingOv(false) }
+  }
   useEffect(() => {
     if (DEMO_MODE) return
     return onSnapshot(doc(db, 'appState', 'pundit'), (s) => setPundit((s.data()?.text as string) || ''))
@@ -99,6 +118,34 @@ export default function AdminFeatures() {
           נקה את הודעת המלך
         </button>
       </section>
+
+      {/* Tom's pick override (ahead of kickoff) */}
+      <section className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>🤖 עקיפת ניחושי טום</h3>
+        <p className="text-muted" style={{ fontSize: 12 }}>טום מנחש את הפייבוריט אוטומטית. כאן אפשר לעקוף ידנית ניחוש למשחק מסוים (לפני פתיחתו). ריק = ניחוש אוטומטי.</p>
+        <div style={{ maxHeight: 320, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {scheduled.map((m) => {
+            const [ah, aa] = tomPick(m.homeTeam.code, m.awayTeam.code, m.id)
+            const cur = ov[m.id]
+            return (
+              <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, padding: '4px 0', borderTop: '1px solid var(--color-border)' }}>
+                <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.homeTeam.name} - {m.awayTeam.name}</span>
+                <span style={{ color: 'var(--color-text-muted)' }} title="ניחוש אוטומטי">auto {ah}-{aa}</span>
+                <input type="number" min={0} max={20} value={cur ? cur[0] : ''} placeholder={String(ah)} onChange={(e) => setPick(m.id, 0, e.target.value)} style={ovInput} />
+                <span>-</span>
+                <input type="number" min={0} max={20} value={cur ? cur[1] : ''} placeholder={String(aa)} onChange={(e) => setPick(m.id, 1, e.target.value)} style={ovInput} />
+                {cur && <button onClick={() => clearPick(m.id)} title="בטל עקיפה" style={{ border: 'none', background: 'transparent', color: 'var(--color-danger)', cursor: 'pointer' }}>×</button>}
+              </div>
+            )
+          })}
+          {scheduled.length === 0 && <span className="text-muted" style={{ fontSize: 12 }}>אין משחקים עתידיים.</span>}
+        </div>
+        <button className="btn" onClick={saveOv} disabled={!ovDirty || savingOv} style={{ alignSelf: 'flex-start', padding: '8px 16px' }}>
+          {savingOv ? 'שומר…' : 'שמירת עקיפות'}
+        </button>
+      </section>
     </div>
   )
 }
+
+const ovInput = { width: 40, textAlign: 'center', padding: '4px', background: 'var(--color-bg-elevated)', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', color: 'var(--color-text)', fontSize: 13 } as const

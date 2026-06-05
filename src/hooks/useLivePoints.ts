@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
 import { scorePrediction, applyStage } from '../lib/scoring'
-import { octoPredict, AUTO_FACTOR } from '../lib/octopus'
+import { tomPick, AUTO_FACTOR, type AnalystOverrides } from '../lib/octopus'
 import type { Match, Prediction, ScoringConfig, StageMultipliers } from '../types'
 
 /**
@@ -11,7 +11,7 @@ import type { Match, Prediction, ScoringConfig, StageMultipliers } from '../type
  * Octopus's pick (matching the auto-fill rule). Predictions are static once a
  * match locks, so we fetch them per live match and recompute as scores change.
  */
-export function useLivePoints(matches: Match[], scoring: ScoringConfig, uids: string[], stageMult?: StageMultipliers): Map<string, number> {
+export function useLivePoints(matches: Match[], scoring: ScoringConfig, uids: string[], stageMult?: StageMultipliers, overrides?: AnalystOverrides): Map<string, number> {
   const liveIds = matches.filter((m) => m.status === 'LIVE' && m.homeScore != null && m.awayScore != null).map((m) => m.id)
   const key = liveIds.join(',')
   const [predsByMatch, setPredsByMatch] = useState<Record<string, Record<string, Prediction>>>({})
@@ -32,7 +32,7 @@ export function useLivePoints(matches: Match[], scoring: ScoringConfig, uids: st
     for (const m of matches) {
       if (m.status !== 'LIVE' || m.homeScore == null || m.awayScore == null) continue
       const pm = predsByMatch[m.id] || {}
-      const [oh, oa] = octoPredict(m.id)
+      const [oh, oa] = tomPick(m.homeTeam.code, m.awayTeam.code, m.id, overrides)
       for (const uid of uids) {
         const p = pm[uid]
         const ph = p ? p.homeScore : oh

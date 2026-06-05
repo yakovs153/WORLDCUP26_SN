@@ -19,12 +19,12 @@ export default function Leaderboard() {
   const [tab, setTab] = useState<'personal' | 'departments'>('personal')
 
   const liveUids = useMemo(() => entries.map((e) => e.uid), [entries])
-  const liveDelta = useLivePoints(matches, cfg.scoring, liveUids, cfg.stageMultipliers)
+  const liveDelta = useLivePoints(matches, cfg.scoring, liveUids, cfg.stageMultipliers, cfg.analystOverrides)
   const hasLive = useMemo(() => matches.some((m) => m.status === 'LIVE'), [matches])
 
   // Inject the Octopus + fold in provisional points from any live matches.
   const ranked = useMemo(() => {
-    const octo = octopusEntry(matches, cfg.scoring, cfg.stageMultipliers) // includes live, provisional
+    const octo = octopusEntry(matches, cfg.scoring, cfg.stageMultipliers, cfg.analystOverrides) // includes live, provisional
     const withLive = entries
       .filter((e) => e.uid !== OCTOPUS_UID)
       .map((e) => ({ ...e, totalPoints: e.totalPoints + (liveDelta.get(e.uid) || 0) }))

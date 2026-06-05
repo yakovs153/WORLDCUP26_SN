@@ -12,7 +12,7 @@ import { scorePrediction, applyStage } from '../lib/scoring'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { ringColors } from '../lib/players'
 import { fireConfetti } from '../lib/confetti'
-import { octoPredict, AUTO_FACTOR } from '../lib/octopus'
+import { tomPick, AUTO_FACTOR } from '../lib/octopus'
 
 interface Props {
   match: Match
@@ -190,7 +190,7 @@ export default function MatchCard({ match, prediction, uid }: Props) {
         )}
 
         {locked && !prediction && (() => {
-          const [oh, oa] = octoPredict(match.id)
+          const [oh, oa] = tomPick(match.homeTeam.code, match.awayTeam.code, match.id, cfg.analystOverrides)
           const octoPts = scoreKnown ? Math.round(applyStage(scorePrediction(oh, oa, match.homeScore!, match.awayScore!, cfg.scoring), match.stage, cfg.stageMultipliers) * AUTO_FACTOR) : null
           return (
             <>

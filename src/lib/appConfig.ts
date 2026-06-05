@@ -18,6 +18,7 @@ export function getDemoConfig(): AppConfig {
       content: { ...DEFAULT_APP_CONFIG.content, ...(parsed.content || {}) },
       hallOfFame: Array.isArray(parsed.hallOfFame) ? parsed.hallOfFame : DEFAULT_APP_CONFIG.hallOfFame,
       features: { ...DEFAULT_APP_CONFIG.features, ...(parsed.features || {}) },
+      analystOverrides: parsed.analystOverrides || {},
       tips: parsed.tips || [],
       tipsEnabled: parsed.tipsEnabled !== false,
       announcement: { ...DEFAULT_APP_CONFIG.announcement, ...(parsed.announcement || {}) },

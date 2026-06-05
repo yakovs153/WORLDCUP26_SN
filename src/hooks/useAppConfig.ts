@@ -37,6 +37,7 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
           content: { ...DEFAULT_APP_CONFIG.content, ...(data.content || {}) },
           hallOfFame: Array.isArray(data.hallOfFame) ? data.hallOfFame : DEFAULT_APP_CONFIG.hallOfFame,
           features: { ...DEFAULT_APP_CONFIG.features, ...(data.features || {}) },
+          analystOverrides: data.analystOverrides || {},
           tips: data.tips || [],
           tipsEnabled: data.tipsEnabled !== false,
           announcement: { ...DEFAULT_APP_CONFIG.announcement, ...(data.announcement || {}) },

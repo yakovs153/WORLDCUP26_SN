@@ -28,6 +28,8 @@ jobs:
           RT: ${{ secrets.FIREBASE_REFRESH_TOKEN }}
         run: |
           printf '{"type":"authorized_user","client_id":"563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com","client_secret":"j9iVZfS8kkCEFUPaAeJV0sAi","refresh_token":"%s"}' "$RT" > "$GOOGLE_APPLICATION_CREDENTIALS"
+      - name: Recompute daily stats (counts + Hall of Fame)
+        run: node scripts/daily-stats.mjs
       - name: Generate pundit line
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

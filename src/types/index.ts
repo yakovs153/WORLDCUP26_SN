@@ -169,6 +169,7 @@ export interface AppConfig {
   content: ContentConfig
   hallOfFame: HofCategory[]            // admin-managed Hall of Fame & Shame categories
   features: FeatureFlags               // admin on/off switches for automatic features
+  analystOverrides: Record<string, [number, number]> // admin overrides for Tom's pick, by matchId
   tips: string[]                       // admin-managed "tip of the day" rotation
   tipsEnabled: boolean
   announcement: AnnouncementConfig
@@ -196,6 +197,7 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
     { key: 'disaster', emoji: '💔', title: 'אסון השבוע',  active: true }
   ],
   features: { pundit: true, leaderPerk: true, analystAutofill: true },
+  analystOverrides: {},
   tips: [],
   tipsEnabled: true,
   content: {
