@@ -109,6 +109,8 @@ export default function Bonus() {
 
   const selectedTeam = teams.find((t) => t.code === championCode)
   const selectedPlayer = allPlayers.find((p) => p.name === topScorer)
+  const finalistTeams = finalistCodes.map((c) => teams.find((t) => t.code === c)).filter(Boolean) as TeamRef[]
+  const surpriseTeam = teams.find((t) => t.code === surpriseCode)
 
   return (
     <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -144,6 +146,18 @@ export default function Bonus() {
             value={selectedPlayer ? selectedPlayer.name : 'לא נבחר'}
             badge="15 נק'"
             icon={selectedPlayer && <PlayerAvatar name={selectedPlayer.name} countryCode={selectedPlayer.countryCode} photoUrl={photoFor(selectedPlayer.name, selectedPlayer.photoUrl)} size={36} shape="logo" />}
+          />
+          <SummaryCell
+            title="🎽 פיינליסטיות"
+            value={finalistTeams.length ? finalistTeams.map((t) => t.name).join(' · ') : 'לא נבחר'}
+            badge="10 נק׳"
+            icon={finalistTeams[0] && <span style={{ display: 'flex', gap: 4 }}>{finalistTeams.map((t) => <FlagIcon key={t.code} flag={t.flag} code={t.code} size={24} />)}</span>}
+          />
+          <SummaryCell
+            title="🐎 הפתעה"
+            value={surpriseTeam ? surpriseTeam.name : 'לא נבחר'}
+            badge="15 נק׳"
+            icon={surpriseTeam && <FlagIcon flag={surpriseTeam.flag} code={surpriseTeam.code} size={28} />}
           />
         </div>
       </div>

@@ -3,10 +3,8 @@ import { useAuth } from '../auth/AuthProvider'
 import { useUserDoc } from '../hooks/useUserDoc'
 import { useMatches } from '../hooks/useMatches'
 import { usePredictions } from '../hooks/usePredictions'
-import { useBonus } from '../hooks/useBonus'
 import { useToast } from '../components/Toast'
 import StatsBreakdown from '../components/StatsBreakdown'
-import FlagIcon from '../components/FlagIcon'
 import { useIsAdmin } from '../admin/AdminGate'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { setDepartment } from '../lib/departments'
@@ -16,7 +14,6 @@ export default function Profile() {
   const { data } = useUserDoc(user?.uid ?? null)
   const { matches } = useMatches()
   const { byMatchId } = usePredictions(user?.uid ?? null)
-  const { data: bonus } = useBonus(user?.uid ?? null)
   const toast = useToast()
   const isAdmin = useIsAdmin()
   const cfg = useAppConfig()
@@ -26,11 +23,6 @@ export default function Profile() {
     try { await setDepartment(user.uid, dept); toast.show('המחלקה עודכנה ✓', 'success') }
     catch (e) { toast.show(e instanceof Error ? e.message : 'עדכון נכשל', 'error') }
   }
-
-  const championTeam = bonus?.championTeamCode
-    ? matches.find((m) => m.homeTeam.code === bonus.championTeamCode)?.homeTeam ||
-      matches.find((m) => m.awayTeam.code === bonus.championTeamCode)?.awayTeam
-    : null
 
   if (!user) return null
 
@@ -96,36 +88,6 @@ export default function Profile() {
       <StatsBreakdown matches={matches} byMatchId={byMatchId} />
 
       <Link
-        to="/bonus"
-        className="card animate-in"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
-          padding: 'var(--space-4)',
-          textDecoration: 'none',
-          color: 'var(--color-text)',
-          border: '1px solid var(--color-border-strong)'
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>
-            🏆 ניחושי בונוס
-          </h3>
-          <span style={{ color: 'var(--color-primary)', fontSize: 14 }}>←</span>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <SmallBonus
-            title="זוכה"
-            value={championTeam?.name || 'לא נבחר'}
-            icon={championTeam ? <FlagIcon flag={championTeam.flag} code={championTeam.code} size={22} /> : null}
-          />
-          <SmallBonus title="מלך שערים" value={bonus?.topScorer || 'לא נבחר'} icon={null} />
-        </div>
-      </Link>
-
-
-      <Link
         to="/rules"
         className="btn-ghost btn-block"
         style={{
@@ -168,27 +130,6 @@ export default function Profile() {
               style={{ padding: '12px 16px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)' }}>
         התנתקות
       </button>
-    </div>
-  )
-}
-
-function SmallBonus({ title, value, icon }: { title: string; value: string; icon: React.ReactNode }) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 6,
-        padding: '10px 12px',
-        background: 'var(--color-bg-elevated)',
-        borderRadius: 'var(--radius-md)'
-      }}
-    >
-      <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>{title}</span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, minHeight: 24 }}>
-        {icon}
-        <span style={{ fontSize: 13, fontWeight: 700 }}>{value}</span>
-      </div>
     </div>
   )
 }

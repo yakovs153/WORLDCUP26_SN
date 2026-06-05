@@ -6,7 +6,6 @@ import { useAuth } from '../auth/AuthProvider'
 import { Link } from 'react-router-dom'
 import MatchCard from '../components/MatchCard'
 import NextMatchHero from '../components/NextMatchHero'
-import LiveStatus from '../components/LiveStatus'
 import PollCard from '../components/PollCard'
 import { MatchCardSkeleton } from '../components/Skeleton'
 import { useAppConfig } from '../hooks/useAppConfig'
@@ -70,7 +69,6 @@ export default function Matches() {
 
   return (
     <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-      <LiveStatus />
       {cfg.content.prize && (
         <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px' }}>
           <span style={{ fontSize: 24 }}>🎁</span>
