@@ -136,7 +136,7 @@ test('survey: admin creates a survey, user fills it and sees public results', as
 test('admin: open each tab without errors', async ({ page }) => {
   const errs = watchErrors(page)
   await page.goto('/?demo=1&sim=1#/admin', { waitUntil: 'networkidle' })
-  for (const tab of ['תוכן', 'מחלקות', 'ניקוד', 'שחקנים', 'סקרים', 'גישה', 'משחקים']) {
+  for (const tab of ['תוכן', 'מחלקות', 'ניקוד', 'שחקנים', 'סקרים', 'ניחושים', 'גישה', 'משחקים']) {
     await page.getByRole('button', { name: tab, exact: false }).first().click().catch(() => {})
     await page.waitForTimeout(400)
   }

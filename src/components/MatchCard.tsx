@@ -35,8 +35,10 @@ export default function MatchCard({ match, prediction, uid }: Props) {
     setAway(prediction?.awayScore ?? null)
   }, [prediction?.homeScore, prediction?.awayScore])
 
-  const locked = match.status !== 'SCHEDULED'
   const kickoff = match.kickoff.toDate()
+  // Locked once the match isn't scheduled OR kickoff time has arrived — whichever
+  // comes first. This closes the gap before the sync flips status to LIVE.
+  const locked = match.status !== 'SCHEDULED' || Date.now() >= kickoff.getTime()
   const dirty =
     !locked &&
     home !== null &&

@@ -38,7 +38,7 @@ const SAMPLE = [
 
 const LEADER = [
   { rank: 1, name: 'רונן ל.', pts: 47, dept: 'שיווק' },
-  { rank: 2, name: 'התמנון 🐙', pts: 44, dept: 'האורקל', octo: true },
+  { rank: 2, name: 'סטורי התמנון 🐙', pts: 44, dept: 'האורקל', octo: true },
   { rank: 3, name: 'שרון ק.', pts: 41, dept: 'פיתוח' },
   { rank: 4, name: 'אני', pts: 38, dept: 'דאטה', me: true }
 ]
@@ -59,7 +59,7 @@ export default function OctopusPreview() {
         <section className="card" style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 20%, var(--color-bg-elevated)), var(--color-bg-elevated))' }}>
           <OctopusMark size={84} />
           <div>
-            <h1 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 26 }}>פאול הקוביה 🐙</h1>
+            <h1 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 26 }}>סטורי התמנון 🐙</h1>
             <p className="text-muted" style={{ fontSize: 13, marginTop: 4 }}>האורקל של StoreNext — מנחש כל משחק, ומחליף אותך אם שכחת.</p>
           </div>
         </section>
@@ -112,7 +112,7 @@ export default function OctopusPreview() {
               <div style={{ textAlign: 'center' }}><div style={{ fontSize: 30 }}>🇭🇷</div><div style={{ fontWeight: 800, fontSize: 13 }}>קרואטיה</div></div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: 'color-mix(in srgb, var(--color-primary) 14%, transparent)', borderTop: '1px solid var(--glass-border)', fontSize: 13, fontWeight: 700 }}>
-              <OctopusMark size={26} /> התמנון ניחש בשבילך
+              <OctopusMark size={26} /> סטורי התמנון ניחש בשבילך
             </div>
           </div>
         </section>
@@ -137,14 +137,10 @@ export default function OctopusPreview() {
           </p>
         </section>
 
-        {/* Name options */}
-        <section className="card">
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 16, marginBottom: 10 }}>שם למאסקוט — מה אתה הכי אוהב?</h2>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {['פאול הקוביה', 'אוקטו', 'התמנון', 'קובי התמנון', 'פאולה'].map((n) => (
-              <span key={n} style={{ padding: '8px 14px', borderRadius: 'var(--radius-full)', background: 'var(--glass-bg-hi)', border: '1px solid var(--color-border-strong)', fontWeight: 700, fontSize: 14 }}>{n}</span>
-            ))}
-          </div>
+        {/* Chosen name */}
+        <section className="card" style={{ textAlign: 'center' }}>
+          <div className="text-muted" style={{ fontSize: 12, fontWeight: 700 }}>השם נבחר</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, marginTop: 4 }}>סטורי התמנון 🐙</div>
         </section>
 
       </div>

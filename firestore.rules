@@ -109,6 +109,7 @@ service cloud.firestore {
                     && predId == request.auth.uid + '_' + request.resource.data.matchId
                     && exists(/databases/$(database)/documents/matches/$(request.resource.data.matchId))
                     && get(/databases/$(database)/documents/matches/$(request.resource.data.matchId)).data.status == 'SCHEDULED'
+                    && request.time < get(/databases/$(database)/documents/matches/$(request.resource.data.matchId)).data.kickoff
                     && request.resource.data.homeScore is int
                     && request.resource.data.awayScore is int
                     && request.resource.data.homeScore >= 0 && request.resource.data.homeScore <= 30
@@ -119,6 +120,7 @@ service cloud.firestore {
                     && resource.data.uid == request.auth.uid
                     && request.resource.data.uid == request.auth.uid
                     && get(/databases/$(database)/documents/matches/$(resource.data.matchId)).data.status == 'SCHEDULED'
+                    && request.time < get(/databases/$(database)/documents/matches/$(resource.data.matchId)).data.kickoff
                     && request.resource.data.points == resource.data.points
                     && request.resource.data.homeScore is int
                     && request.resource.data.awayScore is int
