@@ -1,12 +1,22 @@
 name: Live results sync
 
-# Keyless live-sync (no service-account key — uses Workload Identity Federation).
 # Polls football-data.org and writes fixtures + live scores to Firestore,
-# scoring finished matches. See docs/WIF-SETUP.md for one-time setup.
+# scoring finished matches. Auth: a Firebase CLI refresh token (no service
+# account / no IT) stored in the FIREBASE_REFRESH_TOKEN secret.
+#
+# Two modes:
+#   • schedule (every 5 min) — heartbeat: fixtures, kickoffs, results.
+#   • workflow_dispatch with `live_minutes` > 0 — near-real-time: one job that
+#     re-syncs every 60s for that many minutes (run it during a match window).
 on:
   schedule:
-    - cron: '*/5 * * * *' # every 5 minutes (GitHub's minimum)
-  workflow_dispatch: {}
+    - cron: '*/5 * * * *' # every 5 minutes (GitHub's scheduled minimum)
+  workflow_dispatch:
+    inputs:
+      live_minutes:
+        description: 'Live mode: keep polling every 60s for N minutes (0 = run once)'
+        required: false
+        default: '0'
 
 concurrency:
   group: live-sync
@@ -14,26 +24,36 @@ concurrency:
 
 permissions:
   contents: read
-  id-token: write   # required for Workload Identity Federation
 
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 55
     env:
       GOOGLE_CLOUD_PROJECT: world-cup-2026-c145b
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/adc.json
     steps:
       - uses: actions/checkout@v4
-      - name: Authenticate to Google Cloud (keyless)
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
       - run: npm install firebase-admin@^12 --no-save
-      - name: Run sync
+      - name: Write credentials from refresh token
+        env:
+          RT: ${{ secrets.FIREBASE_REFRESH_TOKEN }}
+        run: |
+          printf '{"type":"authorized_user","client_id":"563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com","client_secret":"j9iVZfS8kkCEFUPaAeJV0sAi","refresh_token":"%s"}' "$RT" > "$GOOGLE_APPLICATION_CREDENTIALS"
+      - name: Run sync (loops in live mode)
         env:
           FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
-        run: node scripts/sync-live.mjs
+          LIVE_MINUTES: ${{ github.event.inputs.live_minutes || '0' }}
+        run: |
+          END=$(( SECONDS + 60 * LIVE_MINUTES ))
+          while : ; do
+            node scripts/sync-live.mjs || true
+            if [ "$SECONDS" -ge "$END" ]; then break; fi
+            sleep 60
+          done
+      - name: Clean up credentials
+        if: always()
+        run: rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
