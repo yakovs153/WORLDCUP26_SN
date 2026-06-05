@@ -27,12 +27,15 @@ export function useBonus(uid: string | null) {
           uid,
           championTeamCode: null,
           topScorer: null,
+          finalistCodes: [],
+          surpriseTeamCode: null,
           championPoints: null,
           topScorerPoints: null,
           updatedAt: { toDate: () => new Date() } as never
         })
       } else {
-        setData(snap.data() as BonusPrediction)
+        const d = snap.data() as BonusPrediction
+        setData({ ...d, finalistCodes: d.finalistCodes || [], surpriseTeamCode: d.surpriseTeamCode ?? null })
       }
       setLoading(false)
     })

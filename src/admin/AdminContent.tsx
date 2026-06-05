@@ -11,6 +11,7 @@ export default function AdminContent() {
   const [tagline, setTagline] = useState(cfg.content.tagline)
   const [rulesIntro, setRulesIntro] = useState(cfg.content.rulesIntro)
   const [rulesNotes, setRulesNotes] = useState(cfg.content.rulesNotes)
+  const [prize, setPrize] = useState(cfg.content.prize)
   const [annText, setAnnText] = useState(cfg.announcement.text)
   const [annActive, setAnnActive] = useState(cfg.announcement.active)
   const [saving, setSaving] = useState(false)
@@ -20,6 +21,7 @@ export default function AdminContent() {
     setTagline(cfg.content.tagline)
     setRulesIntro(cfg.content.rulesIntro)
     setRulesNotes(cfg.content.rulesNotes)
+    setPrize(cfg.content.prize)
     setAnnText(cfg.announcement.text)
     setAnnActive(cfg.announcement.active)
   }, [cfg])
@@ -29,6 +31,7 @@ export default function AdminContent() {
     tagline !== cfg.content.tagline ||
     rulesIntro !== cfg.content.rulesIntro ||
     rulesNotes !== cfg.content.rulesNotes ||
+    prize !== cfg.content.prize ||
     annText !== cfg.announcement.text ||
     annActive !== cfg.announcement.active
 
@@ -36,7 +39,7 @@ export default function AdminContent() {
     setSaving(true)
     try {
       await patchAppConfig({
-        content: { tournamentName: tournamentName.trim() || 'מונדיאל 2026', tagline, rulesIntro, rulesNotes },
+        content: { tournamentName: tournamentName.trim() || 'מונדיאל 2026', tagline, rulesIntro, rulesNotes, prize },
         announcement: { text: annText, active: annActive }
       })
       toast.show('נשמר ✓', 'success')
@@ -67,6 +70,7 @@ export default function AdminContent() {
         <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>🏷️ שם וכותרת</h3>
         <Label text="שם הטורניר (כותרת עליונה)"><input value={tournamentName} onChange={(e) => setTournamentName(e.target.value)} style={fld} /></Label>
         <Label text="כותרת משנה (מסך התחברות)"><input value={tagline} onChange={(e) => setTagline(e.target.value)} style={fld} /></Label>
+        <Label text="🎁 פרס (מוצג בעמוד הבית)"><input value={prize} onChange={(e) => setPrize(e.target.value)} placeholder="למשל: ארוחת שף לזוכה + גביע נודד" style={fld} /></Label>
       </section>
 
       {/* Rules text */}

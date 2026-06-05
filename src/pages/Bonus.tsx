@@ -27,14 +27,24 @@ export default function Bonus() {
 
   const [championCode, setChampionCode] = useState<string | null>(null)
   const [topScorer, setTopScorer] = useState<string | null>(null)
+  const [finalistCodes, setFinalistCodes] = useState<string[]>([])
+  const [surpriseCode, setSurpriseCode] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (bonus) {
       setChampionCode(bonus.championTeamCode)
       setTopScorer(bonus.topScorer)
+      setFinalistCodes(bonus.finalistCodes || [])
+      setSurpriseCode(bonus.surpriseTeamCode ?? null)
     }
-  }, [bonus?.championTeamCode, bonus?.topScorer])
+  }, [bonus?.championTeamCode, bonus?.topScorer, bonus?.finalistCodes, bonus?.surpriseTeamCode])
+
+  const toggleFinalist = (code: string) => {
+    setFinalistCodes((prev) =>
+      prev.includes(code) ? prev.filter((c) => c !== code) : prev.length >= 2 ? prev : [...prev, code]
+    )
+  }
 
   // Unique teams from matches data, sorted A-Z (Hebrew)
   const teams = useMemo<TeamRef[]>(() => {
@@ -59,7 +69,9 @@ export default function Bonus() {
 
   const dirty =
     championCode !== (bonus?.championTeamCode ?? null) ||
-    topScorer !== (bonus?.topScorer ?? null)
+    topScorer !== (bonus?.topScorer ?? null) ||
+    surpriseCode !== (bonus?.surpriseTeamCode ?? null) ||
+    [...finalistCodes].sort().join(',') !== [...(bonus?.finalistCodes ?? [])].sort().join(',')
 
   // Combine hard-coded candidates with admin-added custom players
   const allPlayers = useMemo<PlayerOption[]>(() => {
@@ -78,7 +90,7 @@ export default function Bonus() {
     if (!user) return
     setSaving(true)
     try {
-      await saveBonus(user.uid, championCode, topScorer)
+      await saveBonus(user.uid, championCode, topScorer, finalistCodes, surpriseCode)
       toast.show('בונוס נשמר ✓', 'success')
     } catch (e) {
       toast.show(e instanceof Error ? e.message : 'שמירה נכשלה', 'error')
@@ -173,6 +185,55 @@ export default function Bonus() {
               >
                 <FlagIcon flag={t.flag} code={t.code} size={32} />
                 <span style={{ fontSize: 12, fontWeight: selected ? 800 : 600 }}>{t.name}</span>
+              </button>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* Finalists */}
+      <section className="card animate-in">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 18 }}>🎽 שתי הפיינליסטיות</h2>
+          <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>{finalistCodes.length}/2 · 10 נק׳ לכל אחת</span>
+        </div>
+        <p className="text-muted" style={{ fontSize: 12, marginBottom: 12 }}>בחר את שתי הנבחרות שיגיעו לגמר.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(86px, 1fr))', gap: 8 }}>
+          {teams.map((t) => {
+            const sel = finalistCodes.includes(t.code)
+            const dim = !sel && finalistCodes.length >= 2
+            return (
+              <button key={t.code} onClick={() => !locked && toggleFinalist(t.code)} disabled={locked || dim}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '10px 6px', borderRadius: 'var(--radius-md)',
+                  background: sel ? 'color-mix(in srgb, var(--color-primary) 18%, transparent)' : 'var(--color-bg-elevated)',
+                  border: sel ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                  opacity: dim ? 0.4 : 1, cursor: locked ? 'not-allowed' : 'pointer', transition: 'all 0.15s ease' }}>
+                <FlagIcon flag={t.flag} code={t.code} size={32} />
+                <span style={{ fontSize: 12, fontWeight: sel ? 800 : 600 }}>{t.name}</span>
+              </button>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* Surprise of the tournament */}
+      <section className="card animate-in">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <h2 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 18 }}>🐎 הפתעת הטורניר</h2>
+          <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>15 נק׳</span>
+        </div>
+        <p className="text-muted" style={{ fontSize: 12, marginBottom: 12 }}>בחר נבחרת «אאוטסיידר» שתפתיע ותגיע לפחות לרבע הגמר.</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(86px, 1fr))', gap: 8 }}>
+          {teams.map((t) => {
+            const sel = surpriseCode === t.code
+            return (
+              <button key={t.code} onClick={() => !locked && setSurpriseCode(sel ? null : t.code)} disabled={locked}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '10px 6px', borderRadius: 'var(--radius-md)',
+                  background: sel ? 'color-mix(in srgb, var(--color-accent) 22%, transparent)' : 'var(--color-bg-elevated)',
+                  border: sel ? '2px solid var(--color-accent)' : '1px solid var(--color-border)',
+                  cursor: locked ? 'not-allowed' : 'pointer', transition: 'all 0.15s ease' }}>
+                <FlagIcon flag={t.flag} code={t.code} size={32} />
+                <span style={{ fontSize: 12, fontWeight: sel ? 800 : 600 }}>{t.name}</span>
               </button>
             )
           })}

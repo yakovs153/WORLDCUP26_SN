@@ -13,6 +13,8 @@ export default function AdminScoring() {
   const [winOnly, setWinOnly] = useState(cfg.scoring.winnerOnly)
   const [champion, setChampion] = useState(cfg.bonus.champion)
   const [topScorer, setTopScorer] = useState(cfg.bonus.topScorer)
+  const [finalist, setFinalist] = useState(cfg.bonus.finalist)
+  const [surprise, setSurprise] = useState(cfg.bonus.surprise)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -21,6 +23,8 @@ export default function AdminScoring() {
     setWinOnly(cfg.scoring.winnerOnly)
     setChampion(cfg.bonus.champion)
     setTopScorer(cfg.bonus.topScorer)
+    setFinalist(cfg.bonus.finalist)
+    setSurprise(cfg.bonus.surprise)
   }, [cfg])
 
   const dirty =
@@ -28,14 +32,16 @@ export default function AdminScoring() {
     winDiff !== cfg.scoring.winnerAndDiff ||
     winOnly !== cfg.scoring.winnerOnly ||
     champion !== cfg.bonus.champion ||
-    topScorer !== cfg.bonus.topScorer
+    topScorer !== cfg.bonus.topScorer ||
+    finalist !== cfg.bonus.finalist ||
+    surprise !== cfg.bonus.surprise
 
   const save = async () => {
     setSaving(true)
     try {
       await patchAppConfig({
         scoring: { exact, winnerAndDiff: winDiff, winnerOnly: winOnly },
-        bonus: { champion, topScorer }
+        bonus: { champion, topScorer, finalist, surprise }
       })
       toast.show('ניקוד עודכן ✓', 'success')
     } catch (e) {
@@ -51,6 +57,8 @@ export default function AdminScoring() {
     setWinOnly(DEFAULT_APP_CONFIG.scoring.winnerOnly)
     setChampion(DEFAULT_APP_CONFIG.bonus.champion)
     setTopScorer(DEFAULT_APP_CONFIG.bonus.topScorer)
+    setFinalist(DEFAULT_APP_CONFIG.bonus.finalist)
+    setSurprise(DEFAULT_APP_CONFIG.bonus.surprise)
   }
 
   return (
@@ -69,6 +77,8 @@ export default function AdminScoring() {
           🏆 ניקוד בונוס
         </h3>
         <PointInput label="🏆 זוכה המונדיאל" value={champion}  onChange={setChampion} />
+        <PointInput label="🎽 פיינליסטית (לכל אחת)" value={finalist} onChange={setFinalist} />
+        <PointInput label="🐎 הפתעת הטורניר" value={surprise} onChange={setSurprise} />
         <PointInput label="⚽ מלך השערים"     value={topScorer} onChange={setTopScorer} />
       </section>
 

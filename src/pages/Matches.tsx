@@ -71,6 +71,15 @@ export default function Matches() {
   return (
     <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
       <LiveStatus />
+      {cfg.content.prize && (
+        <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px' }}>
+          <span style={{ fontSize: 24 }}>🎁</span>
+          <div>
+            <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>הפרס</div>
+            <div style={{ fontWeight: 800 }}>{cfg.content.prize}</div>
+          </div>
+        </div>
+      )}
       {nextMatch && <NextMatchHero match={nextMatch} />}
 
       {activePolls.map((p) => (

@@ -52,6 +52,8 @@ export interface BonusPrediction {
   uid: string
   championTeamCode: string | null
   topScorer: string | null
+  finalistCodes: string[]          // up to 2 teams predicted to reach the final
+  surpriseTeamCode: string | null  // "dark horse" predicted to reach the quarter-finals
   championPoints: number | null   // computed after tournament ends
   topScorerPoints: number | null  // computed after tournament ends
   updatedAt: Timestamp
@@ -67,6 +69,8 @@ export interface ScoringConfig {
 export interface BonusScoringConfig {
   champion: number
   topScorer: number
+  finalist: number   // points per correctly predicted finalist
+  surprise: number   // points if the "surprise" team reaches the quarter-finals
 }
 
 export interface ThemeConfig {
@@ -110,6 +114,7 @@ export interface ContentConfig {
   tagline: string          // login subtitle
   rulesIntro: string       // free text shown at top of the Rules page
   rulesNotes: string       // free text shown at the bottom of the Rules page
+  prize: string            // the prize, spotlighted on the home screen
 }
 
 export interface AnnouncementConfig {
@@ -136,12 +141,13 @@ export interface AppConfig {
 
 export const DEFAULT_APP_CONFIG: AppConfig = {
   scoring: { exact: 5, winnerAndDiff: 3, winnerOnly: 1 },
-  bonus:   { champion: 20, topScorer: 15 },
+  bonus:   { champion: 20, topScorer: 15, finalist: 10, surprise: 15 },
   content: {
     tournamentName: 'מונדיאל 2026',
     tagline: 'משחק ניחושים פנימי של StoreNext',
     rulesIntro: '',
-    rulesNotes: ''
+    rulesNotes: '',
+    prize: ''
   },
   announcement: { text: '', active: false },
   theme: {
