@@ -1,8 +1,11 @@
 name: Playground sync
 
-# Mirrors a currently-live competition into `playgroundMatches` so /playground
-# can show live results before the World Cup. Manual only.
+# Mirrors a currently-live competition into the playgroundSnapshot doc so
+# /playground stays fresh. Auto-runs LIVE every 15 minutes; can also be
+# triggered manually with a specific competition or SIM mode.
 on:
+  schedule:
+    - cron: '*/15 * * * *' # auto-refresh LIVE (ESPN multi-sport) every 15 min
   workflow_dispatch:
     inputs:
       comp:
@@ -42,7 +45,7 @@ jobs:
       - name: Run playground (SIM = fake live match; else mirror a real competition)
         env:
           FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
-          COMP: ${{ github.event.inputs.comp }}
+          COMP: ${{ github.event.inputs.comp || 'LIVE' }}
           LIVE_MINUTES: ${{ github.event.inputs.live_minutes || '0' }}
           SIM_MINUTES: ${{ github.event.inputs.live_minutes || '5' }}
         run: |

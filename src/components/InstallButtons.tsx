@@ -1,58 +1,74 @@
 import { useEffect, useState } from 'react'
 
 interface BIPEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }> }
-const DISMISS_KEY = 'wc26-install-dismissed-v1'
+const DISMISS_KEY = 'wc26-install-dismissed-until-v2' // session-only dismiss (timestamp)
 
-/** Twin buttons: "Install app" (PWA install prompt) and "Continue in browser". */
+/** Always-visible Install / Open in browser card on the home screen.
+ *  Hides only when (a) running as a standalone PWA, or (b) user dismissed within
+ *  the last 24h. Works on Android Chrome (native prompt), iOS Safari (share-sheet
+ *  instructions), and falls back to a clear "ask your browser to install" hint. */
 export default function InstallButtons() {
   const [evt, setEvt] = useState<BIPEvent | null>(null)
   const [installed, setInstalled] = useState(false)
-  const [dismissed, setDismissed] = useState(() => { try { return localStorage.getItem(DISMISS_KEY) === '1' } catch { return false } })
-  const [iosTip, setIosTip] = useState(false)
+  const [dismissed, setDismissed] = useState(() => {
+    try { const until = Number(localStorage.getItem(DISMISS_KEY) || 0); return until > Date.now() } catch { return false }
+  })
+  const [showIosTip, setShowIosTip] = useState(false)
+  const [showGenericTip, setShowGenericTip] = useState(false)
 
   useEffect(() => {
     const onBIP = (e: Event) => { e.preventDefault(); setEvt(e as BIPEvent) }
     const onInstalled = () => setInstalled(true)
     window.addEventListener('beforeinstallprompt', onBIP)
     window.addEventListener('appinstalled', onInstalled)
-    // Already installed (running as PWA)?
-    const inStandalone = window.matchMedia?.('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true
+    const nav = navigator as Navigator & { standalone?: boolean }
+    const inStandalone = window.matchMedia?.('(display-mode: standalone)').matches || nav.standalone === true
     if (inStandalone) setInstalled(true)
     return () => { window.removeEventListener('beforeinstallprompt', onBIP); window.removeEventListener('appinstalled', onInstalled) }
   }, [])
 
   if (installed || dismissed) return null
 
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as Window & { MSStream?: unknown }).MSStream
-  const canPrompt = !!evt
+  // Robust iOS detection — iPadOS 13+ reports as "Macintosh" but has touch.
+  const ua = navigator.userAgent || ''
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || ('ontouchend' in document && /Mac/.test(ua))
+  const isAndroid = /Android/.test(ua)
 
   const install = async () => {
-    if (canPrompt && evt) { await evt.prompt(); await evt.userChoice; setEvt(null) }
-    else if (isIOS) setIosTip(true)
+    if (evt) { await evt.prompt(); await evt.userChoice; setEvt(null); return }
+    if (isIOS) { setShowIosTip(true); return }
+    setShowGenericTip(true)
   }
-  const continueBrowser = () => { try { localStorage.setItem(DISMISS_KEY, '1') } catch { /* ignore */ } setDismissed(true) }
-
-  // Hide entirely if there's nothing useful to offer (e.g. desktop browser with no support and not iOS).
-  if (!canPrompt && !isIOS) return null
+  const dismiss = () => {
+    try { localStorage.setItem(DISMISS_KEY, String(Date.now() + 24 * 60 * 60 * 1000)) } catch { /* ignore */ }
+    setDismissed(true)
+  }
 
   return (
     <div className="glass animate-in" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', flexWrap: 'wrap' }}>
-      <span style={{ fontSize: 22 }}>📲</span>
+      <span style={{ fontSize: 24 }}>📲</span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>שמור על האפליקציה בהישג יד</div>
-        <div style={{ fontWeight: 700, fontSize: 14 }}>{canPrompt ? 'התקן את האפליקציה למסך הבית' : 'הוסף למסך הבית מ-Safari'}</div>
+        <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>שמור גישה מהירה</div>
+        <div style={{ fontWeight: 800, fontSize: 14 }}>התקן את האפליקציה — בלי דפדפן, ישר ממסך הבית</div>
       </div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-        <button className="btn" onClick={install} style={{ padding: '8px 12px', fontSize: 13 }}>
+        <button className="btn" onClick={install} style={{ padding: '8px 14px', fontSize: 13 }}>
           ⬇ התקן אפליקציה
         </button>
-        <button onClick={continueBrowser} className="btn-ghost" style={{ padding: '8px 12px', fontSize: 13, border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)' }}>
-          המשך בדפדפן
+        <button onClick={dismiss} className="btn-ghost" style={{ padding: '8px 12px', fontSize: 13, border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)' }}>
+          💻 פתח בדפדפן
         </button>
       </div>
-      {iosTip && (
-        <div style={{ flexBasis: '100%', fontSize: 12, color: 'var(--color-text-muted)', marginTop: 4 }}>
-          ב-iPhone: לחץ על כפתור השיתוף 􀈂 בתחתית הדפדפן → "Add to Home Screen".
+      {showIosTip && (
+        <div style={{ flexBasis: '100%', fontSize: 12, lineHeight: 1.6, marginTop: 6, padding: '8px 10px', background: 'var(--glass-bg-hi)', borderRadius: 'var(--radius-md)' }}>
+          <b>ב-iPhone (Safari):</b> לחץ על כפתור השיתוף בתחתית הדפדפן (ריבוע עם חץ למעלה ↑) → גלול ובחר <b>"הוסף למסך הבית"</b> / "Add to Home Screen".
+        </div>
+      )}
+      {showGenericTip && !isIOS && (
+        <div style={{ flexBasis: '100%', fontSize: 12, lineHeight: 1.6, marginTop: 6, padding: '8px 10px', background: 'var(--glass-bg-hi)', borderRadius: 'var(--radius-md)' }}>
+          {isAndroid
+            ? <><b>ב-Android (Chrome):</b> לחץ על תפריט שלוש הנקודות ⋮ ובחר <b>"Install app"</b> / "התקן אפליקציה".</>
+            : <><b>במחשב:</b> בחר בתפריט הדפדפן את "התקן את האפליקציה" / "Install ניחושי מונדיאל 2026". באייקון בשורת הכתובת (⊕ או 🖥️) ב-Chrome/Edge.</>}
         </div>
       )}
     </div>
