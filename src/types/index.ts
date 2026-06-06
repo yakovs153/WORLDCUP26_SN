@@ -151,9 +151,10 @@ export type StageMultipliers = Record<MatchStage, number>
 export type HofMetric = 'prophet' | 'optimist' | 'draw' | 'disaster'
 
 export interface FeatureFlags {
-  pundit: boolean          // טום's daily AI recap card
-  leaderPerk: boolean      // king banner + megaphone
-  analystAutofill: boolean // Tom auto-fills forgotten predictions (admin override)
+  pundit: boolean                 // טום's daily AI recap card
+  leaderPerk: boolean             // king banner + megaphone
+  analystAutofill: boolean        // Tom auto-fills forgotten predictions (admin override)
+  requireEmailVerification: boolean // block app access until the user clicks the email-verify link
 }
 
 export interface HofCategory {
@@ -198,7 +199,7 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
     { key: 'draw',     emoji: '🤝', title: 'מלך התיקו',   active: true },
     { key: 'disaster', emoji: '💔', title: 'אסון השבוע',  active: true }
   ],
-  features: { pundit: true, leaderPerk: true, analystAutofill: true },
+  features: { pundit: true, leaderPerk: true, analystAutofill: true, requireEmailVerification: true },
   analystOverrides: {},
   tips: [],
   tipsEnabled: true,

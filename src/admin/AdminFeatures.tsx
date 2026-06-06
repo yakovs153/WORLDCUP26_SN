@@ -8,10 +8,11 @@ import { patchAppConfig } from '../lib/appConfig'
 import { tomPick } from '../lib/octopus'
 import { useToast } from '../components/Toast'
 
-const TOGGLES: { key: 'pundit' | 'leaderPerk' | 'analystAutofill'; label: string; desc: string }[] = [
+const TOGGLES: { key: 'pundit' | 'leaderPerk' | 'analystAutofill' | 'requireEmailVerification'; label: string; desc: string }[] = [
   { key: 'pundit', label: '🤖 מבזק טום האנליסט', desc: 'כרטיס ה-AI היומי במסך הבית' },
   { key: 'leaderPerk', label: '👑 הטבת המוביל', desc: 'באנר המלך + רמקול להודעה לכולם' },
-  { key: 'analystAutofill', label: '🧠 מילוי אוטומטי ע״י טום', desc: 'מי ששכח לנחש מקבל את ניחוש ה-AI (70% מהנקודות)' }
+  { key: 'analystAutofill', label: '🧠 מילוי אוטומטי ע״י טום', desc: 'מי ששכח לנחש מקבל את ניחוש ה-AI (70% מהנקודות)' },
+  { key: 'requireEmailVerification', label: '📧 חובת אימות מייל בהרשמה', desc: 'חוסם גישה עד שהמשתמש לוחץ על קישור האימות במייל שנשלח אליו' }
 ]
 
 export default function AdminFeatures() {
