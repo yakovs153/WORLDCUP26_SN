@@ -7,7 +7,6 @@ import { Link } from 'react-router-dom'
 import MatchCard from '../components/MatchCard'
 import NextMatchHero from '../components/NextMatchHero'
 import LiveStrip from '../components/LiveStrip'
-import InstallButtons from '../components/InstallButtons'
 import KingBanner from '../components/KingBanner'
 import PunditCard from '../components/PunditCard'
 import { MatchCardSkeleton } from '../components/Skeleton'
@@ -61,7 +60,6 @@ export default function Matches() {
   return (
     <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
       <LiveStrip />
-      <InstallButtons />
       {unpredictedToday > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'color-mix(in srgb, var(--color-accent) 18%, var(--color-bg-elevated))', border: '1px solid color-mix(in srgb, var(--color-accent) 50%, var(--color-border-strong))', fontWeight: 700, fontSize: 14 }}>
           ⏰ יש לך {unpredictedToday} {unpredictedToday === 1 ? 'משחק' : 'משחקים'} היום שעדיין לא ניחשת — אל תיתן לטום לנחש במקומך!
