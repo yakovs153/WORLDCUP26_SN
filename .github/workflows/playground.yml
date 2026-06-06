@@ -5,7 +5,9 @@ name: Playground sync
 # triggered manually with a specific competition or SIM mode.
 on:
   schedule:
-    - cron: '*/15 * * * *' # auto-refresh LIVE (ESPN multi-sport) every 15 min
+    - cron: '*/15 * * * *' # GH cron is unreliable — fallback only
+  repository_dispatch:
+    types: [run-playground] # external trigger (Cloud Scheduler) for reliable timing
   workflow_dispatch:
     inputs:
       comp:

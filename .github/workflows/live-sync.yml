@@ -10,7 +10,9 @@ name: Live results sync
 #     re-syncs every 60s for that many minutes (run it during a match window).
 on:
   schedule:
-    - cron: '*/5 * * * *' # every 5 minutes (GitHub's scheduled minimum)
+    - cron: '*/5 * * * *' # GH cron is unreliable (can delay 15-60 min) — fallback only
+  repository_dispatch:
+    types: [run-sync] # external trigger (Cloud Scheduler) for reliable timing
   workflow_dispatch:
     inputs:
       live_minutes:
