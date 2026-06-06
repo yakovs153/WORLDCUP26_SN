@@ -4,6 +4,7 @@ import { AuthProvider } from './auth/AuthProvider'
 import ProtectedRoute from './auth/ProtectedRoute'
 import Layout from './components/Layout'
 import Login from './pages/Login'
+import VerifyEmail from './pages/VerifyEmail'
 import Matches from './pages/Matches'
 import { ToastProvider } from './components/Toast'
 import { AppConfigProvider } from './hooks/useAppConfig'
@@ -42,6 +43,7 @@ export default function App() {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/verify" element={<VerifyEmail />} />
               <Route path="/rules" element={<Rules />} />
               <Route path="/octopus" element={<OctopusPreview />} />
               <Route path="/playground" element={<Playground />} />

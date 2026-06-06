@@ -184,6 +184,7 @@ export interface AppConfig {
   departments: string[]                 // company departments users can belong to
   adminEmails: string[]
   allowedEmailDomains: string[]         // e.g. ["storenext.com"] — empty = no restriction
+  blockedEmails: string[]               // emails rejected from login/register (admin-managed)
   updatedAt?: Timestamp
 }
 
@@ -231,5 +232,6 @@ export const DEFAULT_APP_CONFIG: AppConfig = {
   hiddenScorers: [],
   departments: ['דאטה ואנליזה', 'פיתוח', 'סיסטם', 'פרוייקטים', 'מטאור', 'המימד השביעי', 'משאבי אנוש', 'הנהלה', 'כספים', 'מוצר'],
   adminEmails: [],
-  allowedEmailDomains: []
+  allowedEmailDomains: [],
+  blockedEmails: []
 }

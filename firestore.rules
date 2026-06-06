@@ -24,7 +24,7 @@ service cloud.firestore {
       allow update: if (isSelf(uid) || isAdmin())
                     && request.resource.data.totalPoints == resource.data.totalPoints
                     && request.resource.data.predictionsCount == resource.data.predictionsCount;
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
 
     // App-config / admin helper (defined before use by /matches).
@@ -124,7 +124,7 @@ service cloud.firestore {
         && request.resource.data.championPoints == null
         && request.resource.data.topScorerPoints == null;
 
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
 
     // ===== Predictions =====
@@ -155,7 +155,7 @@ service cloud.firestore {
                     && request.resource.data.homeScore >= 0 && request.resource.data.homeScore <= 30
                     && request.resource.data.awayScore >= 0 && request.resource.data.awayScore <= 30;
 
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
 
     // ===== Match rooms (live chat / reactions) =====

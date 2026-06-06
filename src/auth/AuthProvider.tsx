@@ -7,6 +7,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   updateProfile,
+  sendEmailVerification,
+  reload,
   type User
 } from 'firebase/auth'
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
@@ -36,6 +38,8 @@ interface AuthContextValue {
   registerEmail: (email: string, password: string, displayName: string, department?: string) => Promise<void>
   signInGoogle: () => Promise<void>
   signOut: () => Promise<void>
+  resendVerification: () => Promise<void>
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -154,6 +158,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const cred = await createUserWithEmailAndPassword(auth, email, password)
     if (displayName) await updateProfile(cred.user, { displayName })
     await ensureUserDoc(cred.user, displayName, department)
+    // Email verification — send a verification email; ProtectedRoute will gate
+    // access until the user clicks the link and the auth token reloads.
+    try { await sendEmailVerification(cred.user) } catch (e) { console.warn('sendEmailVerification failed:', e) }
   }
 
   const signInGoogle = async () => {
@@ -185,8 +192,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await fbSignOut(auth)
   }
 
+  const resendVerification = async () => {
+    if (DEMO_MODE) return
+    if (!auth.currentUser) throw new Error('not signed in')
+    await sendEmailVerification(auth.currentUser)
+  }
+
+  const refreshUser = async () => {
+    if (DEMO_MODE) return
+    if (!auth.currentUser) return
+    await reload(auth.currentUser)
+    setUser({ ...(auth.currentUser as User) }) // force re-render via new object
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, signInEmail, registerEmail, signInGoogle, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signInEmail, registerEmail, signInGoogle, signOut, resendVerification, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )

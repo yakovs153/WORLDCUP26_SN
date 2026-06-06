@@ -15,7 +15,7 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
       const refresh = () => {
         const c = getDemoConfig()
         setCfg(c)
-        cacheConfigForGate(c.allowedEmailDomains || [])
+        cacheConfigForGate(c.allowedEmailDomains || [], c.blockedEmails || [])
       }
       refresh()
       window.addEventListener('demo-app-config-changed', refresh)
@@ -50,10 +50,11 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
           hiddenScorers: data.hiddenScorers || [],
           departments: data.departments || DEFAULT_APP_CONFIG.departments,
           adminEmails: data.adminEmails || [],
-          allowedEmailDomains: data.allowedEmailDomains || []
+          allowedEmailDomains: data.allowedEmailDomains || [],
+          blockedEmails: data.blockedEmails || []
         }
         setCfg(merged)
-        cacheConfigForGate(merged.allowedEmailDomains)
+        cacheConfigForGate(merged.allowedEmailDomains, merged.blockedEmails)
       }
     })
     return unsub

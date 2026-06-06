@@ -31,7 +31,8 @@ export function getDemoConfig(): AppConfig {
       hiddenScorers: parsed.hiddenScorers || [],
       departments: parsed.departments || DEFAULT_APP_CONFIG.departments,
       adminEmails: parsed.adminEmails || [],
-      allowedEmailDomains: parsed.allowedEmailDomains || []
+      allowedEmailDomains: parsed.allowedEmailDomains || [],
+      blockedEmails: parsed.blockedEmails || []
     }
   } catch {
     return DEFAULT_APP_CONFIG
