@@ -5,6 +5,7 @@ import { usePredictions } from '../hooks/usePredictions'
 import FlagIcon from '../components/FlagIcon'
 import LiveBadge from '../components/LiveBadge'
 import PointsChart from '../components/PointsChart'
+import MyPicksSubTabs from '../components/MyPicksSubTabs'
 import { MatchCardSkeleton } from '../components/Skeleton'
 import { formatTimeHe, formatDateHe, stageLabel } from '../lib/format'
 
@@ -37,6 +38,7 @@ export default function MyPredictions() {
     return (
       <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <h1 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1 }}>הניחושים שלי</h1>
+        <MyPicksSubTabs />
         <MatchCardSkeleton />
         <MatchCardSkeleton />
       </div>
@@ -48,6 +50,7 @@ export default function MyPredictions() {
   return (
     <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
       <h1 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1 }}>הניחושים שלי</h1>
+      <MyPicksSubTabs />
 
       <div className="card" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', gap: 8 }}>
         <Stat label="ניחושים" value={rows.length} />

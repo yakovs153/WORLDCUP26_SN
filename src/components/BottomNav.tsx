@@ -1,13 +1,15 @@
 import { NavLink } from 'react-router-dom'
 import { useAppConfig } from '../hooks/useAppConfig'
 
+// 5-tab IA (Option A from the colleague-feedback redesign):
+//   Home · My Picks · Groups · Rank · Profile
+// Bonus is now a sub-tab inside My Picks; surveys live as a card on Profile.
+// The big bonus reminder on the home page still deep-links straight to /bonus.
 const ITEMS: { to: string; label: string; key?: keyof import('../types').NavIconsConfig; icon?: string }[] = [
   { to: '/',            label: 'משחקים', key: 'matches' },
-  { to: '/leaderboard', label: 'דירוג',  key: 'leaderboard' },
   { to: '/my',          label: 'ניחושים שלי', key: 'my' },
   { to: '/teams',       label: 'בתים',   icon: '🌍' },
-  { to: '/surveys',     label: 'סקרים',  icon: '🗳️' },
-  { to: '/bonus',       label: 'בונוס',  key: 'bonus' },
+  { to: '/leaderboard', label: 'דירוג',  key: 'leaderboard' },
   { to: '/profile',     label: 'פרופיל', key: 'profile' }
 ]
 

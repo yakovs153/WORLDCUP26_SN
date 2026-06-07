@@ -7,6 +7,7 @@ import { useAppConfig } from '../hooks/useAppConfig'
 import FlagIcon from '../components/FlagIcon'
 import PlayerAvatar from '../components/PlayerAvatar'
 import GoldenBootRace from '../components/GoldenBootRace'
+import MyPicksSubTabs from '../components/MyPicksSubTabs'
 import { useGoldenBoot } from '../hooks/useGoldenBoot'
 import { useToast } from '../components/Toast'
 import { saveBonus } from '../lib/bonus'
@@ -141,6 +142,7 @@ export default function Bonus() {
     return (
       <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <h1 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1 }}>ניחושי בונוס</h1>
+        <MyPicksSubTabs />
         <MatchCardSkeleton />
       </div>
     )
@@ -153,6 +155,7 @@ export default function Bonus() {
 
   return (
     <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <MyPicksSubTabs />
       <header>
         <h1 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 28 }}>ניחושי בונוס</h1>
         <p className="text-muted" style={{ fontSize: 13, marginTop: 4 }}>
