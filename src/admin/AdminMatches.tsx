@@ -55,13 +55,15 @@ function MatchRow({ match, onSaved, onError }: { match: Match; onSaved: () => vo
   const [home, setHome] = useState<string>(match.homeScore == null ? '' : String(match.homeScore))
   const [away, setAway] = useState<string>(match.awayScore == null ? '' : String(match.awayScore))
   const [status, setStatus] = useState<MatchStatus>(match.status)
+  const [venue, setVenue] = useState<string>(match.venue ?? '')
   const [saving, setSaving] = useState(false)
   const overridden = !!match.manualOverride
 
   const dirty =
     home !== (match.homeScore == null ? '' : String(match.homeScore)) ||
     away !== (match.awayScore == null ? '' : String(match.awayScore)) ||
-    status !== match.status
+    status !== match.status ||
+    venue !== (match.venue ?? '')
 
   const save = async () => {
     setSaving(true)
@@ -79,6 +81,7 @@ function MatchRow({ match, onSaved, onError }: { match: Match; onSaved: () => vo
           awayScore: as,
           status,
           winner,
+          venue: venue.trim() || null,
           manualOverride: true,
           minute: status === 'LIVE' ? (match.minute ?? null) : null,
           lastUpdated: serverTimestamp()
@@ -112,74 +115,96 @@ function MatchRow({ match, onSaved, onError }: { match: Match; onSaved: () => vo
   }
 
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'auto 1fr auto auto auto auto auto',
-        gap: 8,
-        alignItems: 'center',
-        padding: '10px 6px',
-        borderTop: '1px solid var(--color-border)',
-        fontSize: 13
-      }}
-    >
-      <span style={{ color: 'var(--color-text-muted)', fontSize: 11, minWidth: 48 }}>
-        {formatTimeHe(match.kickoff.toDate())}
-      </span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-        <FlagIcon flag={match.homeTeam.flag} code={match.homeTeam.code} size={18} />
-        <span style={{ fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{match.homeTeam.name}</span>
-        <span style={{ color: 'var(--color-text-muted)' }}>–</span>
-        <span style={{ fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{match.awayTeam.name}</span>
-        <FlagIcon flag={match.awayTeam.flag} code={match.awayTeam.code} size={18} />
-        <span style={{ fontSize: 10, color: 'var(--color-text-muted)', marginInlineStart: 4 }}>{stageLabel(match.stage, match.group)}</span>
-      </div>
-      <input
-        type="number"
-        min={0}
-        value={home}
-        onChange={(e) => setHome(e.target.value)}
-        style={inp}
-        aria-label={`שערים ${match.homeTeam.name}`}
-      />
-      <input
-        type="number"
-        min={0}
-        value={away}
-        onChange={(e) => setAway(e.target.value)}
-        style={inp}
-        aria-label={`שערים ${match.awayTeam.name}`}
-      />
-      <select
-        value={status}
-        onChange={(e) => setStatus(e.target.value as MatchStatus)}
-        style={{ ...inp, width: 80, padding: '6px 4px' }}
+    <div style={{ padding: '10px 6px', borderTop: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {/* Top row: time, teams, score, status, save/override */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'auto 1fr auto auto auto auto auto',
+          gap: 8,
+          alignItems: 'center',
+          fontSize: 13
+        }}
       >
-        <option value="SCHEDULED">עתידי</option>
-        <option value="LIVE">חי</option>
-        <option value="FINISHED">סופי</option>
-        <option value="POSTPONED">נדחה</option>
-      </select>
-      <button
-        className="btn"
-        onClick={save}
-        disabled={!dirty || saving}
-        style={{ padding: '6px 10px', fontSize: 12 }}
-      >
-        {saving ? '…' : 'שמירה'}
-      </button>
-      {overridden ? (
-        <button
-          onClick={clearOverride}
-          disabled={saving}
-          title="שחרר מהתערבות ידנית — הסנכרון יחזור לשלוט"
-          style={{ padding: '6px 8px', fontSize: 11, background: 'transparent', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', color: 'var(--color-danger)' }}
+        <span style={{ color: 'var(--color-text-muted)', fontSize: 11, minWidth: 48 }}>
+          {formatTimeHe(match.kickoff.toDate())}
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+          <FlagIcon flag={match.homeTeam.flag} code={match.homeTeam.code} size={18} />
+          <span style={{ fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{match.homeTeam.name}</span>
+          <span style={{ color: 'var(--color-text-muted)' }}>–</span>
+          <span style={{ fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{match.awayTeam.name}</span>
+          <FlagIcon flag={match.awayTeam.flag} code={match.awayTeam.code} size={18} />
+          <span style={{ fontSize: 10, color: 'var(--color-text-muted)', marginInlineStart: 4 }}>{stageLabel(match.stage, match.group)}</span>
+        </div>
+        <input
+          type="number"
+          min={0}
+          value={home}
+          onChange={(e) => setHome(e.target.value)}
+          style={inp}
+          aria-label={`שערים ${match.homeTeam.name}`}
+        />
+        <input
+          type="number"
+          min={0}
+          value={away}
+          onChange={(e) => setAway(e.target.value)}
+          style={inp}
+          aria-label={`שערים ${match.awayTeam.name}`}
+        />
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value as MatchStatus)}
+          style={{ ...inp, width: 80, padding: '6px 4px' }}
         >
-          ✕ ידני
+          <option value="SCHEDULED">עתידי</option>
+          <option value="LIVE">חי</option>
+          <option value="FINISHED">סופי</option>
+          <option value="POSTPONED">נדחה</option>
+        </select>
+        <button
+          className="btn"
+          onClick={save}
+          disabled={!dirty || saving}
+          style={{ padding: '6px 10px', fontSize: 12 }}
+        >
+          {saving ? '…' : 'שמירה'}
         </button>
-      ) : (
-        <span style={{ fontSize: 10, color: 'var(--color-text-muted)', width: 40, textAlign: 'center' }}>אוטו׳</span>
-      )}
+        {overridden ? (
+          <button
+            onClick={clearOverride}
+            disabled={saving}
+            title="שחרר מהתערבות ידנית — הסנכרון יחזור לשלוט"
+            style={{ padding: '6px 8px', fontSize: 11, background: 'transparent', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', color: 'var(--color-danger)' }}
+          >
+            ✕ ידני
+          </button>
+        ) : (
+          <span style={{ fontSize: 10, color: 'var(--color-text-muted)', width: 40, textAlign: 'center' }}>אוטו׳</span>
+        )}
+      </div>
+      {/* Bottom row: editable venue */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingInlineStart: 56 }}>
+        <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>📍 אצטדיון:</span>
+        <input
+          type="text"
+          value={venue}
+          onChange={(e) => setVenue(e.target.value)}
+          placeholder="לדוגמה: אצטדיון אצטקה, מקסיקו סיטי"
+          aria-label="שם האצטדיון"
+          style={{
+            flex: 1,
+            padding: '4px 8px',
+            background: 'var(--color-bg-elevated)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-md)',
+            color: 'var(--color-text)',
+            fontSize: 12,
+            outline: 'none'
+          }}
+        />
+      </div>
     </div>
   )
 }
