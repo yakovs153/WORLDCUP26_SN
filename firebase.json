@@ -23,7 +23,11 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
-  "_comment_functions": "Cloud Functions are NOT deployed on the free (Spark) plan. Live-sync runs via GitHub Actions instead (.github/workflows/live-sync.yml). If you later enable Blaze, restore the 'functions' block here and deploy the functions/ codebase.",
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs20",
+    "predeploy": ["npm --prefix functions run build"]
+  },
   "emulators": {
     "auth":      { "port": 9099 },
     "firestore": { "port": 8080 },
