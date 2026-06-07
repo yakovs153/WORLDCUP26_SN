@@ -11,6 +11,7 @@ import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { tomPick, winProb } from '../lib/octopus'
+import { venueFor } from '../lib/wcVenues'
 import type { Prediction, UserDoc } from '../types'
 
 interface PeerPred { name: string; home: number; away: number; auto: boolean }
@@ -97,12 +98,18 @@ export default function MatchRoom() {
               הניחוש שלך: <b style={{ color: 'var(--color-text)' }}>{myPred.homeScore}–{myPred.awayScore}</b>
             </div>
           )}
-          {match.venue && (
-            <div style={{ textAlign: 'center', marginTop: 8, fontSize: 12, color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-              <span>📍</span>
-              <span>{match.venue}</span>
-            </div>
-          )}
+          {(() => {
+            // Admin-set venue wins (manualOverride). Otherwise fall back to the
+            // hardcoded WC2026 schedule lookup (group-stage matches only — KO
+            // bracket matches need admin to set manually until teams resolve).
+            const venue = match.venue || venueFor(match.homeTeam.code, match.awayTeam.code, match.kickoff.toMillis())
+            return venue ? (
+              <div style={{ textAlign: 'center', marginTop: 8, fontSize: 12, color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                <span>📍</span>
+                <span>{venue}</span>
+              </div>
+            ) : null
+          })()}
         </div>
       )}
 
