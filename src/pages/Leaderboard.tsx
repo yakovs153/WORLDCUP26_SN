@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { useLeaderboard } from '../hooks/useLeaderboard'
 import { useMatches } from '../hooks/useMatches'
@@ -78,13 +79,16 @@ function Personal({ entries, meUid }: { entries: LeaderboardEntry[]; meUid?: str
       {entries.map((e) => {
         const me = meUid === e.uid
         const king = e.rank === 1 && e.totalPoints > 0
-        return (
-          <div key={e.uid} className="animate-in" style={{
-            display: 'grid', gridTemplateColumns: '40px 1fr auto', alignItems: 'center', gap: 'var(--space-3)',
+        // Tapping ANY other row (including Tom) opens the head-to-head view.
+        // Your own row is non-clickable — no point comparing to yourself.
+        const body = (
+          <div className="animate-in" style={{
+            display: 'grid', gridTemplateColumns: '40px 1fr auto auto', alignItems: 'center', gap: 'var(--space-3)',
             padding: 'var(--space-3) var(--space-4)',
             background: king ? 'linear-gradient(90deg, color-mix(in srgb, var(--color-accent) 18%, transparent), transparent)'
               : me ? 'color-mix(in srgb, var(--color-primary) 10%, transparent)' : 'transparent',
-            borderBottom: '1px solid var(--glass-border)'
+            borderBottom: '1px solid var(--glass-border)',
+            cursor: me ? 'default' : 'pointer'
           }}>
             <div style={{ fontFamily: 'var(--font-display)', fontSize: king ? 24 : 20, color: e.rank <= 3 ? 'var(--color-primary)' : 'var(--color-text-muted)' }}>
               {king ? '👑' : medal(e.rank) || e.rank}
@@ -103,7 +107,15 @@ function Personal({ entries, meUid }: { entries: LeaderboardEntry[]; meUid?: str
               </div>
             </div>
             <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--color-primary)' }}><CountUp value={e.totalPoints} /></div>
+            {!me && <span aria-hidden style={{ color: 'var(--color-text-muted)', fontSize: 18, paddingInlineEnd: 4 }}>‹</span>}
+            {me && <span style={{ width: 18 }} />}
           </div>
+        )
+        if (me) return <div key={e.uid}>{body}</div>
+        return (
+          <Link key={e.uid} to={`/compare/${e.uid}`} style={{ color: 'inherit', textDecoration: 'none' }} aria-label={`השוואה אל ${e.displayName}`}>
+            {body}
+          </Link>
         )
       })}
     </div>

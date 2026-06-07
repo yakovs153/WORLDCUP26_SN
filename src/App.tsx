@@ -27,6 +27,7 @@ const Wrap = lazy(() => import('./pages/Wrap'))
 const Surveys = lazy(() => import('./pages/Surveys'))
 const Survey = lazy(() => import('./pages/Survey'))
 const Rules = lazy(() => import('./pages/Rules'))
+const Compare = lazy(() => import('./pages/Compare'))
 const Admin = lazy(() => import('./pages/Admin'))
 
 const Fallback = () => <div className="page-fade" style={{ padding: 'var(--space-6)', textAlign: 'center', color: 'var(--color-text-muted)' }}>טוען…</div>
@@ -64,6 +65,7 @@ export default function App() {
                 <Route path="survey/:id" element={<Survey />} />
                 <Route path="my" element={<MyPredictions />} />
                 <Route path="leaderboard" element={<Leaderboard />} />
+                <Route path="compare/:otherUid" element={<Compare />} />
                 <Route path="profile" element={<Profile />} />
                 <Route
                   path="admin/*"
