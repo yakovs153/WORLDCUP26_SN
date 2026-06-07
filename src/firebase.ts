@@ -2,7 +2,14 @@ import { initializeApp, type FirebaseOptions } from 'firebase/app'
 import { getAuth, connectAuthEmulator } from 'firebase/auth'
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore'
 
-const isDemo = import.meta.env.VITE_DEMO_MODE === 'true'
+// DEMO_MODE turns on when EITHER the build-time env var is true OR the URL
+// query string includes `?demo=1`. The URL-param path lets us share the live
+// hosting URL as a demo link (`https://storenext-wc2026.web.app/?demo=1`)
+// without needing a separate hosting site. Demo data lives in its own
+// localStorage keys ('demo-*') so it can't pollute real user state.
+const isDemoBuild = import.meta.env.VITE_DEMO_MODE === 'true'
+const isDemoUrl = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demo') === '1'
+const isDemo = isDemoBuild || isDemoUrl
 
 // In demo mode the real Firebase keys are empty. Firebase still initializes
 // eagerly here (this module is imported by AuthProvider/useAppConfig), and
@@ -31,5 +38,8 @@ if (import.meta.env.VITE_USE_EMULATORS === 'true') {
 /**
  * Demo mode: כשמופעל, ה-hooks משתמשים ב-fixtures מקומיות
  * וניחושים נשמרים ב-localStorage. שימושי לתצוגה מקדימה ללא Firebase project.
+ *
+ * Activates via `VITE_DEMO_MODE=true` at build time OR `?demo=1` in the URL
+ * at runtime — either path uses the same demo data.
  */
-export const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true'
+export const DEMO_MODE = isDemo

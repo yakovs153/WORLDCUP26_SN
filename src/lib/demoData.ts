@@ -1,6 +1,6 @@
 import { Timestamp } from 'firebase/firestore'
 import type { Match, MatchStage, MatchStatus, Prediction, UserDoc } from '../types'
-import { scorePrediction } from './scoring'
+import { scorePredictionForStage, mergeScoring } from './scoring'
 import scheduleData from '../data/wc2026.json'
 
 /**
@@ -218,7 +218,9 @@ export function setDemoPrediction(matchId: string, homeScore: number, awayScore:
 
 function computePoints(s: StoredPrediction, m: Match): number {
   if (m.homeScore === null || m.awayScore === null) return 0
-  // Reads admin-configured scoring values from localStorage if present
+  // Reads admin-configured scoring values from localStorage if present (and
+  // normalises legacy shape via mergeScoring) so the demo respects whatever
+  // scoring the user has tweaked in the admin panel.
   let cfg
   try {
     const raw = localStorage.getItem('demo-app-config-v1')
@@ -227,7 +229,7 @@ function computePoints(s: StoredPrediction, m: Match): number {
       cfg = parsed?.scoring
     }
   } catch { /* default */ }
-  return scorePrediction(s.homeScore, s.awayScore, m.homeScore, m.awayScore, cfg)
+  return scorePredictionForStage(s.homeScore, s.awayScore, m.homeScore, m.awayScore, m.stage, mergeScoring(cfg))
 }
 
 function getCurrentUserPoints(): number {
