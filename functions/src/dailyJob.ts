@@ -77,8 +77,15 @@ async function runDaily(geminiKey: string) {
   // ===== Bonus awarding (incl. penalty-shootout fix) =====
   const cfgSnap = await db.collection('appConfig').doc('main').get()
   const cfg = cfgSnap.exists ? cfgSnap.data() || {} : {}
-  const bonusPts = cfg.bonus || { champion: 20, topScorer: 15, runnerUp: 10, surprise: 10, flop: 10 }
-  const adminTopScorer = cfg.bonusResults?.topScorer || null
+  const bonusPts = cfg.bonus || { champion: 20, topScorer: 15, runnerUp: 8, surprise: 8, flop: 8 }
+  // Top scorer can be a single string OR an array OR comma-separated — when
+  // multiple players tie on goals, every user who picked any of them scores.
+  const tsRaw = cfg.bonusResults?.topScorers ?? cfg.bonusResults?.topScorer ?? []
+  const adminTopScorers = new Set<string>(
+    (Array.isArray(tsRaw) ? tsRaw : String(tsRaw).split(','))
+      .map((s: string) => String(s).trim())
+      .filter(Boolean)
+  )
   const up = (s: string | undefined | null) => String(s || '').toUpperCase()
   const codeOf = (t: { code?: string } | undefined) => up(t?.code)
 
@@ -109,7 +116,7 @@ async function runDaily(geminiKey: string) {
     let pts = 0
     if (champion && up(b.championTeamCode) === champion) pts += bonusPts.champion || 0
     if (runnerUp && up(b.runnerUpCode) === runnerUp) pts += bonusPts.runnerUp || 0
-    if (adminTopScorer && b.topScorer === adminTopScorer) pts += bonusPts.topScorer || 0
+    if (adminTopScorers.size && b.topScorer && adminTopScorers.has(b.topScorer)) pts += bonusPts.topScorer || 0
     if (b.surpriseTeamCode && qfReachers.has(up(b.surpriseTeamCode))) pts += bonusPts.surprise || 0
     if (knockoutsStarted && b.flopTeamCode && !r16Reachers.has(up(b.flopTeamCode))) pts += bonusPts.flop || 0
     const prev = b.awardedPoints || 0

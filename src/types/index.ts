@@ -193,7 +193,7 @@ export interface AppConfig {
 export const DEFAULT_APP_CONFIG: AppConfig = {
   scoring: { exact: 5, winnerAndDiff: 3, winnerOnly: 1 },
   stageMultipliers: { GROUP: 1, R32: 1, R16: 2, QF: 2, SF: 3, TP: 1, F: 3 },
-  bonus:   { champion: 20, topScorer: 15, runnerUp: 10, surprise: 10, flop: 10 },
+  bonus:   { champion: 20, topScorer: 15, runnerUp: 8, surprise: 8, flop: 8 },
   hallOfFame: [
     { key: 'prophet',  emoji: '🔮', title: 'הנביא',       active: true },
     { key: 'optimist', emoji: '🤡', title: 'האופטימי',    active: true },

@@ -4,7 +4,7 @@ import type { Match, ScoringConfig, StageMultipliers, LeaderboardEntry } from '.
 
 export const OCTOPUS_UID = 'octopus'        // internal id (kept stable)
 export const OCTOPUS_NAME = 'טום האנליסט'    // display name — the AI analyst
-export const AUTO_FACTOR = 0.7              // forgot to predict? Tom's pick scores 70%
+export const AUTO_FACTOR = 0.5              // forgot to predict? Tom's pick scores 50%
 
 export type AnalystOverrides = Record<string, [number, number]>
 

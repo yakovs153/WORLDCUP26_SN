@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/AuthProvider'
 import { useMatches } from '../hooks/useMatches'
 import { useBonus } from '../hooks/useBonus'
@@ -18,6 +19,10 @@ import type { TeamRef } from '../types'
 // for the "biggest flop" bonus.
 const GIANT_CODES = new Set(['ESP', 'FRA', 'GER', 'NED', 'POR', 'BRA', 'ARG', 'ENG'])
 
+// Teams that did NOT qualify for WC2026 — hide from every bonus pool. They
+// can still leak in from seed/strength data; this guard is the safety net.
+const NOT_IN_WC2026 = new Set(['BEL', 'CRO'])
+
 export default function Bonus() {
   const { user } = useAuth()
   const { matches, loading: lm } = useMatches()
@@ -25,6 +30,11 @@ export default function Bonus() {
   const cfg = useAppConfig()
   const goldenBoot = useGoldenBoot()
   const toast = useToast()
+  const location = useLocation()
+  // Used by the "#empty" deep-link from the home reminder card: once the user
+  // arrives we scroll them to the first section they haven't filled. Once-only
+  // per visit so further state changes don't yank the page around.
+  const scrolledRef = useRef(false)
 
   // Get admin-uploaded photo if present, else fall back to player's hard-coded photoUrl
   const photoFor = (name: string, fallback?: string) => cfg.playerPhotos[name] || fallback
@@ -46,6 +56,28 @@ export default function Bonus() {
     }
   }, [bonus?.championTeamCode, bonus?.topScorer, bonus?.runnerUpCode, bonus?.surpriseTeamCode, bonus?.flopTeamCode])
 
+  // Deep-link "#empty" → scroll to the first section the user hasn't filled.
+  // Runs once after data finishes loading.
+  useEffect(() => {
+    if (scrolledRef.current) return
+    if (location.hash !== '#empty') return
+    if (lb || lm) return
+    scrolledRef.current = true
+    const order = [
+      { id: 'bonus-champion',   empty: !bonus?.championTeamCode },
+      { id: 'bonus-runner-up',  empty: !bonus?.runnerUpCode },
+      { id: 'bonus-surprise',   empty: !bonus?.surpriseTeamCode },
+      { id: 'bonus-flop',       empty: !bonus?.flopTeamCode },
+      { id: 'bonus-top-scorer', empty: !bonus?.topScorer }
+    ]
+    const target = order.find((o) => o.empty)
+    if (!target) return
+    // Wait one tick for the sections to render before scrolling.
+    setTimeout(() => {
+      document.getElementById(target.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 120)
+  }, [location.hash, lb, lm, bonus])
+
   // Unique teams from matches data, sorted A-Z (Hebrew)
   const teams = useMemo<TeamRef[]>(() => {
     const seen = new Map<string, TeamRef>()
@@ -56,8 +88,10 @@ export default function Bonus() {
     return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name, 'he'))
   }, [matches])
 
-  const surpriseTeams = useMemo(() => teams.filter((t) => !GIANT_CODES.has(t.code)), [teams])
-  const giantTeams = useMemo(() => teams.filter((t) => GIANT_CODES.has(t.code)), [teams])
+  // Filter out teams that didn't qualify for WC2026 from every pool.
+  const eligibleTeams = useMemo(() => teams.filter((t) => !NOT_IN_WC2026.has(t.code)), [teams])
+  const surpriseTeams = useMemo(() => eligibleTeams.filter((t) => !GIANT_CODES.has(t.code)), [eligibleTeams])
+  const giantTeams = useMemo(() => eligibleTeams.filter((t) => GIANT_CODES.has(t.code)), [eligibleTeams])
 
   // Lock once tournament starts (first match kickoff in the past).
   // In demo mode we never lock — so the user can explore and edit.
@@ -174,7 +208,7 @@ export default function Bonus() {
       </div>
 
       {/* Champion picker */}
-      <section className="card animate-in">
+      <section id="bonus-champion" className="card animate-in" style={{ scrollMarginTop: 'calc(var(--header-height) + 12px)' }}>
         <h2 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 18, marginBottom: 4 }}>
           הזוכה במונדיאל
         </h2>
@@ -188,7 +222,7 @@ export default function Bonus() {
             gap: 8
           }}
         >
-          {teams.map((t) => {
+          {eligibleTeams.map((t) => {
             const selected = championCode === t.code
             return (
               <button
@@ -222,14 +256,14 @@ export default function Bonus() {
       </section>
 
       {/* Runner-up (loser of the final) */}
-      <section className="card animate-in">
+      <section id="bonus-runner-up" className="card animate-in" style={{ scrollMarginTop: 'calc(var(--header-height) + 12px)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
           <h2 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 18 }}>🥈 הסגנית</h2>
           <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>{cfg.bonus.runnerUp} נק׳</span>
         </div>
         <p className="text-muted" style={{ fontSize: 12, marginBottom: 12 }}>בחר את הנבחרת שתפסיד בגמר (הזוכה כבר נבחר למעלה).</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(86px, 1fr))', gap: 8 }}>
-          {teams.map((t) => {
+          {eligibleTeams.map((t) => {
             const sel = runnerUpCode === t.code
             const isChampion = championCode === t.code
             return (
@@ -248,7 +282,7 @@ export default function Bonus() {
       </section>
 
       {/* Surprise of the tournament — outsiders only (the 8 favourites are excluded) */}
-      <section className="card animate-in">
+      <section id="bonus-surprise" className="card animate-in" style={{ scrollMarginTop: 'calc(var(--header-height) + 12px)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
           <h2 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 18 }}>🐎 הפתעת הטורניר</h2>
           <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>{cfg.bonus.surprise} נק׳</span>
@@ -272,7 +306,7 @@ export default function Bonus() {
       </section>
 
       {/* Biggest flop — a favourite that crashes out early (the 8 giants only) */}
-      <section className="card animate-in">
+      <section id="bonus-flop" className="card animate-in" style={{ scrollMarginTop: 'calc(var(--header-height) + 12px)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
           <h2 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 18 }}>📉 האכזבה הגדולה</h2>
           <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>{cfg.bonus.flop} נק׳</span>
@@ -296,6 +330,7 @@ export default function Bonus() {
       </section>
 
       {/* Top scorer — Golden Boot race */}
+      <div id="bonus-top-scorer" style={{ scrollMarginTop: 'calc(var(--header-height) + 12px)' }}>
       <GoldenBootRace
         players={allPlayers}
         goals={goldenBoot}
@@ -304,6 +339,7 @@ export default function Bonus() {
         onPick={(n) => !locked && setTopScorer(n)}
         locked={locked}
       />
+      </div>
 
       {!locked && (
         <button

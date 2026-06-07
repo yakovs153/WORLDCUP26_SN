@@ -38,9 +38,11 @@ export default function MatchCard({ match, prediction, uid }: Props) {
   }, [prediction?.homeScore, prediction?.awayScore])
 
   const kickoff = match.kickoff.toDate()
-  // Locked once the match isn't scheduled OR kickoff time has arrived — whichever
-  // comes first. This closes the gap before the sync flips status to LIVE.
-  const locked = match.status !== 'SCHEDULED' || Date.now() >= kickoff.getTime()
+  // Locked once the match isn't scheduled OR kickoff is within 5 minutes — whichever
+  // comes first. The 5-minute buffer prevents last-second edits and closes the gap
+  // before the sync flips status to LIVE.
+  const LOCK_LEAD_MS = 5 * 60 * 1000
+  const locked = match.status !== 'SCHEDULED' || Date.now() >= kickoff.getTime() - LOCK_LEAD_MS
   const dirty =
     !locked &&
     home !== null &&
@@ -185,7 +187,7 @@ export default function MatchCard({ match, prediction, uid }: Props) {
 
         {locked && prediction?.auto && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-muted)' }}>
-            🤖 טום האנליסט ניחש בשבילך · 70% מהנקודות
+            🤖 טום האנליסט ניחש בשבילך · 50% מהנקודות
           </div>
         )}
 
@@ -196,7 +198,7 @@ export default function MatchCard({ match, prediction, uid }: Props) {
             <>
               <ResultBadge myHome={oh} myAway={oa} points={octoPts} isLive={match.status === 'LIVE'} />
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-muted)' }}>
-                🤖 שכחת לנחש — טום האנליסט ניחש בשבילך · 70% מהנקודות
+                🤖 שכחת לנחש — טום האנליסט ניחש בשבילך · 50% מהנקודות
               </div>
             </>
           )

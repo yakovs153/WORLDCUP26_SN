@@ -85,7 +85,7 @@ export default function Matches() {
 
       {needsBonus && (
         <Link
-          to="/bonus"
+          to="/bonus#empty"
           className="animate-in"
           style={{
             display: 'flex',
