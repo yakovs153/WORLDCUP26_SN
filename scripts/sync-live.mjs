@@ -111,8 +111,13 @@ async function main() {
   for (const m of apiMatches) {
     const id = String(m.id)
     const status = statusOf(m.status)
+    // fullTime = score after 90 (group) or after 120 incl. ET (knockout). Penalty
+    // shootouts are NOT in fullTime — they live in score.penalties + score.winner.
     const hs = m.score?.fullTime?.home ?? null
     const as = m.score?.fullTime?.away ?? null
+    const pH = m.score?.penalties?.home ?? null
+    const pA = m.score?.penalties?.away ?? null
+    const winner = m.score?.winner ?? null   // 'HOME_TEAM' | 'AWAY_TEAM' | 'DRAW' | null
     const homeTeam = { name: heName(m.homeTeam.tla, m.homeTeam.shortName || m.homeTeam.name), code: m.homeTeam.tla || '', flag: '' }
     const awayTeam = { name: heName(m.awayTeam.tla, m.awayTeam.shortName || m.awayTeam.name), code: m.awayTeam.tla || '', flag: '' }
     const group = m.group ? String(m.group).replace('GROUP_', '') : null
@@ -122,6 +127,8 @@ async function main() {
       homeTeam, awayTeam,
       kickoff: Timestamp.fromDate(new Date(m.utcDate)),
       stage, group, status, homeScore: hs, awayScore: as,
+      penalties: (pH != null && pA != null) ? { home: pH, away: pA } : null,
+      winner: winner ?? null,
       minute: m.minute ?? null,
       lastUpdated: Timestamp.now()
     }, { merge: true })

@@ -90,10 +90,13 @@ const codeOf = (t) => up(t?.code)
 const allMatches = (await db.collection('matches').get()).docs.map((d) => d.data())
 const final = allMatches.find((m) => m.stage === 'F' && m.status === 'FINISHED' && m.homeScore != null && m.awayScore != null)
 let champion = null, runnerUp = null
-if (final && final.homeScore !== final.awayScore) {
+if (final) {
   const h = codeOf(final.homeTeam), a = codeOf(final.awayTeam)
-  champion = final.homeScore > final.awayScore ? h : a
-  runnerUp = final.homeScore > final.awayScore ? a : h
+  if (final.homeScore > final.awayScore) { champion = h; runnerUp = a }
+  else if (final.awayScore > final.homeScore) { champion = a; runnerUp = h }
+  else if (final.winner === 'HOME_TEAM') { champion = h; runnerUp = a } // tied after ET → penalty shootout
+  else if (final.winner === 'AWAY_TEAM') { champion = a; runnerUp = h }
+  // else: still tied with no winner (data not yet populated) — leave null, next run picks it up
 }
 const reachedIn = (stages) => {
   const s = new Set()
