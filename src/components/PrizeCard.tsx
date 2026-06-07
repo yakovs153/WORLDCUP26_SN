@@ -69,7 +69,7 @@ export default function PrizeCard() {
           מכונת קפה איכותית
         </div>
         <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
-          למנצח/ת המונדיאל — תזכייה את הבוקר של עצמך 😉
+          המנצח/ת זוכה בבקרים טובים יותר ☕😉
         </div>
       </div>
     </div>
