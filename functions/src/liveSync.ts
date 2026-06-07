@@ -99,7 +99,7 @@ async function runSync(token: string) {
   const cfg = cfgSnap.exists ? cfgSnap.data() || {} : {}
   const scoringCfg = cfg.scoring as { exact?: number; winnerAndDiff?: number; winnerOnly?: number } | undefined
   const stageMult = cfg.stageMultipliers as Record<string, number> | undefined
-  const overrides = (cfg.analystOverrides || {}) as Record<string, [number, number]>
+  const analystOverrides = (cfg.analystOverrides || {}) as Record<string, [number, number]>
   const analystAutofill = cfg.features?.analystAutofill !== false
   const applyStage = (base: number, stage: string) => Math.round(base * ((stage && stageMult && stageMult[stage]) || 1))
 
@@ -108,6 +108,25 @@ async function runSync(token: string) {
   const scoredFlag: Record<string, boolean> = sState.scored || {}
   const autofilledFlag: Record<string, boolean> = sState.autofilled || {}
 
+  // Read existing matches once so manualOverride entries can shadow the API
+  // values. Admin sets manualOverride=true on a match doc to pin its score
+  // and status; the API tick must not clobber it.
+  const existingMatches = await db.collection('matches').get()
+  type ManualOverride = { homeScore: number | null; awayScore: number | null; status: string; winner: string | null; minute: number | null }
+  const manualOverrides = new Map<string, ManualOverride>()
+  for (const d of existingMatches.docs) {
+    const data = d.data()
+    if (data.manualOverride === true) {
+      manualOverrides.set(d.id, {
+        homeScore: data.homeScore ?? null,
+        awayScore: data.awayScore ?? null,
+        status: data.status ?? 'FINISHED',
+        winner: data.winner ?? null,
+        minute: data.minute ?? null
+      })
+    }
+  }
+
   const batch = db.batch()
   let upserts = 0
   const finishedToScore: Array<{ id: string; h: number; a: number; stage: string }> = []
@@ -115,31 +134,42 @@ async function runSync(token: string) {
 
   for (const m of apiMatches) {
     const id = String(m.id)
-    const status = statusOf(m.status)
-    const hs = m.score?.fullTime?.home ?? null
-    const as = m.score?.fullTime?.away ?? null
+    const ov = manualOverrides.get(id)
+    // For overridden matches, score/status/winner/minute come from Firestore (admin),
+    // NOT the API. Other metadata (teams, kickoff, stage, venue) always comes from API.
+    const status = ov ? ov.status : statusOf(m.status)
+    const hs = ov ? ov.homeScore : (m.score?.fullTime?.home ?? null)
+    const as = ov ? ov.awayScore : (m.score?.fullTime?.away ?? null)
     const pH = m.score?.penalties?.home ?? null
     const pA = m.score?.penalties?.away ?? null
-    const winner = m.score?.winner ?? null
+    const winner = ov ? ov.winner : (m.score?.winner ?? null)
+    const minute = ov ? ov.minute : (m.minute ?? null)
     const homeTeam = { name: heName(m.homeTeam.tla, m.homeTeam.shortName || m.homeTeam.name), code: m.homeTeam.tla || '', flag: '' }
     const awayTeam = { name: heName(m.awayTeam.tla, m.awayTeam.shortName || m.awayTeam.name), code: m.awayTeam.tla || '', flag: '' }
     const group = m.group ? String(m.group).replace('GROUP_', '') : null
     const stage = STAGE[m.stage] || 'GROUP'
 
     const venue = heVenue(m.venue)
-    batch.set(db.collection('matches').doc(id), {
+    // For overridden matches we don't touch score/status/winner/minute fields —
+    // merge: true means omitted fields are preserved.
+    const doc: Record<string, unknown> = {
       homeTeam, awayTeam,
       kickoff: Timestamp.fromDate(new Date(m.utcDate)),
-      stage, group, status, homeScore: hs, awayScore: as,
-      penalties: (pH != null && pA != null) ? { home: pH, away: pA } : null,
-      winner: winner ?? null,
-      minute: m.minute ?? null,
-      venue,
+      stage, group, venue,
       lastUpdated: Timestamp.now()
-    }, { merge: true })
+    }
+    if (!ov) {
+      doc.status = status
+      doc.homeScore = hs
+      doc.awayScore = as
+      doc.penalties = (pH != null && pA != null) ? { home: pH, away: pA } : null
+      doc.winner = winner ?? null
+      doc.minute = minute
+    }
+    batch.set(db.collection('matches').doc(id), doc, { merge: true })
     upserts++
 
-    snap.set(id, { id, homeTeam, awayTeam, kickoffMs: new Date(m.utcDate).getTime(), stage, group, status, homeScore: hs, awayScore: as, minute: m.minute ?? null, scorers: [], venue })
+    snap.set(id, { id, homeTeam, awayTeam, kickoffMs: new Date(m.utcDate).getTime(), stage, group, status, homeScore: hs, awayScore: as, minute, scorers: [], venue })
 
     if (status === 'FINISHED' && typeof hs === 'number' && typeof as === 'number' && scoredFlag[id] !== true) {
       finishedToScore.push({ id, h: hs, a: as, stage })
@@ -147,9 +177,11 @@ async function runSync(token: string) {
   }
   await batch.commit()
 
-  // Live detail: minute + goalscorers for in-play matches
+  // Live detail: minute + goalscorers for in-play matches.
+  // Skip overridden matches — admin owns their state.
   for (const m of apiMatches) {
     if (statusOf(m.status) !== 'LIVE') continue
+    if (manualOverrides.has(String(m.id))) continue
     try {
       const dres = await fetch(`https://api.football-data.org/v4/matches/${m.id}`, { headers: { 'X-Auth-Token': token } })
       if (!dres.ok) continue
@@ -176,7 +208,7 @@ async function runSync(token: string) {
     if (autofilledFlag[id] === true) continue
     if (new Date(m.utcDate).getTime() > nowMs) continue
     const have = new Set((await db.collection('predictions').where('matchId', '==', id).get()).docs.map((d) => d.data().uid))
-    const [oh, oa] = tomPick(m.homeTeam.tla, m.awayTeam.tla, id, overrides)
+    const [oh, oa] = tomPick(m.homeTeam.tla, m.awayTeam.tla, id, analystOverrides)
     const fb = db.batch()
     for (const uid of allUserIds) {
       if (have.has(uid)) continue

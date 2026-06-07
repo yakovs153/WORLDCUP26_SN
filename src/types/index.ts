@@ -23,6 +23,7 @@ export interface Match {
   scorers?: MatchScorer[]            // goalscorers, when available
   venue?: string | null              // stadium (already localized to Hebrew)
   lastUpdated?: Timestamp
+  manualOverride?: boolean           // admin pinned score/status (liveSync won't clobber)
 }
 
 export interface MatchScorer {

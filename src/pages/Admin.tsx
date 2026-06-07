@@ -5,6 +5,7 @@ import AdminDepartments from '../admin/AdminDepartments'
 import AdminScoring from '../admin/AdminScoring'
 import AdminSurveys from '../admin/AdminSurveys'
 import AdminPlayers from '../admin/AdminPlayers'
+import AdminMatches from '../admin/AdminMatches'
 import AdminPredictions from '../admin/AdminPredictions'
 import AdminFeatures from '../admin/AdminFeatures'
 import AdminUsers from '../admin/AdminUsers'
@@ -12,7 +13,7 @@ import AdminActivity from '../admin/AdminActivity'
 import AdminDigest from '../admin/AdminDigest'
 import AdminAccess from '../admin/AdminAccess'
 
-type Tab = 'content' | 'departments' | 'scoring' | 'players' | 'polls' | 'predictions' | 'features' | 'users' | 'activity' | 'digest' | 'access'
+type Tab = 'content' | 'departments' | 'scoring' | 'players' | 'polls' | 'matches' | 'predictions' | 'features' | 'users' | 'activity' | 'digest' | 'access'
 
 const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: 'content', label: 'תוכן',     icon: '📝' },
@@ -20,6 +21,7 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: 'scoring', label: 'ניקוד',    icon: '🧮' },
   { key: 'players', label: 'שחקנים',   icon: '👟' },
   { key: 'polls',   label: 'סקרים',    icon: '📋' },
+  { key: 'matches', label: 'משחקים',   icon: '⚽' },
   { key: 'predictions', label: 'ניחושים', icon: '📋' },
   { key: 'features', label: 'אוטומציה', icon: '🤖' },
   { key: 'users',   label: 'משתמשים',  icon: '👥' },
@@ -92,6 +94,7 @@ export default function Admin() {
       {tab === 'scoring' && <AdminScoring />}
       {tab === 'players' && <AdminPlayers />}
       {tab === 'polls' && <AdminSurveys />}
+      {tab === 'matches' && <AdminMatches />}
       {tab === 'predictions' && <AdminPredictions />}
       {tab === 'features' && <AdminFeatures />}
       {tab === 'users' && <AdminUsers />}
