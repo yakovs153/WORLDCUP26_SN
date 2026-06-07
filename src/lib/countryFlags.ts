@@ -27,7 +27,8 @@ const FIFA_TO_ISO: Record<string, string> = {
   NZL: 'nz', FIJ: 'fj',
 
   // Additional 2026 qualifiers not already mapped above
-  BIH: 'ba', CPV: 'cv', CUW: 'cw', HAI: 'ht'
+  // football-data.org sometimes returns CUR for Curaçao instead of the FIFA-standard CUW — map both.
+  BIH: 'ba', CPV: 'cv', CUW: 'cw', CUR: 'cw', HAI: 'ht'
 }
 
 /**

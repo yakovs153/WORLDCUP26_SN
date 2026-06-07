@@ -28,11 +28,20 @@ interface ScheduleEntry {
 
 const SCHEDULE = schedule as ScheduleEntry[]
 
+// FIFA standard code → what football-data.org sometimes returns instead.
+// Both keys (and their normalized form) point to the same row in the lookup.
+const CODE_ALIAS: Record<string, string> = { CUR: 'CUW' }
+
+function norm(code: string): string {
+  const upper = code.toUpperCase()
+  return CODE_ALIAS[upper] ?? upper
+}
+
 // (date, sorted_TLA_pair) -> Hebrew stadium name. Group stage only.
 const BY_DATE_TEAMS = new Map<string, string>()
 for (const m of SCHEDULE) {
   if (m.team1Code && m.team2Code) {
-    const [a, b] = [m.team1Code, m.team2Code].sort()
+    const [a, b] = [norm(m.team1Code), norm(m.team2Code)].sort()
     BY_DATE_TEAMS.set(`${m.date}_${a}_${b}`, m.stadiumHe)
   }
 }
@@ -49,6 +58,6 @@ function etDateKey(ms: number): string {
 export function venueFor(homeCode: string | null | undefined, awayCode: string | null | undefined, kickoffMs: number): string | null {
   if (!homeCode || !awayCode) return null
   const date = etDateKey(kickoffMs)
-  const [a, b] = [homeCode.toUpperCase(), awayCode.toUpperCase()].sort()
+  const [a, b] = [norm(homeCode), norm(awayCode)].sort()
   return BY_DATE_TEAMS.get(`${date}_${a}_${b}`) || null
 }
