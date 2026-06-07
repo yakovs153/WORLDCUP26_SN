@@ -12,10 +12,10 @@ import FlagIcon from '../components/FlagIcon'
 import LiveBadge from '../components/LiveBadge'
 import OctopusMark from '../components/OctopusMark'
 import { MatchCardSkeleton } from '../components/Skeleton'
-import { scorePrediction, applyStage } from '../lib/scoring'
+import { scorePredictionForStage } from '../lib/scoring'
 import { tomPick, AUTO_FACTOR, OCTOPUS_UID, OCTOPUS_NAME, octopusEntry } from '../lib/octopus'
 import { formatTimeHe, formatDateHe, stageLabel } from '../lib/format'
-import type { Match, Prediction } from '../types'
+import type { Match, Prediction, ScoringConfig } from '../types'
 
 /**
  * Head-to-head: me vs another participant (or Tom). Tap a leaderboard row to
@@ -93,8 +93,8 @@ export default function Compare() {
 
   // Tom's totals: derived live from octopusEntry (he isn't a real user doc).
   const tomTotal = useMemo(
-    () => isOtherTom ? octopusEntry(matches, cfg.scoring, cfg.stageMultipliers, cfg.analystOverrides).totalPoints : 0,
-    [isOtherTom, matches, cfg.scoring, cfg.stageMultipliers, cfg.analystOverrides]
+    () => isOtherTom ? octopusEntry(matches, cfg.scoring, undefined, cfg.analystOverrides).totalPoints : 0,
+    [isOtherTom, matches, cfg.scoring, cfg.analystOverrides]
   )
 
   if (!myUid) return null
@@ -240,8 +240,7 @@ function Pick({ team, text, align = 'start' }: { team?: { name: string; flag: st
 }
 
 interface Cfg {
-  scoring: { exact: number; winnerAndDiff: number; winnerOnly: number }
-  stageMultipliers: Record<string, number>
+  scoring: ScoringConfig
 }
 
 function pointsFor(pred: Prediction | { homeScore: number; awayScore: number; auto?: boolean; points?: number | null } | undefined, m: Match, cfg: Cfg): number {
@@ -249,9 +248,8 @@ function pointsFor(pred: Prediction | { homeScore: number; awayScore: number; au
   if (m.status !== 'FINISHED' || m.homeScore == null || m.awayScore == null) return 0
   // Cached points on the doc win when present.
   if ('points' in pred && typeof pred.points === 'number') return pred.points
-  const base = scorePrediction(pred.homeScore, pred.awayScore, m.homeScore, m.awayScore, cfg.scoring)
-  const stagePts = applyStage(base, m.stage, cfg.stageMultipliers)
-  return Math.round(stagePts * (pred.auto ? AUTO_FACTOR : 1))
+  const base = scorePredictionForStage(pred.homeScore, pred.awayScore, m.homeScore, m.awayScore, m.stage, cfg.scoring)
+  return Math.round(base * (pred.auto ? AUTO_FACTOR : 1))
 }
 
 function MatchCompareRow({ match, mine, theirs, cfg }: { match: Match; mine?: Prediction; theirs?: Prediction | { homeScore: number; awayScore: number; auto?: boolean }; cfg: Cfg }) {

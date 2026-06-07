@@ -72,11 +72,14 @@ export interface BonusPrediction {
 }
 
 // ===== App Config (managed by admin) =====
-export interface ScoringConfig {
-  exact: number          // exact score match
-  winnerAndDiff: number  // correct winner + correct goal diff
-  winnerOnly: number     // correct winner only
+export interface StageScoring {
+  exact: number       // exact score match (e.g. predicted 2-1, actual 2-1)
+  direction: number   // correct outcome only (winner OR draw) — was "winnerOnly"; the old
+                      // "winnerAndDiff" middle bucket has been retired.
 }
+// Scoring is now per-stage: each round has its own (exact, direction) values.
+// Replaces the old "base values × stageMultipliers" model.
+export type ScoringConfig = Record<MatchStage, StageScoring>
 
 export interface BonusScoringConfig {
   champion: number
@@ -148,7 +151,10 @@ export interface AnnouncementConfig {
   active: boolean
 }
 
-export type StageMultipliers = Record<MatchStage, number>
+// StageMultipliers retired — scoring is now per-stage in ScoringConfig.
+// (Type kept as a no-op alias so deprecated imports don't break the build;
+// remove it when nothing references it anymore.)
+export type StageMultipliers = never
 
 export type HofMetric = 'prophet' | 'optimist' | 'draw' | 'disaster'
 
@@ -168,7 +174,6 @@ export interface HofCategory {
 
 export interface AppConfig {
   scoring: ScoringConfig
-  stageMultipliers: StageMultipliers   // points multiplier per stage (group, R32…final)
   bonus: BonusScoringConfig
   content: ContentConfig
   hallOfFame: HofCategory[]            // admin-managed Hall of Fame & Shame categories
@@ -192,8 +197,16 @@ export interface AppConfig {
 }
 
 export const DEFAULT_APP_CONFIG: AppConfig = {
-  scoring: { exact: 5, winnerAndDiff: 3, winnerOnly: 1 },
-  stageMultipliers: { GROUP: 1, R32: 1, R16: 2, QF: 2, SF: 3, TP: 1, F: 3 },
+  // Per-stage scoring: direction = correct outcome only; exact = exact score.
+  scoring: {
+    GROUP: { direction: 1, exact: 3 },
+    R32:   { direction: 2, exact: 4 },
+    R16:   { direction: 2, exact: 4 },
+    QF:    { direction: 3, exact: 6 },
+    SF:    { direction: 3, exact: 6 },
+    TP:    { direction: 1, exact: 3 },   // third-place game: same as group (low stakes)
+    F:     { direction: 5, exact: 10 }
+  },
   bonus:   { champion: 20, topScorer: 15, runnerUp: 8, surprise: 8, flop: 8 },
   hallOfFame: [
     { key: 'prophet',  emoji: '🔮', title: 'הנביא',       active: true },

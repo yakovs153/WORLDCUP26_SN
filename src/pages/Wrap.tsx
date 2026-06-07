@@ -6,7 +6,7 @@ import { useMatches } from '../hooks/useMatches'
 import { usePredictions } from '../hooks/usePredictions'
 import { useLeaderboard } from '../hooks/useLeaderboard'
 import { useAppConfig } from '../hooks/useAppConfig'
-import { scorePrediction, applyStage } from '../lib/scoring'
+import { scorePredictionForStage } from '../lib/scoring'
 import { tomPick, OCTOPUS_NAME } from '../lib/octopus'
 
 // Preview lines shown before the tournament starts (or before Tom has data to coach on).
@@ -33,11 +33,11 @@ export default function Wrap() {
     let predicted = 0
     for (const m of finished) {
       const [th, ta] = tomPick(m.homeTeam.code, m.awayTeam.code, m.id, cfg.analystOverrides)
-      tomPts += applyStage(scorePrediction(th, ta, m.homeScore!, m.awayScore!, cfg.scoring), m.stage, cfg.stageMultipliers)
+      tomPts += scorePredictionForStage(th, ta, m.homeScore!, m.awayScore!, m.stage, cfg.scoring)
       const p = byMatchId[m.id]
       if (!p) continue
       predicted++
-      const pts = applyStage(scorePrediction(p.homeScore, p.awayScore, m.homeScore!, m.awayScore!, cfg.scoring), m.stage, cfg.stageMultipliers)
+      const pts = scorePredictionForStage(p.homeScore, p.awayScore, m.homeScore!, m.awayScore!, m.stage, cfg.scoring)
       myPts += pts
       if (p.homeScore === m.homeScore && p.awayScore === m.awayScore) exact++
       if (!best || pts > best.pts) best = { label: `${m.homeTeam.name} ${p.homeScore}–${p.awayScore} ${m.awayTeam.name}`, pts }

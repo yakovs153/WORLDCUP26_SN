@@ -1,6 +1,7 @@
 import { doc, setDoc } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
 import { DEFAULT_APP_CONFIG, type AppConfig } from '../types'
+import { mergeScoring } from './scoring'
 
 const STORAGE_KEY = 'demo-app-config-v1'
 
@@ -12,8 +13,7 @@ export function getDemoConfig(): AppConfig {
     return {
       ...DEFAULT_APP_CONFIG,
       ...parsed,
-      scoring: { ...DEFAULT_APP_CONFIG.scoring, ...(parsed.scoring || {}) },
-      stageMultipliers: { ...DEFAULT_APP_CONFIG.stageMultipliers, ...(parsed.stageMultipliers || {}) },
+      scoring: mergeScoring(parsed.scoring),
       bonus: { ...DEFAULT_APP_CONFIG.bonus, ...(parsed.bonus || {}) },
       content: { ...DEFAULT_APP_CONFIG.content, ...(parsed.content || {}) },
       hallOfFame: Array.isArray(parsed.hallOfFame) ? parsed.hallOfFame : DEFAULT_APP_CONFIG.hallOfFame,

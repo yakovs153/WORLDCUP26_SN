@@ -74,13 +74,34 @@ function tomPick(homeCode: string, awayCode: string, matchId: string, overrides?
   return pool[0]
 }
 
-function scorePrediction(ph: number, pa: number, ah: number, aa: number, cfg?: { exact?: number; winnerAndDiff?: number; winnerOnly?: number }) {
-  const C = cfg || { exact: 5, winnerAndDiff: 3, winnerOnly: 1 }
-  if (ph === ah && pa === aa) return C.exact ?? 5
+// Per-stage scoring (mirrors src/lib/scoring.ts on the client).
+type StageScoring = { exact: number; direction: number }
+type ScoringByStage = Record<string, StageScoring>
+
+const DEFAULT_SCORING: ScoringByStage = {
+  GROUP: { direction: 1, exact: 3 },
+  R32:   { direction: 2, exact: 4 },
+  R16:   { direction: 2, exact: 4 },
+  QF:    { direction: 3, exact: 6 },
+  SF:    { direction: 3, exact: 6 },
+  TP:    { direction: 1, exact: 3 },
+  F:     { direction: 5, exact: 10 }
+}
+
+function getStage(cfg: unknown, stage: string): StageScoring {
+  const s = (cfg as Record<string, unknown> | null)?.[stage]
+  if (s && typeof s === 'object' && 'exact' in s && 'direction' in s) {
+    return s as StageScoring
+  }
+  return DEFAULT_SCORING[stage] || DEFAULT_SCORING.GROUP
+}
+
+function scorePrediction(ph: number, pa: number, ah: number, aa: number, stage: string, scoring?: ScoringByStage) {
+  const s = getStage(scoring || DEFAULT_SCORING, stage)
+  if (ph === ah && pa === aa) return s.exact
   const sign = (n: number) => (n > 0 ? 1 : n < 0 ? -1 : 0)
   if (sign(ph - pa) !== sign(ah - aa)) return 0
-  if (ph - pa === ah - aa) return C.winnerAndDiff ?? 3
-  return C.winnerOnly ?? 1
+  return s.direction
 }
 
 async function runSync(token: string) {
@@ -97,11 +118,13 @@ async function runSync(token: string) {
 
   const cfgSnap = await db.collection('appConfig').doc('main').get()
   const cfg = cfgSnap.exists ? cfgSnap.data() || {} : {}
-  const scoringCfg = cfg.scoring as { exact?: number; winnerAndDiff?: number; winnerOnly?: number } | undefined
-  const stageMult = cfg.stageMultipliers as Record<string, number> | undefined
+  // Detect legacy scoring shape ({exact, winnerAndDiff, winnerOnly}) and fall back
+  // to per-stage defaults until admin re-saves.
+  const rawScoring = cfg.scoring as unknown
+  const isLegacy = rawScoring && typeof rawScoring === 'object' && ('winnerAndDiff' in (rawScoring as Record<string, unknown>) || 'winnerOnly' in (rawScoring as Record<string, unknown>))
+  const scoringCfg: ScoringByStage = isLegacy ? DEFAULT_SCORING : (rawScoring as ScoringByStage) || DEFAULT_SCORING
   const analystOverrides = (cfg.analystOverrides || {}) as Record<string, [number, number]>
   const analystAutofill = cfg.features?.analystAutofill !== false
-  const applyStage = (base: number, stage: string) => Math.round(base * ((stage && stageMult && stageMult[stage]) || 1))
 
   const stateSnap = await db.collection('appState').doc('syncState').get()
   const sState = (stateSnap.exists ? stateSnap.data() : {}) || {}
@@ -228,7 +251,7 @@ async function runSync(token: string) {
       for (const d of preds.docs) {
         const p = d.data()
         if (p.points !== null && p.points !== undefined) continue
-        let pts = applyStage(scorePrediction(p.homeScore, p.awayScore, fm.h, fm.a, scoringCfg), fm.stage)
+        let pts = scorePrediction(p.homeScore, p.awayScore, fm.h, fm.a, fm.stage, scoringCfg)
         if (p.auto) pts = Math.round(pts * 0.5)
         tx.update(d.ref, { points: pts })
         userDelta.set(p.uid, (userDelta.get(p.uid) || 0) + pts)

@@ -8,7 +8,7 @@ import CubeMark from './CubeMark'
 import { savePrediction } from '../lib/predictions'
 import { formatTimeHe, stageLabel } from '../lib/format'
 import { useToast } from './Toast'
-import { scorePrediction, applyStage } from '../lib/scoring'
+import { scorePredictionForStage } from '../lib/scoring'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { ringColors } from '../lib/players'
 import { fireConfetti } from '../lib/confetti'
@@ -77,7 +77,7 @@ export default function MatchCard({ match, prediction, uid }: Props) {
   const scoreKnown = match.homeScore !== null && match.awayScore !== null
   const potential =
     prediction && scoreKnown
-      ? prediction.points ?? Math.round(applyStage(scorePrediction(prediction.homeScore, prediction.awayScore, match.homeScore!, match.awayScore!, cfg.scoring), match.stage, cfg.stageMultipliers) * (prediction.auto ? AUTO_FACTOR : 1))
+      ? prediction.points ?? Math.round(scorePredictionForStage(prediction.homeScore, prediction.awayScore, match.homeScore!, match.awayScore!, match.stage, cfg.scoring) * (prediction.auto ? AUTO_FACTOR : 1))
       : null
 
   // Confetti once when a finished match rewards the user.
@@ -193,7 +193,7 @@ export default function MatchCard({ match, prediction, uid }: Props) {
 
         {locked && !prediction && (() => {
           const [oh, oa] = tomPick(match.homeTeam.code, match.awayTeam.code, match.id, cfg.analystOverrides)
-          const octoPts = scoreKnown ? Math.round(applyStage(scorePrediction(oh, oa, match.homeScore!, match.awayScore!, cfg.scoring), match.stage, cfg.stageMultipliers) * AUTO_FACTOR) : null
+          const octoPts = scoreKnown ? Math.round(scorePredictionForStage(oh, oa, match.homeScore!, match.awayScore!, match.stage, cfg.scoring) * AUTO_FACTOR) : null
           return (
             <>
               <ResultBadge myHome={oh} myAway={oa} points={octoPts} isLive={match.status === 'LIVE'} />

@@ -85,7 +85,7 @@ function buildDigest({
   const dateHe = new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })
 
   // Top 5 — fold in Tom as an extra player
-  const tom = octopusEntry(matches, cfg.scoring, cfg.stageMultipliers, cfg.analystOverrides)
+  const tom = octopusEntry(matches, cfg.scoring, undefined, cfg.analystOverrides)
   const all = [...entries.filter((e) => e.uid !== OCTOPUS_UID), tom].sort((a, b) => b.totalPoints - a.totalPoints).slice(0, 5)
   const topLines = all.map((e, i) => {
     const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`

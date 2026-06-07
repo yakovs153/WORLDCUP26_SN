@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode, createElement } from 'react'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
+import { mergeScoring } from '../lib/scoring'
 import { DEFAULT_APP_CONFIG, type AppConfig } from '../types'
 import { getDemoConfig } from '../lib/appConfig'
 import { cacheConfigForGate } from '../lib/emailGate'
@@ -31,8 +32,7 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
         const merged = {
           ...DEFAULT_APP_CONFIG,
           ...data,
-          scoring: { ...DEFAULT_APP_CONFIG.scoring, ...(data.scoring || {}) },
-          stageMultipliers: { ...DEFAULT_APP_CONFIG.stageMultipliers, ...(data.stageMultipliers || {}) },
+          scoring: mergeScoring(data.scoring),
           bonus: { ...DEFAULT_APP_CONFIG.bonus, ...(data.bonus || {}) },
           content: { ...DEFAULT_APP_CONFIG.content, ...(data.content || {}) },
           hallOfFame: Array.isArray(data.hallOfFame) ? data.hallOfFame : DEFAULT_APP_CONFIG.hallOfFame,

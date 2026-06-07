@@ -1,6 +1,6 @@
-import { scorePrediction, applyStage } from './scoring'
+import { scorePredictionForStage } from './scoring'
 import strength from '../data/teamStrength.json'
-import type { Match, ScoringConfig, StageMultipliers, LeaderboardEntry } from '../types'
+import type { Match, ScoringConfig, LeaderboardEntry } from '../types'
 
 export const OCTOPUS_UID = 'octopus'        // internal id (kept stable)
 export const OCTOPUS_NAME = 'טום האנליסט'    // display name — the AI analyst
@@ -69,14 +69,14 @@ export function winProb(homeCode: string, awayCode: string): { home: number; dra
 }
 
 /** Synthetic leaderboard entry for Tom, scored from his picks vs finished results. */
-export function octopusEntry(matches: Match[], scoring: ScoringConfig, stageMult?: StageMultipliers, overrides?: AnalystOverrides): LeaderboardEntry {
+export function octopusEntry(matches: Match[], scoring: ScoringConfig, _stageMult?: unknown, overrides?: AnalystOverrides): LeaderboardEntry {
   let total = 0
   let count = 0
   for (const m of matches) {
     // Finished = final points; live = provisional (so the board moves during a match).
     if ((m.status === 'FINISHED' || m.status === 'LIVE') && m.homeScore != null && m.awayScore != null) {
       const [h, a] = tomPick(m.homeTeam.code, m.awayTeam.code, m.id, overrides)
-      total += applyStage(scorePrediction(h, a, m.homeScore, m.awayScore, scoring), m.stage, stageMult)
+      total += scorePredictionForStage(h, a, m.homeScore, m.awayScore, m.stage, scoring)
       count++
     }
   }

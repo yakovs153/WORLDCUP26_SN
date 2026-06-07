@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
-import { scorePrediction, applyStage } from '../lib/scoring'
+import { scorePredictionForStage } from '../lib/scoring'
 import { tomPick, AUTO_FACTOR, type AnalystOverrides } from '../lib/octopus'
-import type { Match, Prediction, ScoringConfig, StageMultipliers } from '../types'
+import type { Match, Prediction, ScoringConfig } from '../types'
 
 /**
  * Provisional points from LIVE matches, per user — so the leaderboard moves in
@@ -11,7 +11,7 @@ import type { Match, Prediction, ScoringConfig, StageMultipliers } from '../type
  * Octopus's pick (matching the auto-fill rule). Predictions are static once a
  * match locks, so we fetch them per live match and recompute as scores change.
  */
-export function useLivePoints(matches: Match[], scoring: ScoringConfig, uids: string[], stageMult?: StageMultipliers, overrides?: AnalystOverrides): Map<string, number> {
+export function useLivePoints(matches: Match[], scoring: ScoringConfig, uids: string[], overrides?: AnalystOverrides): Map<string, number> {
   const liveIds = matches.filter((m) => m.status === 'LIVE' && m.homeScore != null && m.awayScore != null).map((m) => m.id)
   const key = liveIds.join(',')
   const [predsByMatch, setPredsByMatch] = useState<Record<string, Record<string, Prediction>>>({})
@@ -38,7 +38,7 @@ export function useLivePoints(matches: Match[], scoring: ScoringConfig, uids: st
         const ph = p ? p.homeScore : oh
         const pa = p ? p.awayScore : oa
         const isAuto = !p || p.auto // Tom filled it (live) or it was auto-filled
-        const base = applyStage(scorePrediction(ph, pa, m.homeScore, m.awayScore, scoring), m.stage, stageMult)
+        const base = scorePredictionForStage(ph, pa, m.homeScore, m.awayScore, m.stage, scoring)
         delta.set(uid, (delta.get(uid) || 0) + Math.round(base * (isAuto ? AUTO_FACTOR : 1)))
       }
     }
