@@ -1,6 +1,7 @@
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
 import { setDemoPrediction } from './demoData'
+import { logActivity } from './activity'
 
 export async function savePrediction(
   uid: string,
@@ -31,4 +32,5 @@ export async function savePrediction(
   } else {
     await setDoc(ref, { ...base, points: null })
   }
+  logActivity('prediction_save', { matchId, score: `${h}-${a}`, edit: existing.exists() ? 1 : 0 })
 }

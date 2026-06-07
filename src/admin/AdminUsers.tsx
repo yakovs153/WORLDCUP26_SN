@@ -4,6 +4,7 @@ import { db, DEMO_MODE } from '../firebase'
 import { useAuth } from '../auth/AuthProvider'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { patchAppConfig } from '../lib/appConfig'
+import { logActivity } from '../lib/activity'
 import { useToast } from '../components/Toast'
 import type { UserDoc } from '../types'
 
@@ -47,6 +48,7 @@ export default function AdminUsers() {
         const next = [...new Set([...(cfg.blockedEmails || []), u.email.toLowerCase()])]
         await patchAppConfig({ blockedEmails: next })
       }
+      logActivity('admin_delete_user', { targetUid: u.uid, targetName: u.displayName || '', targetEmail: u.email || '' })
       toast.show(`${u.displayName || u.email} נמחק ✓`, 'success')
     } catch (e) {
       toast.show(e instanceof Error ? e.message : 'מחיקה נכשלה', 'error')
@@ -55,7 +57,7 @@ export default function AdminUsers() {
 
   const unblock = async (email: string) => {
     const next = (cfg.blockedEmails || []).filter((e) => e.toLowerCase() !== email.toLowerCase())
-    try { await patchAppConfig({ blockedEmails: next }); toast.show('בוטל החסימה ✓', 'success') }
+    try { await patchAppConfig({ blockedEmails: next }); logActivity('admin_unblock_email', { email }); toast.show('בוטל החסימה ✓', 'success') }
     catch (e) { toast.show(e instanceof Error ? e.message : 'הסרה נכשלה', 'error') }
   }
 

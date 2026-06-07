@@ -1,5 +1,6 @@
 import { collection, doc, onSnapshot, query, where, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
+import { logActivity } from './activity'
 
 export interface SurveyResponse {
   uid: string
@@ -25,6 +26,7 @@ export async function submitSurvey(uid: string, surveyId: string, answers: Recor
     return
   }
   await setDoc(doc(db, 'surveyResponses', `${uid}_${surveyId}`), { uid, surveyId, answers, ts: serverTimestamp() })
+  logActivity('survey_submit', { surveyId, count: Object.keys(answers).length })
 }
 
 /** Watch all responses for a survey (results are public). Returns unsubscribe. */

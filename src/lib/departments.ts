@@ -1,6 +1,7 @@
 import { doc, setDoc } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
 import { setDemoDepartment } from './demoData'
+import { logActivity } from './activity'
 
 /**
  * Set a user's department. Used by the user (own profile / registration) and by
@@ -12,4 +13,5 @@ export async function setDepartment(uid: string, department: string): Promise<vo
     return
   }
   await setDoc(doc(db, 'users', uid), { department }, { merge: true })
+  logActivity('department_set', { department })
 }

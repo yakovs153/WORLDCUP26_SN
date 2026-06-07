@@ -1,6 +1,7 @@
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
 import { setDemoBonus } from './demoData'
+import { logActivity } from './activity'
 
 export async function saveBonus(
   uid: string,
@@ -30,4 +31,5 @@ export async function saveBonus(
     },
     { merge: true }
   )
+  logActivity('bonus_save', { champion: championTeamCode || '', runnerUp: runnerUpCode || '', surprise: surpriseTeamCode || '', flop: flopTeamCode || '', topScorer: topScorer || '' })
 }

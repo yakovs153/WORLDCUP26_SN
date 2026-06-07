@@ -8,9 +8,10 @@ import AdminPlayers from '../admin/AdminPlayers'
 import AdminPredictions from '../admin/AdminPredictions'
 import AdminFeatures from '../admin/AdminFeatures'
 import AdminUsers from '../admin/AdminUsers'
+import AdminActivity from '../admin/AdminActivity'
 import AdminAccess from '../admin/AdminAccess'
 
-type Tab = 'content' | 'departments' | 'scoring' | 'players' | 'polls' | 'predictions' | 'features' | 'users' | 'access'
+type Tab = 'content' | 'departments' | 'scoring' | 'players' | 'polls' | 'predictions' | 'features' | 'users' | 'activity' | 'access'
 
 const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: 'content', label: 'תוכן',     icon: '📝' },
@@ -21,6 +22,7 @@ const TABS: { key: Tab; label: string; icon: string }[] = [
   { key: 'predictions', label: 'ניחושים', icon: '📋' },
   { key: 'features', label: 'אוטומציה', icon: '🤖' },
   { key: 'users',   label: 'משתמשים',  icon: '👥' },
+  { key: 'activity', label: 'פעילות',  icon: '📊' },
   { key: 'access',  label: 'גישה',     icon: '🔒' }
 ]
 
@@ -91,6 +93,7 @@ export default function Admin() {
       {tab === 'predictions' && <AdminPredictions />}
       {tab === 'features' && <AdminFeatures />}
       {tab === 'users' && <AdminUsers />}
+      {tab === 'activity' && <AdminActivity />}
       {tab === 'access' && <AdminAccess />}
 
       {tab === 'predictions' && (

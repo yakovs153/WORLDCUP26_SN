@@ -15,6 +15,7 @@ import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { auth, db, DEMO_MODE } from '../firebase'
 import { checkEmailAllowed } from '../lib/emailGate'
 import { setDemoDepartment } from '../lib/demoData'
+import { logActivity } from '../lib/activity'
 
 class EmailGateError extends Error {
   code = 'email-gate'
@@ -143,6 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     const cred = await signInWithEmailAndPassword(auth, email, password)
     await ensureUserDoc(cred.user)
+    logActivity('login', { method: 'email' })
   }
 
   const registerEmail = async (email: string, password: string, displayName: string, department?: string) => {
@@ -158,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const cred = await createUserWithEmailAndPassword(auth, email, password)
     if (displayName) await updateProfile(cred.user, { displayName })
     await ensureUserDoc(cred.user, displayName, department)
+    logActivity('register', { department: department || '' })
     // Email verification — send a verification email; ProtectedRoute will gate
     // access until the user clicks the link and the auth token reloads.
     try { await sendEmailVerification(cred.user) } catch (e) { console.warn('sendEmailVerification failed:', e) }

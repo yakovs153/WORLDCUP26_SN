@@ -158,6 +158,14 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // ===== User activity log =====
+    // Signed-in users append their own events; only admins can read.
+    match /userActivity/{eventId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
     // ===== Match rooms (live chat / reactions) =====
     match /matches/{matchId}/chat/{msgId} {
       allow read: if isSignedIn();

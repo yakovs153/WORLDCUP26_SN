@@ -1,6 +1,7 @@
 import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db, DEMO_MODE, auth } from '../firebase'
 import { getDemoLeaderboard } from './demoData'
+import { logActivity } from './activity'
 
 export interface KingState {
   uid: string
@@ -46,4 +47,5 @@ export async function setKingMessage(uid: string, message: string): Promise<void
     return
   }
   await setDoc(doc(db, 'appState', 'kingMessage'), { message, byUid: uid, updatedAt: serverTimestamp() })
+  logActivity('king_message', { length: message.length })
 }

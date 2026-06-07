@@ -1,5 +1,6 @@
 import { collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp, Timestamp } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
+import { logActivity } from './activity'
 
 export interface RoomMsg {
   id: string
@@ -29,6 +30,7 @@ export async function sendRoomMessage(matchId: string, uid: string, name: string
   await addDoc(collection(db, 'matches', matchId, 'chat'), {
     uid, name, text: payload.text ?? null, emoji: payload.emoji ?? null, ts: serverTimestamp()
   })
+  logActivity('room_message', { matchId, kind: payload.text ? 'text' : 'emoji' })
 }
 
 export function watchRoom(matchId: string, cb: (msgs: RoomMsg[]) => void): () => void {

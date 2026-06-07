@@ -2,6 +2,7 @@ import { doc, setDoc } from 'firebase/firestore'
 import { updateProfile } from 'firebase/auth'
 import { db, DEMO_MODE, auth } from '../firebase'
 import { setDemoProfile } from './demoData'
+import { logActivity } from './activity'
 
 /** Update the user's display name (own profile). Firestore rules allow self-edit. */
 export async function updateDisplayName(uid: string, displayName: string): Promise<void> {
@@ -10,12 +11,14 @@ export async function updateDisplayName(uid: string, displayName: string): Promi
   if (DEMO_MODE) { setDemoProfile({ displayName: name }); return }
   await setDoc(doc(db, 'users', uid), { displayName: name }, { merge: true })
   if (auth.currentUser) { try { await updateProfile(auth.currentUser, { displayName: name }) } catch { /* non-fatal */ } }
+  logActivity('profile_name', { name })
 }
 
 /** Update the user's avatar (stored as a small data URL on the user doc). */
 export async function updatePhoto(uid: string, photoURL: string): Promise<void> {
   if (DEMO_MODE) { setDemoProfile({ photoURL }); return }
   await setDoc(doc(db, 'users', uid), { photoURL }, { merge: true })
+  logActivity('profile_photo', {})
 }
 
 /** Resize/crop an image File to a square data URL (default 160px, JPEG) — keeps docs tiny. */
