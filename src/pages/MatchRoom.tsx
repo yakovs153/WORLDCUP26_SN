@@ -97,6 +97,12 @@ export default function MatchRoom() {
               הניחוש שלך: <b style={{ color: 'var(--color-text)' }}>{myPred.homeScore}–{myPred.awayScore}</b>
             </div>
           )}
+          {match.venue && (
+            <div style={{ textAlign: 'center', marginTop: 8, fontSize: 12, color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+              <span>📍</span>
+              <span>{match.venue}</span>
+            </div>
+          )}
         </div>
       )}
 

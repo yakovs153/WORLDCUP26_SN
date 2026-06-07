@@ -22,7 +22,9 @@ import { dirname, join } from 'node:path'
 // Hebrew team names keyed by FIFA code — the API serves English, we display Hebrew.
 const __dir = dirname(fileURLToPath(import.meta.url))
 const HE_TEAMS = JSON.parse(readFileSync(join(__dir, '..', 'src', 'data', 'heTeams.json'), 'utf8'))
+const HE_VENUES = JSON.parse(readFileSync(join(__dir, '..', 'src', 'data', 'heVenues.json'), 'utf8'))
 const heName = (tla, fallback) => (tla && HE_TEAMS[tla.toUpperCase()]) || fallback || ''
+const heVenue = (en) => (en && HE_VENUES[en]) || en || null
 
 // Tom the Analyst — bookmaker-favourite picks with realistic VARIETY. Same
 // match always gets the same pick (deterministic hash); admin can override.
@@ -130,11 +132,12 @@ async function main() {
       penalties: (pH != null && pA != null) ? { home: pH, away: pA } : null,
       winner: winner ?? null,
       minute: m.minute ?? null,
+      venue: heVenue(m.venue) || null,
       lastUpdated: Timestamp.now()
     }, { merge: true })
     upserts++
 
-    snap.set(id, { id, homeTeam, awayTeam, kickoffMs: new Date(m.utcDate).getTime(), stage, group, status, homeScore: hs, awayScore: as, minute: m.minute ?? null, scorers: [] })
+    snap.set(id, { id, homeTeam, awayTeam, kickoffMs: new Date(m.utcDate).getTime(), stage, group, status, homeScore: hs, awayScore: as, minute: m.minute ?? null, scorers: [], venue: heVenue(m.venue) || null })
 
     if (status === 'FINISHED' && typeof hs === 'number' && typeof as === 'number' && scoredFlag[id] !== true) {
       finishedToScore.push({ id, h: hs, a: as, stage })

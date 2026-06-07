@@ -5,12 +5,12 @@ import { getDemoMatches } from '../lib/demoData'
 import { localizeTeam } from '../lib/teamNames'
 import type { Match } from '../types'
 
-interface SnapItem { id: string; homeTeam: Match['homeTeam']; awayTeam: Match['awayTeam']; kickoffMs: number; stage: Match['stage']; group: string | null; status: Match['status']; homeScore: number | null; awayScore: number | null; minute?: number | null; scorers?: Match['scorers'] }
+interface SnapItem { id: string; homeTeam: Match['homeTeam']; awayTeam: Match['awayTeam']; kickoffMs: number; stage: Match['stage']; group: string | null; status: Match['status']; homeScore: number | null; awayScore: number | null; minute?: number | null; scorers?: Match['scorers']; venue?: string | null }
 function fromSnap(it: SnapItem): Match {
   return {
     id: it.id, homeTeam: localizeTeam(it.homeTeam), awayTeam: localizeTeam(it.awayTeam),
     kickoff: Timestamp.fromMillis(it.kickoffMs), stage: it.stage, group: it.group,
-    status: it.status, homeScore: it.homeScore, awayScore: it.awayScore, minute: it.minute ?? null, scorers: it.scorers ?? []
+    status: it.status, homeScore: it.homeScore, awayScore: it.awayScore, minute: it.minute ?? null, scorers: it.scorers ?? [], venue: it.venue ?? null
   }
 }
 

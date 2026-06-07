@@ -11,6 +11,7 @@ import { logger } from 'firebase-functions/v2'
 import { defineSecret } from 'firebase-functions/params'
 import { Timestamp, getFirestore, FieldValue } from 'firebase-admin/firestore'
 import heTeams from './data/heTeams.json'
+import heVenues from './data/heVenues.json'
 import teamStrength from './data/teamStrength.json'
 
 export const FOOTBALL_TOKEN = defineSecret('FOOTBALL_DATA_TOKEN')
@@ -18,9 +19,13 @@ export const SYNC_SECRET = defineSecret('SYNC_SECRET')
 
 const STRENGTH = teamStrength as Record<string, number>
 const HE_TEAMS = heTeams as Record<string, string>
+const HE_VENUES = heVenues as Record<string, string>
 
 function heName(tla: string | null | undefined, fallback?: string) {
   return (tla && HE_TEAMS[tla.toUpperCase()]) || fallback || ''
+}
+function heVenue(en: string | null | undefined): string | null {
+  return (en && HE_VENUES[en]) || en || null
 }
 
 const STAGE: Record<string, string> = {
@@ -84,7 +89,7 @@ async function runSync(token: string) {
   if (!res.ok) throw new Error(`football-data ${res.status}: ${await res.text()}`)
   const data = (await res.json()) as { matches: Array<Record<string, unknown>> }
   const apiMatches = data.matches as Array<{
-    id: number; utcDate: string; status: string; stage: string; group: string | null; minute?: number
+    id: number; utcDate: string; status: string; stage: string; group: string | null; minute?: number; venue?: string
     homeTeam: { tla: string; shortName?: string; name?: string }
     awayTeam: { tla: string; shortName?: string; name?: string }
     score: { fullTime: { home: number | null; away: number | null }; penalties?: { home: number | null; away: number | null }; winner: string | null }
@@ -121,6 +126,7 @@ async function runSync(token: string) {
     const group = m.group ? String(m.group).replace('GROUP_', '') : null
     const stage = STAGE[m.stage] || 'GROUP'
 
+    const venue = heVenue(m.venue)
     batch.set(db.collection('matches').doc(id), {
       homeTeam, awayTeam,
       kickoff: Timestamp.fromDate(new Date(m.utcDate)),
@@ -128,11 +134,12 @@ async function runSync(token: string) {
       penalties: (pH != null && pA != null) ? { home: pH, away: pA } : null,
       winner: winner ?? null,
       minute: m.minute ?? null,
+      venue,
       lastUpdated: Timestamp.now()
     }, { merge: true })
     upserts++
 
-    snap.set(id, { id, homeTeam, awayTeam, kickoffMs: new Date(m.utcDate).getTime(), stage, group, status, homeScore: hs, awayScore: as, minute: m.minute ?? null, scorers: [] })
+    snap.set(id, { id, homeTeam, awayTeam, kickoffMs: new Date(m.utcDate).getTime(), stage, group, status, homeScore: hs, awayScore: as, minute: m.minute ?? null, scorers: [], venue })
 
     if (status === 'FINISHED' && typeof hs === 'number' && typeof as === 'number' && scoredFlag[id] !== true) {
       finishedToScore.push({ id, h: hs, a: as, stage })

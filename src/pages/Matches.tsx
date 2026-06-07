@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom'
 import MatchCard from '../components/MatchCard'
 import NextMatchHero from '../components/NextMatchHero'
 import LiveStrip from '../components/LiveStrip'
+import PrizeCard from '../components/PrizeCard'
 import KingBanner from '../components/KingBanner'
 import PunditCard from '../components/PunditCard'
 import { MatchCardSkeleton } from '../components/Skeleton'
@@ -65,15 +66,7 @@ export default function Matches() {
           ⏰ יש לך {unpredictedToday} {unpredictedToday === 1 ? 'משחק' : 'משחקים'} היום שעדיין לא ניחשת — אל תיתן לטום לנחש במקומך!
         </div>
       )}
-      {cfg.content.prize && (
-        <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px' }}>
-          <span style={{ fontSize: 24 }}>🎁</span>
-          <div>
-            <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>הפרס</div>
-            <div style={{ fontWeight: 800 }}>{cfg.content.prize}</div>
-          </div>
-        </div>
-      )}
+      <PrizeCard />
       {nextMatch && <NextMatchHero match={nextMatch} />}
 
       <KingBanner />

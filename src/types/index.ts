@@ -21,6 +21,7 @@ export interface Match {
   awayScore: number | null
   minute?: number | null            // live clock (minutes), when in play
   scorers?: MatchScorer[]            // goalscorers, when available
+  venue?: string | null              // stadium (already localized to Hebrew)
   lastUpdated?: Timestamp
 }
 

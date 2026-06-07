@@ -16,7 +16,6 @@ export default function AdminContent() {
   const toast = useToast()
 
   const [tagline, setTagline] = useState(cfg.content.tagline)
-  const [prize, setPrize] = useState(cfg.content.prize)
   const [annText, setAnnText] = useState(cfg.announcement.text)
   const [annActive, setAnnActive] = useState(cfg.announcement.active)
   const [tips, setTips] = useState<string[]>(cfg.tips)
@@ -25,7 +24,6 @@ export default function AdminContent() {
 
   useEffect(() => {
     setTagline(cfg.content.tagline)
-    setPrize(cfg.content.prize)
     setAnnText(cfg.announcement.text)
     setAnnActive(cfg.announcement.active)
     setTips(cfg.tips)
@@ -34,7 +32,6 @@ export default function AdminContent() {
 
   const dirty =
     tagline !== cfg.content.tagline ||
-    prize !== cfg.content.prize ||
     annText !== cfg.announcement.text ||
     annActive !== cfg.announcement.active ||
     tipsEnabled !== cfg.tipsEnabled ||
@@ -44,7 +41,7 @@ export default function AdminContent() {
     setSaving(true)
     try {
       await patchAppConfig({
-        content: { ...cfg.content, tagline, prize }, // tournamentName + rules text preserved as-is
+        content: { ...cfg.content, tagline }, // prize is hardcoded (coffee machine) in PrizeCard; tournamentName + rules text preserved as-is
         announcement: { text: annText, active: annActive },
         tips: tips.map((t) => t.trim()).filter(Boolean),
         tipsEnabled
@@ -101,11 +98,11 @@ export default function AdminContent() {
         <button onClick={() => setTips([...tips, ''])} className="btn-ghost" style={{ alignSelf: 'flex-start', padding: '6px 12px', fontSize: 12, border: '1px dashed var(--color-border-strong)', borderRadius: 'var(--radius-md)' }}>+ הוספת טיפ</button>
       </section>
 
-      {/* Prize + tagline */}
+      {/* Tagline */}
       <section className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>🎁 פרס וכותרת</h3>
-        <Label text="🎁 פרס (מוצג בעמוד הבית)"><input value={prize} onChange={(e) => setPrize(e.target.value)} placeholder="למשל: ארוחת שף לזוכה + גביע נודד" style={fld} /></Label>
+        <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>🏷️ כותרת התחברות</h3>
         <Label text="כותרת משנה (מסך התחברות)"><input value={tagline} onChange={(e) => setTagline(e.target.value)} style={fld} /></Label>
+        <p className="text-muted" style={{ fontSize: 11 }}>הפרס (מכונת הקפה) מוצג בכרטיס ייעודי במסך הבית — אין צורך לערוך כאן.</p>
       </section>
 
       <button className="btn btn-block" onClick={save} disabled={!dirty || saving} style={{ padding: '14px' }}>
