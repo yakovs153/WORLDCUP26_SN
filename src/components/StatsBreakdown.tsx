@@ -1,5 +1,4 @@
 import type { Match, Prediction } from '../types'
-import { scorePrediction } from '../lib/scoring'
 
 interface Props {
   matches: Match[]
@@ -7,30 +6,39 @@ interface Props {
 }
 
 interface Bucket {
-  key: 'exact' | 'partial' | 'winner' | 'wrong'
+  key: 'exact' | 'direction' | 'wrong'
   label: string
   count: number
   color: string
   emoji: string
 }
 
+/**
+ * Per-user prediction outcome breakdown. Categorises every finished match
+ * the user predicted into one of three buckets — exact score, correct
+ * direction (winner OR draw), or wrong. Counts only the outcome shape;
+ * point values are stage-dependent and tracked elsewhere.
+ */
 export default function StatsBreakdown({ matches, byMatchId }: Props) {
   const buckets: Bucket[] = [
-    { key: 'exact',   label: 'מדויק',   count: 0, color: 'var(--color-primary)',           emoji: '🎯' },
-    { key: 'partial', label: 'הפרש',    count: 0, color: 'color-mix(in srgb, var(--color-primary) 70%, var(--color-bg))', emoji: '✅' },
-    { key: 'winner',  label: 'מנצחת',   count: 0, color: 'color-mix(in srgb, var(--color-primary) 40%, var(--color-bg))', emoji: '➕' },
-    { key: 'wrong',   label: 'שגוי',    count: 0, color: 'var(--color-border-strong)',     emoji: '❌' }
+    { key: 'exact',     label: 'מדויק', count: 0, color: 'var(--color-primary)',                                          emoji: '🎯' },
+    { key: 'direction', label: 'כיוון', count: 0, color: 'color-mix(in srgb, var(--color-primary) 55%, var(--color-bg))', emoji: '✅' },
+    { key: 'wrong',     label: 'שגוי',  count: 0, color: 'var(--color-border-strong)',                                    emoji: '❌' }
   ]
+
+  const sign = (n: number) => (n > 0 ? 1 : n < 0 ? -1 : 0)
 
   for (const m of matches) {
     if (m.status !== 'FINISHED' || m.homeScore === null || m.awayScore === null) continue
     const p = byMatchId[m.id]
     if (!p) continue
-    const pts = scorePrediction(p.homeScore, p.awayScore, m.homeScore, m.awayScore)
-    if (pts === 5) buckets[0].count++
-    else if (pts === 3) buckets[1].count++
-    else if (pts === 1) buckets[2].count++
-    else buckets[3].count++
+    if (p.homeScore === m.homeScore && p.awayScore === m.awayScore) {
+      buckets[0].count++
+    } else if (sign(p.homeScore - p.awayScore) === sign(m.homeScore - m.awayScore)) {
+      buckets[1].count++
+    } else {
+      buckets[2].count++
+    }
   }
 
   const total = buckets.reduce((s, b) => s + b.count, 0)
@@ -84,7 +92,7 @@ export default function StatsBreakdown({ matches, byMatchId }: Props) {
       </div>
 
       {/* Counts grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
         {buckets.map((b) => (
           <div
             key={b.key}
