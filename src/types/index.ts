@@ -159,7 +159,7 @@ export type StageMultipliers = never
 export type HofMetric = 'prophet' | 'optimist' | 'draw' | 'disaster'
 
 export interface FeatureFlags {
-  pundit: boolean                 // טום's daily AI recap card
+  pundit: boolean                 // רובי's daily AI recap card
   leaderPerk: boolean             // king banner + megaphone
   analystAutofill: boolean        // Tom auto-fills forgotten predictions (admin override)
   requireEmailVerification: boolean // block app access until the user clicks the email-verify link

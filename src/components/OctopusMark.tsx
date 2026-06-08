@@ -6,7 +6,7 @@ import CubeMark from './CubeMark'
 export const OCTOPUS_IMG = '/octopus.png'
 
 /**
- * Avatar for "טום האנליסט" — the StoreNext AI analyst. Renders the illustration
+ * Avatar for "רובי האנליסט" — the StoreNext AI analyst. Renders the illustration
  * when available, otherwise a CSS/emoji (🤖 + cube) fallback.
  */
 export default function OctopusMark({ size = 56, crowned = false }: { size?: number; crowned?: boolean }) {

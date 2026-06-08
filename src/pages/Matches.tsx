@@ -63,7 +63,7 @@ export default function Matches() {
       <LiveStrip />
       {unpredictedToday > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'color-mix(in srgb, var(--color-accent) 18%, var(--color-bg-elevated))', border: '1px solid color-mix(in srgb, var(--color-accent) 50%, var(--color-border-strong))', fontWeight: 700, fontSize: 14 }}>
-          ⏰ יש לך {unpredictedToday} {unpredictedToday === 1 ? 'משחק' : 'משחקים'} היום שעדיין לא ניחשת — אל תיתן לטום לנחש במקומך!
+          ⏰ יש לך {unpredictedToday} {unpredictedToday === 1 ? 'משחק' : 'משחקים'} היום שעדיין לא ניחשת — אל תיתן לרובי לנחש במקומך!
         </div>
       )}
       <PrizeCard />

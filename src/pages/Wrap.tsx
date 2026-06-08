@@ -61,7 +61,7 @@ export default function Wrap() {
         <span style={{ fontSize: 22 }}>🤖</span>
         <div>
           <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>
-            טום האנליסט · אימון אישי{!userDoc?.coach?.text && ' · תצוגה מקדימה'}
+            רובי האנליסט · אימון אישי{!userDoc?.coach?.text && ' · תצוגה מקדימה'}
           </div>
           <div style={{ fontWeight: 600, fontSize: 14, lineHeight: 1.6 }}>
             {userDoc?.coach?.text || PREVIEW_LINES[(user?.uid || 'a').charCodeAt(0) % PREVIEW_LINES.length]}
@@ -73,7 +73,7 @@ export default function Wrap() {
         <div className="card" style={{ textAlign: 'center', padding: 28 }}>
           <div style={{ fontSize: 40, marginBottom: 8 }}>⏳</div>
           <h3>הסיכום ייבנה תוך כדי הטורניר</h3>
-          <p className="text-muted" style={{ marginTop: 8, fontSize: 13 }}>חזור לכאן אחרי שיתחילו המשחקים. סטטיסטיקות, "אתה מול טום" וטיפים אישיים יופיעו כאן.</p>
+          <p className="text-muted" style={{ marginTop: 8, fontSize: 13 }}>חזור לכאן אחרי שיתחילו המשחקים. סטטיסטיקות, "אתה מול רובי" וטיפים אישיים יופיעו כאן.</p>
         </div>
       ) : (
         <>
@@ -96,7 +96,7 @@ export default function Wrap() {
             <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>🤖 אתה מול {OCTOPUS_NAME}</div>
             <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, marginTop: 6 }}>{stats.myPts} : {stats.tomPts}</div>
             <div style={{ marginTop: 6, fontWeight: 800, color: beatTom ? 'var(--color-primary)' : 'var(--color-danger)' }}>
-              {beatTom ? '🎉 ניצחת את ה-AI!' : 'טום מוביל — עוד יש זמן לעקוף!'}
+              {beatTom ? '🎉 ניצחת את ה-AI!' : 'רובי מוביל — עוד יש זמן לעקוף!'}
             </div>
           </div>
         </>

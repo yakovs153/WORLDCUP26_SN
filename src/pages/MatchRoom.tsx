@@ -20,7 +20,7 @@ const DEMO_PEERS: PeerPred[] = [
   { name: 'רונן ל.', home: 2, away: 1, auto: false },
   { name: 'שרון ק.', home: 1, away: 1, auto: false },
   { name: 'עמית ב.', home: 0, away: 2, auto: false },
-  { name: 'טום האנליסט', home: 2, away: 0, auto: true }
+  { name: 'רובי האנליסט', home: 2, away: 0, auto: true }
 ]
 
 const REACTIONS = ['🔥', '⚽', '😱', '🎉', '👏', '😂', '💪', '😭']
@@ -116,7 +116,7 @@ export default function MatchRoom() {
       {match && (
         <div className="glass" style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, flexWrap: 'wrap' }}>
-            {tom && <span style={{ fontWeight: 700 }}>🤖 טום מנחש: {tom[0]}–{tom[1]}</span>}
+            {tom && <span style={{ fontWeight: 700 }}>🤖 רובי מנחש: {tom[0]}–{tom[1]}</span>}
             {consensus && <span className="text-muted">· הכי נפוץ בקרב המשתתפים: {consensus[0]} ({consensus[1]})</span>}
           </div>
           {match.scorers && match.scorers.length > 0 && (

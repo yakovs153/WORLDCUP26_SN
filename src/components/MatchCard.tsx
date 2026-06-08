@@ -187,7 +187,7 @@ export default function MatchCard({ match, prediction, uid }: Props) {
 
         {locked && prediction?.auto && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-muted)' }}>
-            🤖 טום האנליסט ניחש בשבילך · 50% מהנקודות
+            🤖 רובי האנליסט ניחש בשבילך · 50% מהנקודות
           </div>
         )}
 
@@ -198,7 +198,7 @@ export default function MatchCard({ match, prediction, uid }: Props) {
             <>
               <ResultBadge myHome={oh} myAway={oa} points={octoPts} isLive={match.status === 'LIVE'} />
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-muted)' }}>
-                🤖 שכחת לנחש — טום האנליסט ניחש בשבילך · 50% מהנקודות
+                🤖 שכחת לנחש — רובי האנליסט ניחש בשבילך · 50% מהנקודות
               </div>
             </>
           )

@@ -124,7 +124,7 @@ export default function Compare() {
       <div className="card" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', gap: 6, padding: 'var(--space-3)' }}>
         <Stat label="פער" value={Math.abs(myTotal - otherTotal)} highlight />
         <Stat label="ניצחונות שלך" value={tally.myWins} />
-        <Stat label={isOtherTom ? 'ניצחונות טום' : 'ניצחונות שלו/ה'} value={tally.theirWins} />
+        <Stat label={isOtherTom ? 'ניצחונות רובי' : 'ניצחונות שלו/ה'} value={tally.theirWins} />
       </div>
 
       {/* Bonus side-by-side (hidden until tournament starts; not applicable for Tom) */}
