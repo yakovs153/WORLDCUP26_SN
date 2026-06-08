@@ -10,7 +10,7 @@ import { formatTimeHe, stageLabel } from '../lib/format'
 import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
 import { useAppConfig } from '../hooks/useAppConfig'
-import { tomPick, winProb } from '../lib/octopus'
+import { tomPick } from '../lib/octopus'
 import { venueFor } from '../lib/wcVenues'
 import type { Prediction, UserDoc } from '../types'
 
@@ -67,7 +67,6 @@ export default function MatchRoom() {
     return () => { cancelled = true }
   }, [id, revealed])
 
-  const wp = match ? winProb(match.homeTeam.code, match.awayTeam.code) : null
   const tom = match ? tomPick(match.homeTeam.code, match.awayTeam.code, id, cfg.analystOverrides) : null
   const consensus = useMemo(() => {
     if (!peers.length) return null
@@ -113,22 +112,9 @@ export default function MatchRoom() {
         </div>
       )}
 
-      {/* Match center — win probability, Tom's pick, goals, room consensus */}
+      {/* Match center — Tom's pick, goals, room consensus */}
       {match && (
         <div className="glass" style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {wp && (
-            <div>
-              <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700, marginBottom: 4 }}>סיכויי ניצחון (הערכת טום)</div>
-              <div style={{ display: 'flex', height: 10, borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
-                <span style={{ width: `${wp.home}%`, background: 'var(--color-primary)' }} title={`${match.homeTeam.name} ${wp.home}%`} />
-                <span style={{ width: `${wp.draw}%`, background: 'var(--color-border-strong)' }} title={`תיקו ${wp.draw}%`} />
-                <span style={{ width: `${wp.away}%`, background: 'var(--color-accent)' }} title={`${match.awayTeam.name} ${wp.away}%`} />
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginTop: 4 }}>
-                <span>{match.homeTeam.name} {wp.home}%</span><span>תיקו {wp.draw}%</span><span>{wp.away}% {match.awayTeam.name}</span>
-              </div>
-            </div>
-          )}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, flexWrap: 'wrap' }}>
             {tom && <span style={{ fontWeight: 700 }}>🤖 טום מנחש: {tom[0]}–{tom[1]}</span>}
             {consensus && <span className="text-muted">· הכי נפוץ בקרב המשתתפים: {consensus[0]} ({consensus[1]})</span>}
