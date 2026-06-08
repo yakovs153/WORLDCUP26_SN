@@ -132,9 +132,12 @@ function aggregateDepartments(entries: LeaderboardEntry[]): DeptRow[] {
     cur.total += e.totalPoints; cur.members += 1
     map.set(d, cur)
   }
+  // Rank by AVERAGE points per member — total is biased toward larger teams,
+  // so a 30-person department always beats a 5-person one even when the small
+  // team predicts better. Tiebreak on total then member count for stability.
   return [...map.entries()]
     .map(([department, v]) => ({ department, total: v.total, members: v.members, avg: v.members ? Math.round(v.total / v.members) : 0 }))
-    .sort((a, b) => b.total - a.total)
+    .sort((a, b) => b.avg - a.avg || b.total - a.total || b.members - a.members)
 }
 
 function Departments({ rows, myDept }: { rows: DeptRow[]; myDept: string | null }) {
@@ -153,11 +156,11 @@ function Departments({ rows, myDept }: { rows: DeptRow[]; myDept: string | null 
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 17 }}>{r.department}{mine && <span style={{ color: 'var(--color-primary)', fontSize: 12, marginRight: 6 }}>(שלך)</span>}</div>
-              <div className="text-muted" style={{ fontSize: 12 }}>{r.members} משתתפים · ממוצע {r.avg}</div>
+              <div className="text-muted" style={{ fontSize: 12 }}>{r.members} משתתפים · סה״כ {r.total} נק׳</div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: 'var(--color-primary)' }}>{r.total}</div>
-              <div className="text-muted" style={{ fontSize: 10 }}>נקודות</div>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: 'var(--color-primary)' }}>{r.avg}</div>
+              <div className="text-muted" style={{ fontSize: 10 }}>ממוצע</div>
             </div>
           </div>
         )
