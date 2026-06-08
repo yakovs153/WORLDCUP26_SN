@@ -53,32 +53,46 @@ export default function Admin() {
         שינויים נשמרים ומתעדכנים מיד עבור כל המשתמשים.
       </p>
 
-      {/* Tabs */}
+      {/* Tabs — horizontally scrollable strip. Each tab keeps its natural
+          width and the row scrolls when there are more tabs than the
+          viewport can hold. Works the same on desktop and mobile. */}
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${TABS.length}, 1fr)`,
+          display: 'flex',
+          gap: 4,
           padding: 4,
           background: 'var(--color-bg-elevated)',
           borderRadius: 'var(--radius-full)',
-          border: '1px solid var(--color-border)'
+          border: '1px solid var(--color-border)',
+          overflowX: 'auto',
+          scrollSnapType: 'x proximity',
+          scrollbarWidth: 'thin',
+          WebkitOverflowScrolling: 'touch'
         }}
       >
         {TABS.map((t) => (
           <button
             key={t.key}
-            onClick={() => setTab(t.key)}
+            onClick={(e) => {
+              setTab(t.key)
+              // Bring the tapped tab into view so the active one isn't half-hidden.
+              ;(e.currentTarget as HTMLElement).scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+            }}
             style={{
-              padding: '8px 8px',
+              flexShrink: 0,
+              whiteSpace: 'nowrap',
+              padding: '8px 14px',
               borderRadius: 'var(--radius-full)',
               background: tab === t.key ? 'var(--color-surface)' : 'transparent',
               color: tab === t.key ? 'var(--color-text)' : 'var(--color-text-muted)',
               fontWeight: 700,
-              fontSize: 12,
-              display: 'flex',
+              fontSize: 13,
+              display: 'inline-flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              gap: 4
+              gap: 6,
+              scrollSnapAlign: 'center',
+              cursor: 'pointer',
+              transition: 'background 0.15s ease, color 0.15s ease'
             }}
           >
             <span style={{ fontSize: 16, lineHeight: 1 }}>{t.icon}</span>
