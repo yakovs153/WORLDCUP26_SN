@@ -32,7 +32,7 @@ export function getScheduleFetchedAt(): string | null {
 const MATCH_OVERRIDES_KEY = 'demo-match-overrides-v1'
 const CUSTOM_MATCHES_KEY = 'demo-custom-matches-v1'
 
-interface MatchOverride { status?: MatchStatus; homeScore?: number | null; awayScore?: number | null; manualLock?: boolean }
+interface MatchOverride { status?: MatchStatus; homeScore?: number | null; awayScore?: number | null; manualLock?: boolean; venue?: string | null }
 interface CustomMatchSpec {
   id: string
   home: { name: string; code: string; flag: string }
@@ -65,7 +65,9 @@ export function getDemoMatches(): Match[] {
       group: s.group,
       status: o.status ?? s.status,
       homeScore: o.homeScore !== undefined ? o.homeScore : s.homeScore,
-      awayScore: o.awayScore !== undefined ? o.awayScore : s.awayScore
+      awayScore: o.awayScore !== undefined ? o.awayScore : s.awayScore,
+      venue: o.venue ?? null,
+      manualOverride: ov[s.id] != null
     }
   })
   const custom: Match[] = loadCustomMatches().map((c) => {
@@ -79,7 +81,9 @@ export function getDemoMatches(): Match[] {
       group: c.group,
       status: o.status ?? c.status,
       homeScore: o.homeScore !== undefined ? o.homeScore : c.homeScore,
-      awayScore: o.awayScore !== undefined ? o.awayScore : c.awayScore
+      awayScore: o.awayScore !== undefined ? o.awayScore : c.awayScore,
+      venue: o.venue ?? null,
+      manualOverride: ov[c.id] != null
     }
   })
   return [...builtIn, ...custom].sort((a, b) => a.kickoff.toMillis() - b.kickoff.toMillis())
@@ -89,6 +93,20 @@ export function getDemoMatches(): Match[] {
 export function setDemoMatchResult(matchId: string, patch: MatchOverride): void {
   const ov = loadOverrides()
   ov[matchId] = { ...ov[matchId], ...patch }
+  localStorage.setItem(MATCH_OVERRIDES_KEY, JSON.stringify(ov))
+  window.dispatchEvent(new Event('demo-matches-changed'))
+}
+
+/** Admin (demo): patch a match's venue text. */
+export function setDemoMatchVenue(matchId: string, venue: string | null): void {
+  setDemoMatchResult(matchId, { venue })
+}
+
+/** Admin (demo): drop the override entirely so the match reverts to its
+ * built-in schedule entry. */
+export function clearDemoMatchOverride(matchId: string): void {
+  const ov = loadOverrides()
+  delete ov[matchId]
   localStorage.setItem(MATCH_OVERRIDES_KEY, JSON.stringify(ov))
   window.dispatchEvent(new Event('demo-matches-changed'))
 }

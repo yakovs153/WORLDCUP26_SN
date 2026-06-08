@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore'
-import { db } from '../firebase'
+import { db, DEMO_MODE } from '../firebase'
 import { useMatches } from '../hooks/useMatches'
 import { useToast } from '../components/Toast'
 import { stageLabel, formatTimeHe, formatDateHe, dateKey } from '../lib/format'
+import { setDemoMatchResult, setDemoMatchVenue, clearDemoMatchOverride } from '../lib/demoData'
 import FlagIcon from '../components/FlagIcon'
 import type { Match, MatchStatus } from '../types'
 
@@ -70,6 +71,14 @@ function MatchRow({ match, onSaved, onError }: { match: Match; onSaved: () => vo
     try {
       const hs = home === '' ? null : Math.max(0, parseInt(home, 10) || 0)
       const as = away === '' ? null : Math.max(0, parseInt(away, 10) || 0)
+      const trimmedVenue = venue.trim() || null
+      if (DEMO_MODE) {
+        // Demo writes to localStorage instead of Firestore (which has no creds).
+        setDemoMatchResult(match.id, { status, homeScore: hs, awayScore: as })
+        setDemoMatchVenue(match.id, trimmedVenue)
+        onSaved()
+        return
+      }
       let winner: string | null = null
       if (status === 'FINISHED' && hs != null && as != null) {
         winner = hs > as ? 'HOME_TEAM' : hs < as ? 'AWAY_TEAM' : 'DRAW'
@@ -81,7 +90,7 @@ function MatchRow({ match, onSaved, onError }: { match: Match; onSaved: () => vo
           awayScore: as,
           status,
           winner,
-          venue: venue.trim() || null,
+          venue: trimmedVenue,
           manualOverride: true,
           minute: status === 'LIVE' ? (match.minute ?? null) : null,
           lastUpdated: serverTimestamp()
@@ -105,6 +114,11 @@ function MatchRow({ match, onSaved, onError }: { match: Match; onSaved: () => vo
   const clearOverride = async () => {
     setSaving(true)
     try {
+      if (DEMO_MODE) {
+        clearDemoMatchOverride(match.id)
+        onSaved()
+        return
+      }
       await setDoc(doc(db, 'matches', match.id), { manualOverride: false, lastUpdated: serverTimestamp() }, { merge: true })
       onSaved()
     } catch (e) {
