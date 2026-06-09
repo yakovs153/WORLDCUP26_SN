@@ -108,19 +108,11 @@ export default function Profile() {
       </div>
 
 
-      <div className="card" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', textAlign: 'center', gap: 8 }}>
-        <div>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, color: 'var(--color-primary)' }}>
-            <CountUp value={data?.totalPoints ?? 0} />
-          </div>
-          <div className="text-muted" style={{ fontSize: 13 }}>סך נקודות</div>
+      <div className="card" style={{ textAlign: 'center' }}>
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, color: 'var(--color-primary)' }}>
+          <CountUp value={data?.totalPoints ?? 0} />
         </div>
-        <div>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 32 }}>
-            {data?.predictionsCount ?? 0}
-          </div>
-          <div className="text-muted" style={{ fontSize: 13 }}>סך ניחושים</div>
-        </div>
+        <div className="text-muted" style={{ fontSize: 13 }}>סך נקודות</div>
       </div>
 
       <NemesisCard />
