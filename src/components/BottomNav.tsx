@@ -1,5 +1,9 @@
+import { useMemo } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAppConfig } from '../hooks/useAppConfig'
+import { useAuth } from '../auth/AuthProvider'
+import { useMatches } from '../hooks/useMatches'
+import { usePredictions } from '../hooks/usePredictions'
 
 // 5-tab IA (Option A from the colleague-feedback redesign):
 //   Home · My Picks · Groups · Rank · Profile
@@ -15,6 +19,25 @@ const ITEMS: { to: string; label: string; key?: keyof import('../types').NavIcon
 
 export default function BottomNav() {
   const cfg = useAppConfig()
+  const { user } = useAuth()
+  const { matches } = useMatches()
+  const { byMatchId } = usePredictions(user?.uid ?? null)
+
+  // Red dot on the משחקים tab when there are unpredicted SCHEDULED matches
+  // in the next 3 days. Standard mobile-notification pattern: visible from
+  // anywhere in the app, disappears once the user catches up.
+  const hasUnpredicted = useMemo(() => {
+    const now = Date.now()
+    const THREE_DAYS_MS = 3 * 86_400_000
+    for (const m of matches) {
+      if (m.status !== 'SCHEDULED') continue
+      if (byMatchId[m.id]) continue
+      const diff = m.kickoff.toMillis() - now
+      if (diff > 0 && diff < THREE_DAYS_MS) return true
+    }
+    return false
+  }, [matches, byMatchId])
+
   return (
     <nav
       style={{
@@ -70,6 +93,7 @@ export default function BottomNav() {
                 )}
                 <span
                   style={{
+                    position: 'relative',
                     fontSize: 28,
                     lineHeight: 1,
                     display: 'inline-flex',
@@ -81,6 +105,22 @@ export default function BottomNav() {
                   }}
                 >
                   {icon}
+                  {/* Unpredicted-matches red dot — only on the משחקים tab. */}
+                  {it.key === 'matches' && hasUnpredicted && (
+                    <span
+                      aria-label="יש משחקים שעדיין לא ניחשת"
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        right: -2,
+                        width: 10,
+                        height: 10,
+                        borderRadius: '50%',
+                        background: 'var(--color-danger)',
+                        border: '2px solid var(--color-surface)'
+                      }}
+                    />
+                  )}
                 </span>
                 {it.label}
               </>

@@ -11,8 +11,10 @@ import NemesisCard from '../components/NemesisCard'
 import StreaksBadges from '../components/StreaksBadges'
 import { useIsAdmin } from '../admin/AdminGate'
 import { useAppConfig } from '../hooks/useAppConfig'
+import { useLivePoints } from '../hooks/useLivePoints'
 import { setDepartment } from '../lib/departments'
 import { updateDisplayName, updatePhoto, fileToAvatarDataUrl } from '../lib/profile'
+import { useMemo } from 'react'
 
 export default function Profile() {
   const { user, signOut } = useAuth()
@@ -26,6 +28,13 @@ export default function Profile() {
   const [nameDraft, setNameDraft] = useState('')
   const [busy, setBusy] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // Total points = stored value (refreshed by liveSync every 2 min when a match
+  // finishes) + provisional delta from any match currently in progress.
+  // Mirrors the leaderboard's calculation so the two numbers agree.
+  const uids = useMemo(() => (user?.uid ? [user.uid] : []), [user?.uid])
+  const liveDelta = useLivePoints(matches, cfg.scoring, uids, cfg.analystOverrides)
+  const livePoints = (data?.totalPoints ?? 0) + (user?.uid ? (liveDelta.get(user.uid) || 0) : 0)
 
   const changeDept = async (dept: string) => {
     if (!user || !dept) return
@@ -110,7 +119,7 @@ export default function Profile() {
 
       <div className="card" style={{ textAlign: 'center' }}>
         <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, color: 'var(--color-primary)' }}>
-          <CountUp value={data?.totalPoints ?? 0} />
+          <CountUp value={livePoints} />
         </div>
         <div className="text-muted" style={{ fontSize: 13 }}>סך נקודות</div>
       </div>
