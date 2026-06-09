@@ -1,6 +1,8 @@
 interface Props {
   value: number | null
-  onChange: (v: number) => void
+  // Passes null when the field is cleared so the caller can render the
+  // input as blank — not as "0" — until the user types again.
+  onChange: (v: number | null) => void
   disabled?: boolean
   ariaLabel?: string
 }
@@ -18,7 +20,8 @@ export default function ScoreInput({ value, onChange, disabled, ariaLabel }: Pro
       aria-label={ariaLabel}
       onChange={(e) => {
         const raw = e.target.value.replace(/[^0-9]/g, '')
-        const n = raw === '' ? 0 : parseInt(raw, 10)
+        if (raw === '') { onChange(null); return }
+        const n = parseInt(raw, 10)
         onChange(Math.max(0, Math.min(30, n)))
       }}
       style={{
