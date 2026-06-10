@@ -36,5 +36,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: predictions-backup-${{ github.run_number }}
-          path: predictions-backup.csv
+          path: |
+            predictions-backup.csv
+            bonus-predictions-backup.csv
           retention-days: 90

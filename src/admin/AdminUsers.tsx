@@ -12,11 +12,12 @@ import type { UserDoc } from '../types'
  * they can't simply re-register. The Firebase Auth account stays orphaned but
  * harmless (blocked at sign-in). */
 export default function AdminUsers() {
-  const { user: me } = useAuth()
+  const { user: me, resetPassword } = useAuth()
   const cfg = useAppConfig()
   const toast = useToast()
   const [users, setUsers] = useState<UserDoc[]>([])
   const [busy, setBusy] = useState<string | null>(null)
+  const [resettingUid, setResettingUid] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
 
   useEffect(() => {
@@ -55,6 +56,20 @@ export default function AdminUsers() {
     } finally { setBusy(null) }
   }
 
+  const sendReset = async (u: UserDoc) => {
+    if (!u.email) { toast.show('למשתמש אין כתובת מייל', 'error'); return }
+    if (DEMO_MODE) { toast.show('איפוס סיסמה זמין רק בפרודקשן', 'info'); return }
+    if (!confirm(`לשלוח קישור איפוס סיסמה אל ${u.email}?`)) return
+    setResettingUid(u.uid)
+    try {
+      await resetPassword(u.email)
+      logActivity('admin_password_reset', { targetUid: u.uid, targetEmail: u.email })
+      toast.show(`קישור איפוס נשלח אל ${u.email} ✓`, 'success')
+    } catch (e) {
+      toast.show(e instanceof Error ? e.message : 'שליחה נכשלה', 'error')
+    } finally { setResettingUid(null) }
+  }
+
   const unblock = async (email: string) => {
     const next = (cfg.blockedEmails || []).filter((e) => e.toLowerCase() !== email.toLowerCase())
     try { await patchAppConfig({ blockedEmails: next }); logActivity('admin_unblock_email', { email }); toast.show('בוטל החסימה ✓', 'success') }
@@ -88,10 +103,17 @@ export default function AdminUsers() {
                   </div>
                   <div className="text-muted" style={{ fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email} · {u.department || 'ללא מחלקה'} · {u.totalPoints || 0} נק׳</div>
                 </div>
-                <button onClick={() => remove(u)} disabled={admin || self || busy === u.uid}
-                  className="btn-ghost" style={{ padding: '6px 10px', fontSize: 12, color: 'var(--color-danger)', border: '1px solid var(--color-danger)', borderRadius: 'var(--radius-md)', opacity: admin || self ? 0.4 : 1, cursor: admin || self ? 'not-allowed' : 'pointer' }}>
-                  {busy === u.uid ? '…' : 'מחק'}
-                </button>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={() => sendReset(u)} disabled={!u.email || resettingUid === u.uid}
+                    title="שלח קישור איפוס סיסמה במייל"
+                    className="btn-ghost" style={{ padding: '6px 10px', fontSize: 12, border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', color: 'var(--color-text)' }}>
+                    {resettingUid === u.uid ? '…' : '🔑 איפוס'}
+                  </button>
+                  <button onClick={() => remove(u)} disabled={admin || self || busy === u.uid}
+                    className="btn-ghost" style={{ padding: '6px 10px', fontSize: 12, color: 'var(--color-danger)', border: '1px solid var(--color-danger)', borderRadius: 'var(--radius-md)', opacity: admin || self ? 0.4 : 1, cursor: admin || self ? 'not-allowed' : 'pointer' }}>
+                    {busy === u.uid ? '…' : 'מחק'}
+                  </button>
+                </div>
               </div>
             )
           })}

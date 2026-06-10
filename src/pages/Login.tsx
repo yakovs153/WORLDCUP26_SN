@@ -8,12 +8,14 @@ import CubeMark from '../components/CubeMark'
 import Wc2026Mark from '../components/Wc2026Mark'
 
 export default function Login() {
-  const { user, signInEmail } = useAuth()
+  const { user, signInEmail, resetPassword } = useAuth()
   const cfg = useAppConfig()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
+  const [resetting, setResetting] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const [info, setInfo] = useState<string | null>(null)
   const [logoFailed, setLogoFailed] = useState(false)
   const loc = useLocation() as { state?: { from?: { pathname: string } } }
 
@@ -23,12 +25,33 @@ export default function Login() {
     e.preventDefault()
     setBusy(true)
     setErr(null)
+    setInfo(null)
     try {
       await signInEmail(email, password)
     } catch (e2) {
       setErr(parseAuthError(e2))
     } finally {
       setBusy(false)
+    }
+  }
+
+  const handleReset = async () => {
+    setErr(null)
+    setInfo(null)
+    if (!email.trim()) { setErr('הזן את כתובת האימייל שלך ולחץ שוב'); return }
+    setResetting(true)
+    try {
+      await resetPassword(email)
+      // Never reveal whether the email exists — same message either way.
+      setInfo('שלחנו לך קישור לאיפוס הסיסמה (אם קיים חשבון עם כתובת זו). בדוק את תיבת המייל.')
+    } catch (e2) {
+      // Most errors from sendPasswordResetEmail are "invalid email" — show the
+      // message but stay deliberately vague about whether the account exists.
+      const msg = e2 instanceof Error ? e2.message : String(e2)
+      if (msg.includes('auth/invalid-email')) setErr('כתובת אימייל לא תקינה')
+      else setInfo('שלחנו לך קישור לאיפוס הסיסמה (אם קיים חשבון עם כתובת זו). בדוק את תיבת המייל.')
+    } finally {
+      setResetting(false)
     }
   }
 
@@ -77,6 +100,17 @@ export default function Login() {
         </form>
 
         {err && <div style={{ color: 'var(--color-danger)', fontSize: 13 }}>{err}</div>}
+        {info && <div style={{ color: 'var(--color-primary)', fontSize: 13 }}>{info}</div>}
+
+        <button
+          type="button"
+          onClick={handleReset}
+          disabled={resetting}
+          className="btn-ghost"
+          style={{ background: 'transparent', border: 'none', color: 'var(--color-text-muted)', fontSize: 13, padding: 0, textDecoration: 'underline', cursor: 'pointer' }}
+        >
+          {resetting ? 'שולח קישור איפוס…' : 'שכחת סיסמה? קבל קישור לאיפוס במייל'}
+        </button>
 
         {DEMO_MODE && (
           <button

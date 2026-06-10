@@ -8,6 +8,7 @@ import {
   signInWithPopup,
   updateProfile,
   sendEmailVerification,
+  sendPasswordResetEmail,
   reload,
   type User
 } from 'firebase/auth'
@@ -40,6 +41,7 @@ interface AuthContextValue {
   signInGoogle: () => Promise<void>
   signOut: () => Promise<void>
   resendVerification: () => Promise<void>
+  resetPassword: (email: string) => Promise<void>
   refreshUser: () => Promise<void>
 }
 
@@ -201,6 +203,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await sendEmailVerification(auth.currentUser)
   }
 
+  const resetPassword = async (email: string) => {
+    if (DEMO_MODE) return  // pretend it worked in demo mode
+    const clean = email.trim()
+    if (!clean) throw new Error('יש להזין כתובת אימייל')
+    await sendPasswordResetEmail(auth, clean)
+  }
+
   const refreshUser = async () => {
     if (DEMO_MODE) return
     if (!auth.currentUser) return
@@ -209,7 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInEmail, registerEmail, signInGoogle, signOut, resendVerification, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, signInEmail, registerEmail, signInGoogle, signOut, resendVerification, resetPassword, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )
