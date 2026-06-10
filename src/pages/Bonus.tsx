@@ -181,30 +181,35 @@ export default function Bonus() {
             title="🏆 הזוכה"
             value={selectedTeam ? selectedTeam.name : 'לא נבחר'}
             badge="20 נק'"
+            targetId="bonus-champion"
             icon={selectedTeam && <FlagIcon flag={selectedTeam.flag} code={selectedTeam.code} size={28} />}
           />
           <SummaryCell
             title="⚽ מלך שערים"
             value={selectedPlayer ? selectedPlayer.name : 'לא נבחר'}
             badge="15 נק'"
+            targetId="bonus-top-scorer"
             icon={selectedPlayer && <PlayerAvatar name={selectedPlayer.name} countryCode={selectedPlayer.countryCode} photoUrl={photoFor(selectedPlayer.name, selectedPlayer.photoUrl)} size={36} shape="logo" />}
           />
           <SummaryCell
             title="🥈 סגנית (מפסידת הגמר)"
             value={runnerUpTeam ? runnerUpTeam.name : 'לא נבחר'}
             badge={`${cfg.bonus.runnerUp} נק׳`}
+            targetId="bonus-runner-up"
             icon={runnerUpTeam && <FlagIcon flag={runnerUpTeam.flag} code={runnerUpTeam.code} size={28} />}
           />
           <SummaryCell
             title="🐎 הפתעה"
             value={surpriseTeam ? surpriseTeam.name : 'לא נבחר'}
             badge={`${cfg.bonus.surprise} נק׳`}
+            targetId="bonus-surprise"
             icon={surpriseTeam && <FlagIcon flag={surpriseTeam.flag} code={surpriseTeam.code} size={28} />}
           />
           <SummaryCell
             title="📉 האכזבה"
             value={flopTeam ? flopTeam.name : 'לא נבחר'}
             badge={`${cfg.bonus.flop} נק׳`}
+            targetId="bonus-flop"
             icon={flopTeam && <FlagIcon flag={flopTeam.flag} code={flopTeam.code} size={28} />}
           />
         </div>
@@ -314,7 +319,7 @@ export default function Bonus() {
           <h2 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 18 }}>📉 האכזבה הגדולה</h2>
           <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>{cfg.bonus.flop} נק׳</span>
         </div>
-        <p className="text-muted" style={{ fontSize: 12, marginBottom: 12 }}>איזו מהנבחרות הגדולות תיפול ראשונה ותודח מוקדם (לפני שלב הנוקאאוט)?</p>
+        <p className="text-muted" style={{ fontSize: 12, marginBottom: 12 }}>איזו מהנבחרות הגדולות תאכזב ולא תגיע לרבע הגמר?</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(86px, 1fr))', gap: 8 }}>
           {giantTeams.map((t) => {
             const sel = flopCode === t.code
@@ -362,15 +367,26 @@ function SummaryCell({
   title,
   value,
   badge,
-  icon
+  icon,
+  targetId
 }: {
   title: string
   value: string
   badge: string
   icon?: React.ReactNode
+  // When set, tapping the cell smooth-scrolls to that section's picker.
+  targetId?: string
 }) {
+  const go = () => {
+    if (!targetId) return
+    document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
   return (
     <div
+      onClick={go}
+      role={targetId ? 'button' : undefined}
+      tabIndex={targetId ? 0 : undefined}
+      onKeyDown={(e) => { if (targetId && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); go() } }}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -378,7 +394,9 @@ function SummaryCell({
         padding: 12,
         background: 'var(--color-surface)',
         borderRadius: 'var(--radius-md)',
-        border: '1px solid var(--color-border)'
+        border: '1px solid var(--color-border)',
+        cursor: targetId ? 'pointer' : 'default',
+        transition: 'border-color 0.15s ease'
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

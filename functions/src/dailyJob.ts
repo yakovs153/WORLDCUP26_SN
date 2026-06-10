@@ -106,8 +106,9 @@ async function runDaily(geminiKey: string) {
     return s
   }
   const qfReachers = reachedIn(['QF', 'SF', 'TP', 'F'])
-  const r16Reachers = reachedIn(['R16', 'QF', 'SF', 'TP', 'F'])
-  const knockoutsStarted = r16Reachers.size > 0
+  // "Disappointment" = a favourite that fails to reach the quarter-finals.
+  // Only evaluable once QF participants are known (i.e. QF stage exists).
+  const qfStarted = qfReachers.size > 0
 
   const bps = await db.collection('bonusPredictions').get()
   const bonusDelta = new Map<string, number>()
@@ -118,7 +119,7 @@ async function runDaily(geminiKey: string) {
     if (runnerUp && up(b.runnerUpCode) === runnerUp) pts += bonusPts.runnerUp || 0
     if (adminTopScorers.size && b.topScorer && adminTopScorers.has(b.topScorer)) pts += bonusPts.topScorer || 0
     if (b.surpriseTeamCode && qfReachers.has(up(b.surpriseTeamCode))) pts += bonusPts.surprise || 0
-    if (knockoutsStarted && b.flopTeamCode && !r16Reachers.has(up(b.flopTeamCode))) pts += bonusPts.flop || 0
+    if (qfStarted && b.flopTeamCode && !qfReachers.has(up(b.flopTeamCode))) pts += bonusPts.flop || 0
     const prev = b.awardedPoints || 0
     if (pts !== prev) {
       bonusDelta.set(b.uid, (bonusDelta.get(b.uid) || 0) + (pts - prev))

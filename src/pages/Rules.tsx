@@ -80,7 +80,7 @@ export default function Rules() {
         <BonusRow icon="⚽" label="מלך השערים"     example="הכובש המוביל בכל הטורניר" points={b.topScorer} highlight />
         <BonusRow icon="🥈" label="הסגנית"          example="הנבחרת שתפסיד בגמר" points={b.runnerUp} />
         <BonusRow icon="🐎" label="הפתעת הטורניר"  example="אאוטסיידרית שתגיע לפחות לרבע הגמר" points={b.surprise} />
-        <BonusRow icon="📉" label="האכזבה הגדולה"  example="אחת מהפייבוריטיות שתודח מוקדם" points={b.flop} />
+        <BonusRow icon="📉" label="האכזבה הגדולה"  example="פייבוריטית שלא תגיע לרבע הגמר" points={b.flop} />
         <div style={{ marginTop: 10, padding: '10px 12px', background: 'var(--color-bg-elevated)', borderRadius: 'var(--radius-md)', fontSize: 13 }}>
           <span style={{ fontWeight: 800, color: 'var(--color-primary)' }}>סה״כ בונוס מקסימלי: {b.champion + b.topScorer + b.runnerUp + b.surprise + b.flop} נקודות</span>
         </div>

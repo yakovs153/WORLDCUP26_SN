@@ -25,13 +25,14 @@ export default function Matches() {
 
   const grouped = useMemo(() => groupByDate(matches), [matches])
 
-  // Nudge: scheduled matches the user hasn't predicted yet, split into
-  // today (next 24h) and tomorrow (24-48h) so the banner can be specific
-  // about urgency.
+  // Nudge: scheduled matches the user hasn't predicted yet within the next
+  // 3 days, split by day (today / tomorrow / day-after) so the banner can be
+  // specific about both the count and the window. Matches the 3-day window
+  // used by the bottom-nav red dot.
   const unpredicted = useMemo(() => {
     const now = Date.now()
     const HOUR = 3_600_000
-    let today = 0, tomorrow = 0
+    let today = 0, tomorrow = 0, later = 0
     for (const m of matches) {
       if (m.status !== 'SCHEDULED') continue
       if (byMatchId[m.id]) continue
@@ -39,8 +40,9 @@ export default function Matches() {
       if (hoursAhead <= 0) continue
       if (hoursAhead < 24) today++
       else if (hoursAhead < 48) tomorrow++
+      else if (hoursAhead < 72) later++
     }
-    return { today, tomorrow }
+    return { today, tomorrow, later, total: today + tomorrow + later }
   }, [matches, byMatchId])
 
   const nextMatch = useMemo(() => {
@@ -73,15 +75,20 @@ export default function Matches() {
   return (
     <div className="page-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
       <LiveStrip />
-      {(unpredicted.today > 0 || unpredicted.tomorrow > 0) && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'color-mix(in srgb, var(--color-accent) 18%, var(--color-bg-elevated))', border: '1px solid color-mix(in srgb, var(--color-accent) 50%, var(--color-border-strong))', fontWeight: 700, fontSize: 14 }}>
-          ⏰ {(() => {
-            const parts: string[] = []
-            if (unpredicted.today > 0) parts.push(`היום ${unpredicted.today}`)
-            if (unpredicted.tomorrow > 0) parts.push(`מחר ${unpredicted.tomorrow}`)
-            const suffix = unpredicted.today + unpredicted.tomorrow === 1 ? 'משחק ממתין לניחוש' : 'משחקים ממתינים לניחוש'
-            return `${parts.join(' · ')} — ${suffix}. אל תיתן לרובי לנחש במקומך!`
-          })()}
+      {unpredicted.total > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '10px 14px', borderRadius: 'var(--radius-md)', background: 'color-mix(in srgb, var(--color-accent) 18%, var(--color-bg-elevated))', border: '1px solid color-mix(in srgb, var(--color-accent) 50%, var(--color-border-strong))', fontSize: 14 }}>
+          <div style={{ fontWeight: 800 }}>
+            ⏰ {unpredicted.total === 1 ? 'משחק אחד ממתין לניחוש' : `${unpredicted.total} משחקים ממתינים לניחוש`} ב-3 הימים הקרובים
+          </div>
+          <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--color-text)' }}>
+            {(() => {
+              const parts: string[] = []
+              if (unpredicted.today > 0) parts.push(`היום ${unpredicted.today}`)
+              if (unpredicted.tomorrow > 0) parts.push(`מחר ${unpredicted.tomorrow}`)
+              if (unpredicted.later > 0) parts.push(`מחרתיים ${unpredicted.later}`)
+              return `${parts.join(' · ')} — אל תיתן לרובי לנחש במקומך!`
+            })()}
+          </div>
         </div>
       )}
       <PrizeCard />
