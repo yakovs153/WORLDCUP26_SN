@@ -16,6 +16,8 @@ export type ActivityAction =
   | 'admin_delete_user'
   | 'admin_config_change'
   | 'admin_unblock_email'
+  | 'admin_password_reset'
+  | 'admin_password_set'
 
 /** Log a user activity event. Fire-and-forget; failures never break the calling
  *  action. Demo mode is a no-op (no real backend). Each call is one Firestore
