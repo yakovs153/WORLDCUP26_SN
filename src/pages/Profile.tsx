@@ -17,7 +17,7 @@ import { updateDisplayName, updatePhoto, fileToAvatarDataUrl } from '../lib/prof
 import { useMemo } from 'react'
 
 export default function Profile() {
-  const { user, signOut } = useAuth()
+  const { user, signOut, changeMyPassword, hasPasswordProvider } = useAuth()
   const { data } = useUserDoc(user?.uid ?? null)
   const { matches } = useMatches()
   const { byMatchId } = usePredictions(user?.uid ?? null)
@@ -28,6 +28,29 @@ export default function Profile() {
   const [nameDraft, setNameDraft] = useState('')
   const [busy, setBusy] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // Password-change form state.
+  const [pwOpen, setPwOpen] = useState(false)
+  const [curPw, setCurPw] = useState('')
+  const [newPw, setNewPw] = useState('')
+  const [confirmPw, setConfirmPw] = useState('')
+  const [pwBusy, setPwBusy] = useState(false)
+
+  const submitPassword = async () => {
+    if (newPw !== confirmPw) { toast.show('הסיסמאות אינן תואמות', 'error'); return }
+    if (newPw.length < 6) { toast.show('הסיסמה החדשה חייבת להכיל לפחות 6 תווים', 'error'); return }
+    setPwBusy(true)
+    try {
+      await changeMyPassword(curPw, newPw)
+      toast.show('הסיסמה עודכנה ✓', 'success')
+      setPwOpen(false); setCurPw(''); setNewPw(''); setConfirmPw('')
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      if (msg.includes('auth/invalid-credential') || msg.includes('auth/wrong-password')) toast.show('הסיסמה הנוכחית שגויה', 'error')
+      else if (msg.includes('auth/too-many-requests')) toast.show('יותר מדי ניסיונות — נסה שוב מאוחר יותר', 'error')
+      else toast.show(msg, 'error')
+    } finally { setPwBusy(false) }
+  }
 
   // Total points = stored value (refreshed by liveSync every 2 min when a match
   // finishes) + provisional delta from any match currently in progress.
@@ -160,6 +183,32 @@ export default function Profile() {
         כללי המשחק ←
       </Link>
 
+      {/* Change password — only for email/password accounts (Google users have no password) */}
+      {hasPasswordProvider() && (
+        pwOpen ? (
+          <section className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>🔒 שינוי סיסמה</h3>
+            <input type="password" autoComplete="current-password" placeholder="סיסמה נוכחית" value={curPw} onChange={(e) => setCurPw(e.target.value)} style={pwField} />
+            <input type="password" autoComplete="new-password" placeholder="סיסמה חדשה (לפחות 6 תווים)" value={newPw} onChange={(e) => setNewPw(e.target.value)} style={pwField} />
+            <input type="password" autoComplete="new-password" placeholder="אימות סיסמה חדשה" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} style={pwField} />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn" onClick={submitPassword} disabled={pwBusy || !curPw || !newPw || !confirmPw} style={{ flex: 1, padding: '10px' }}>
+                {pwBusy ? 'שומר…' : 'עדכן סיסמה'}
+              </button>
+              <button className="btn-ghost" onClick={() => { setPwOpen(false); setCurPw(''); setNewPw(''); setConfirmPw('') }}
+                style={{ padding: '10px 14px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)' }}>
+                ביטול
+              </button>
+            </div>
+          </section>
+        ) : (
+          <button onClick={() => setPwOpen(true)} className="btn-ghost btn-block"
+            style={{ padding: '12px 16px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', textAlign: 'center', color: 'var(--color-text)' }}>
+            🔒 שינוי סיסמה
+          </button>
+        )
+      )}
+
       {isAdmin && (
         <Link
           to="/admin"
@@ -192,3 +241,14 @@ export default function Profile() {
     </div>
   )
 }
+
+const pwField = {
+  width: '100%',
+  padding: '10px 12px',
+  background: 'var(--glass-bg-hi)',
+  border: '1px solid var(--color-border-strong)',
+  borderRadius: 'var(--radius-md)',
+  color: 'var(--color-text)',
+  fontSize: 14,
+  outline: 'none'
+} as const

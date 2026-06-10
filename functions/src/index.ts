@@ -21,3 +21,4 @@ setGlobalOptions({ region: 'europe-west1' })
 export { liveSync } from './liveSync'
 export { playgroundLive } from './playgroundLive'
 export { dailyJob } from './dailyJob'
+export { adminSetPassword } from './adminSetPassword'

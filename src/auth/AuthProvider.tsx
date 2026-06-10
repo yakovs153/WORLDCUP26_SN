@@ -9,6 +9,9 @@ import {
   updateProfile,
   sendEmailVerification,
   sendPasswordResetEmail,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
   reload,
   type User
 } from 'firebase/auth'
@@ -42,6 +45,8 @@ interface AuthContextValue {
   signOut: () => Promise<void>
   resendVerification: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
+  changeMyPassword: (currentPassword: string, newPassword: string) => Promise<void>
+  hasPasswordProvider: () => boolean
   refreshUser: () => Promise<void>
 }
 
@@ -210,6 +215,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await sendPasswordResetEmail(auth, clean)
   }
 
+  // Whether the signed-in user has an email/password login (vs Google-only).
+  // Google users have no password to change in-app.
+  const hasPasswordProvider = () =>
+    !!auth.currentUser?.providerData?.some((p) => p.providerId === 'password')
+
+  // In-app password change for the signed-in user. Re-authenticates with the
+  // current password first (Firebase requires recent login to change it), then
+  // sets the new one. No email round-trip.
+  const changeMyPassword = async (currentPassword: string, newPassword: string) => {
+    if (DEMO_MODE) return
+    const u = auth.currentUser
+    if (!u || !u.email) throw new Error('לא מחובר')
+    if (newPassword.length < 6) throw new Error('הסיסמה החדשה חייבת להכיל לפחות 6 תווים')
+    const cred = EmailAuthProvider.credential(u.email, currentPassword)
+    await reauthenticateWithCredential(u, cred)
+    await updatePassword(u, newPassword)
+  }
+
   const refreshUser = async () => {
     if (DEMO_MODE) return
     if (!auth.currentUser) return
@@ -218,7 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInEmail, registerEmail, signInGoogle, signOut, resendVerification, resetPassword, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, signInEmail, registerEmail, signInGoogle, signOut, resendVerification, resetPassword, changeMyPassword, hasPasswordProvider, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )

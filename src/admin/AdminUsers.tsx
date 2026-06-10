@@ -1,6 +1,18 @@
 import { useEffect, useState } from 'react'
 import { collection, deleteDoc, doc, getDocs, onSnapshot, query, where } from 'firebase/firestore'
-import { db, DEMO_MODE } from '../firebase'
+import { db, auth, DEMO_MODE } from '../firebase'
+
+const ADMIN_SET_PASSWORD_URL = 'https://adminsetpassword-62a2xajn5a-ew.a.run.app'
+
+/** Generate a readable temp password the admin can relay (no ambiguous chars). */
+function genTempPassword(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'
+  let s = ''
+  const arr = new Uint32Array(10)
+  crypto.getRandomValues(arr)
+  for (let i = 0; i < 10; i++) s += chars[arr[i] % chars.length]
+  return s
+}
 import { useAuth } from '../auth/AuthProvider'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { patchAppConfig } from '../lib/appConfig'
@@ -56,10 +68,39 @@ export default function AdminUsers() {
     } finally { setBusy(null) }
   }
 
+  // Admin sets a user's password directly (no email). Generates a temp
+  // password, sets it via the privileged Cloud Function, and shows it to the
+  // admin to relay to the user in person / Slack.
+  const setUserPassword = async (u: UserDoc) => {
+    if (DEMO_MODE) { toast.show('איפוס סיסמה זמין רק בפרודקשן', 'info'); return }
+    if (!u.uid) return
+    if (!confirm(`להגדיר סיסמה זמנית חדשה ל${u.displayName || u.email}? הסיסמה תוצג לך כדי שתעביר אותה למשתמש.`)) return
+    setResettingUid(u.uid)
+    try {
+      const token = await auth.currentUser?.getIdToken()
+      if (!token) throw new Error('לא מחובר')
+      const tempPw = genTempPassword()
+      const res = await fetch(ADMIN_SET_PASSWORD_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ targetUid: u.uid, newPassword: tempPw })
+      })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(body.error || `שגיאה ${res.status}`)
+      logActivity('admin_password_set', { targetUid: u.uid, targetEmail: u.email || '' })
+      // Show the temp password so the admin can copy + relay it.
+      window.prompt(`הסיסמה הזמנית ל${u.displayName || u.email} (העתק ומסור למשתמש):`, tempPw)
+      toast.show('הסיסמה הוגדרה ✓ — מסור אותה למשתמש', 'success')
+    } catch (e) {
+      toast.show(e instanceof Error ? e.message : 'הגדרת סיסמה נכשלה', 'error')
+    } finally { setResettingUid(null) }
+  }
+
+  // Fallback: email reset link (kept for users who prefer it / are reachable).
   const sendReset = async (u: UserDoc) => {
     if (!u.email) { toast.show('למשתמש אין כתובת מייל', 'error'); return }
     if (DEMO_MODE) { toast.show('איפוס סיסמה זמין רק בפרודקשן', 'info'); return }
-    if (!confirm(`לשלוח קישור איפוס סיסמה אל ${u.email}?`)) return
+    if (!confirm(`לשלוח קישור איפוס סיסמה במייל אל ${u.email}?`)) return
     setResettingUid(u.uid)
     try {
       await resetPassword(u.email)
@@ -85,7 +126,9 @@ export default function AdminUsers() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <section className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>👥 ניהול משתמשים</h3>
-        <p className="text-muted" style={{ fontSize: 12 }}>מחיקת משתמש מוחקת את כל הניחושים שלו ומוסיפה את המייל לרשימת חסומים. אדמינים מסומנים ולא ניתנים למחיקה.</p>
+        <p className="text-muted" style={{ fontSize: 12 }}>
+          🔑 מגדיר סיסמה זמנית חדשה ומציג אותה לך למסירה למשתמש · ✉️ שולח קישור איפוס במייל (חלופה) · מחיקה מוחקת את כל הניחושים וחוסמת את המייל. אדמינים לא ניתנים למחיקה.
+        </p>
         <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="חיפוש לפי שם או מייל…"
           style={{ padding: '10px 12px', background: 'var(--glass-bg-hi)', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', color: 'var(--color-text)', outline: 'none', fontSize: 14 }} />
         {DEMO_MODE && <p className="text-muted" style={{ fontSize: 12 }}>(מצב דמו — אין משתמשים אמיתיים)</p>}
@@ -104,10 +147,15 @@ export default function AdminUsers() {
                   <div className="text-muted" style={{ fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email} · {u.department || 'ללא מחלקה'} · {u.totalPoints || 0} נק׳</div>
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <button onClick={() => sendReset(u)} disabled={!u.email || resettingUid === u.uid}
-                    title="שלח קישור איפוס סיסמה במייל"
+                  <button onClick={() => setUserPassword(u)} disabled={resettingUid === u.uid}
+                    title="הגדר סיסמה זמנית חדשה (מוצגת לך למסירה)"
                     className="btn-ghost" style={{ padding: '6px 10px', fontSize: 12, border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', color: 'var(--color-text)' }}>
-                    {resettingUid === u.uid ? '…' : '🔑 איפוס'}
+                    {resettingUid === u.uid ? '…' : '🔑 סיסמה'}
+                  </button>
+                  <button onClick={() => sendReset(u)} disabled={!u.email || resettingUid === u.uid}
+                    title="שלח קישור איפוס במייל (חלופה)"
+                    className="btn-ghost" style={{ padding: '6px 8px', fontSize: 12, border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', color: 'var(--color-text-muted)' }}>
+                    ✉️
                   </button>
                   <button onClick={() => remove(u)} disabled={admin || self || busy === u.uid}
                     className="btn-ghost" style={{ padding: '6px 10px', fontSize: 12, color: 'var(--color-danger)', border: '1px solid var(--color-danger)', borderRadius: 'var(--radius-md)', opacity: admin || self ? 0.4 : 1, cursor: admin || self ? 'not-allowed' : 'pointer' }}>
