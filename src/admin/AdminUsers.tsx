@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { collection, deleteDoc, doc, getDocs, onSnapshot, query, where } from 'firebase/firestore'
 import { db, auth, DEMO_MODE } from '../firebase'
 
-const ADMIN_SET_PASSWORD_URL = 'https://adminsetpassword-62a2xajn5a-ew.a.run.app'
+const ADMIN_SET_PASSWORD_URL = 'https://europe-west1-world-cup-2026-c145b.cloudfunctions.net/adminSetPassword'
 
 /** Generate a readable temp password the admin can relay (no ambiguous chars). */
 function genTempPassword(): string {
