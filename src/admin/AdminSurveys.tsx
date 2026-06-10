@@ -37,12 +37,12 @@ export default function AdminSurveys() {
   }, [])
 
   const applySuggestion = () => {
-    if (!suggestions.length) { toast.show('עדיין אין הצעות — רובי יכין כמה בבוקר', 'info'); return }
+    if (!suggestions.length) { toast.show('עדיין אין הצעות — עמוס ואביגדור יכינו כמה בבוקר', 'info'); return }
     const sug = suggestions[sIdx % suggestions.length]
     setSIdx((i) => i + 1)
     if (!title.trim()) setTitle('סקר מונדיאל 2026')
     setQuestions([{ id: rid(), text: sug.title, options: sug.options.length >= 2 ? [...sug.options] : [...sug.options, ''] }])
-    toast.show('הצעה מרובי נטענה ✨', 'success')
+    toast.show('הצעה מעמוס ואביגדור נטענה ✨', 'success')
   }
 
   const reset = () => {
@@ -93,7 +93,7 @@ export default function AdminSurveys() {
 
             <button type="button" onClick={applySuggestion} className="btn-ghost"
               style={{ alignSelf: 'flex-start', padding: '6px 12px', fontSize: 12, border: '1px dashed var(--color-primary)', borderRadius: 'var(--radius-md)', color: 'var(--color-primary)' }}>
-              ✨ הצע שאלה (רובי האנליסט)
+              ✨ הצע שאלה (עמוס ואביגדור)
             </button>
 
             {questions.map((q, qi) => (

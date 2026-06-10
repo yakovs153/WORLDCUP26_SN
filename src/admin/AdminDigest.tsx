@@ -90,7 +90,7 @@ function buildDigest({
   const topLines = all.map((e, i) => {
     const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`
     const isTom = e.uid === OCTOPUS_UID
-    return `${medal} ${e.displayName}${isTom ? ' 🤖' : ''} — ${e.totalPoints} נק׳`
+    return `${medal} ${e.displayName}${isTom ? ' 🎲' : ''} — ${e.totalPoints} נק׳`
   })
 
   // Today's matches
@@ -121,7 +121,7 @@ function buildDigest({
   }
 
   if (pundit.text) {
-    lines.push(`🤖 *${OCTOPUS_NAME} אומר:*`)
+    lines.push(`🎲 *${OCTOPUS_NAME} אומרים:*`)
     lines.push(pundit.text)
     lines.push('')
   }

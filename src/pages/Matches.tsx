@@ -86,7 +86,7 @@ export default function Matches() {
               if (unpredicted.today > 0) parts.push(`היום ${unpredicted.today}`)
               if (unpredicted.tomorrow > 0) parts.push(`מחר ${unpredicted.tomorrow}`)
               if (unpredicted.later > 0) parts.push(`מחרתיים ${unpredicted.later}`)
-              return `${parts.join(' · ')} — אל תיתן לרובי לנחש במקומך!`
+              return `${parts.join(' · ')} — אל תיתנו לעמוס ואביגדור לנחש במקומכם!`
             })()}
           </div>
         </div>

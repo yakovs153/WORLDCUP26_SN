@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import CubeMark from './CubeMark'
 
-/** Path to the mascot illustration. Drop the PNG at public/octopus.png and it
- * is used automatically everywhere; until then we fall back to a cube+🐙 mark. */
-export const OCTOPUS_IMG = '/octopus.png'
+/** Path to the analyst mascot. Drop the image at public/amos-avigdor.png and
+ * it's used automatically everywhere; until then we fall back to a cube+🤖 mark. */
+export const OCTOPUS_IMG = '/amos-avigdor.png'
 
 /**
- * Avatar for "רובי האנליסט" — the StoreNext AI analyst. Renders the illustration
+ * Avatar for "עמוס ואביגדור" — the StoreNext AI analysts. Renders their photo
  * when available, otherwise a CSS/emoji (🤖 + cube) fallback.
  */
 export default function OctopusMark({ size = 56, crowned = false }: { size?: number; crowned?: boolean }) {
@@ -34,14 +34,14 @@ export default function OctopusMark({ size = 56, crowned = false }: { size?: num
           <span style={{ position: 'absolute', opacity: 0.55, transform: 'translateY(2px)' }}>
             <CubeMark size={Math.round(size * 0.46)} />
           </span>
-          <span style={{ position: 'relative', fontSize: size * 0.62, lineHeight: 1, filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.4))' }}>🤖</span>
+          <span style={{ position: 'relative', fontSize: size * 0.62, lineHeight: 1, filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.4))' }}>🎲</span>
         </>
       ) : (
         <img
           src={OCTOPUS_IMG}
-          alt="התמנון"
+          alt="עמוס ואביגדור"
           onError={() => setBroken(true)}
-          style={{ width: '118%', height: '118%', objectFit: 'cover', objectPosition: '50% 38%' }}
+          style={{ width: '118%', height: '118%', objectFit: 'cover', objectPosition: '50% 40%' }}
         />
       )}
       {crowned && (

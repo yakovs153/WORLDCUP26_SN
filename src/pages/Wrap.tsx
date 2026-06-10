@@ -8,14 +8,15 @@ import { useLeaderboard } from '../hooks/useLeaderboard'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { scorePredictionForStage } from '../lib/scoring'
 import { tomPick, OCTOPUS_NAME } from '../lib/octopus'
+import OctopusMark from '../components/OctopusMark'
 
 // Preview lines shown before the tournament starts (or before Tom has data to coach on).
 // Once finished matches exist, the daily job replaces this with a real, personalized line.
 const PREVIEW_LINES = [
-  'עוד אין נתונים אמיתיים לאמן עליהם — אבל ברגע שהמשחקים יתחילו, הנה תקבל טיפ אישי על סמך הניחושים שלך.',
-  'אחרי שלושה משחקים אקח את הסטטיסטיקה שלך ואגיד לך איפה אתה מרוויח נקודות ואיפה אתה מאבד.',
-  'תכניס ניחושים מגוונים — אם תמיד תנחש 1-0, אני ארדוף אותך עם הנתונים אחרי המשחק הראשון.',
-  'אני אנליסט AI, לא חשבונאי. בקרוב אגיד לך בדיוק כמה נקודות הפסדת בגלל ניחושי תיקו זהירים מדי.'
+  'עוד אין נתונים אמיתיים לאמן עליהם — אבל ברגע שהמשחקים יתחילו, נגיש לך טיפ אישי על סמך הניחושים שלך.',
+  'אחרי שלושה משחקים ניקח את הסטטיסטיקה שלך ונגיד לך איפה אתה מרוויח נקודות ואיפה אתה מאבד.',
+  'תכניס ניחושים מגוונים — אם תמיד תנחש 1-0, נרדוף אותך עם הנתונים אחרי המשחק הראשון.',
+  'אנחנו מהמרים, לא נביאים. בקרוב נגיד לך בדיוק כמה נקודות הפסדת בגלל ניחושי תיקו זהירים מדי.'
 ]
 
 /** "סיכום העונה" — a per-user season review (best call, vs-Tom, rank). */
@@ -58,10 +59,10 @@ export default function Wrap() {
 
       {/* AI coach card — always visible (real line if available, else a preview) */}
       <div className="card" style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: 'linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-elevated)), var(--color-bg-elevated))' }}>
-        <span style={{ fontSize: 22 }}>🤖</span>
+        <OctopusMark size={28} />
         <div>
           <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>
-            רובי האנליסט · אימון אישי{!userDoc?.coach?.text && ' · תצוגה מקדימה'}
+            עמוס ואביגדור · אימון אישי{!userDoc?.coach?.text && ' · תצוגה מקדימה'}
           </div>
           <div style={{ fontWeight: 600, fontSize: 14, lineHeight: 1.6 }}>
             {userDoc?.coach?.text || PREVIEW_LINES[(user?.uid || 'a').charCodeAt(0) % PREVIEW_LINES.length]}
@@ -73,7 +74,7 @@ export default function Wrap() {
         <div className="card" style={{ textAlign: 'center', padding: 28 }}>
           <div style={{ fontSize: 40, marginBottom: 8 }}>⏳</div>
           <h3>הסיכום ייבנה תוך כדי הטורניר</h3>
-          <p className="text-muted" style={{ marginTop: 8, fontSize: 13 }}>חזור לכאן אחרי שיתחילו המשחקים. סטטיסטיקות, "אתה מול רובי" וטיפים אישיים יופיעו כאן.</p>
+          <p className="text-muted" style={{ marginTop: 8, fontSize: 13 }}>חזור לכאן אחרי שיתחילו המשחקים. סטטיסטיקות, "אתה מול עמוס ואביגדור" וטיפים אישיים יופיעו כאן.</p>
         </div>
       ) : (
         <>
@@ -93,10 +94,10 @@ export default function Wrap() {
           )}
 
           <div className="card" style={{ textAlign: 'center', border: `1px solid ${beatTom ? 'var(--color-primary)' : 'var(--color-danger)'}` }}>
-            <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>🤖 אתה מול {OCTOPUS_NAME}</div>
+            <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>🎲 אתה מול {OCTOPUS_NAME}</div>
             <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, marginTop: 6 }}>{stats.myPts} : {stats.tomPts}</div>
             <div style={{ marginTop: 6, fontWeight: 800, color: beatTom ? 'var(--color-primary)' : 'var(--color-danger)' }}>
-              {beatTom ? '🎉 ניצחת את ה-AI!' : 'רובי מוביל — עוד יש זמן לעקוף!'}
+              {beatTom ? '🎉 ניצחת את ה-AI!' : 'עמוס ואביגדור מובילים — עוד יש זמן לעקוף!'}
             </div>
           </div>
         </>

@@ -3,7 +3,7 @@ import strength from '../data/teamStrength.json'
 import type { Match, ScoringConfig, LeaderboardEntry } from '../types'
 
 export const OCTOPUS_UID = 'octopus'        // internal id (kept stable)
-export const OCTOPUS_NAME = 'רובי האנליסט'   // display name — the AI analyst (formerly "טום")
+export const OCTOPUS_NAME = 'עמוס ואביגדור'   // display name — the AI analysts (formerly "טום"/"רובי")
 export const AUTO_FACTOR = 0.5              // forgot to predict? Tom's pick scores 50%
 
 export type AnalystOverrides = Record<string, [number, number]>
@@ -85,7 +85,7 @@ export function octopusEntry(matches: Match[], scoring: ScoringConfig, _stageMul
     displayName: OCTOPUS_NAME,
     email: '',
     photoURL: null,
-    department: '🤖 אנליסט AI',
+    department: '🎲 מהמרים',
     totalPoints: total,
     predictionsCount: count,
     joinedAt: { toDate: () => new Date() } as never,

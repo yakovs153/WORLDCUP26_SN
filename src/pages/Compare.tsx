@@ -124,7 +124,7 @@ export default function Compare() {
       <div className="card" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', textAlign: 'center', gap: 6, padding: 'var(--space-3)' }}>
         <Stat label="פער" value={Math.abs(myTotal - otherTotal)} highlight />
         <Stat label="ניצחונות שלך" value={tally.myWins} />
-        <Stat label={isOtherTom ? 'ניצחונות רובי' : 'ניצחונות שלו/ה'} value={tally.theirWins} />
+        <Stat label={isOtherTom ? 'ניצחונות עמוס ואביגדור' : 'ניצחונות שלו/ה'} value={tally.theirWins} />
       </div>
 
       {/* Bonus side-by-side (hidden until tournament starts; not applicable for Tom) */}
@@ -297,7 +297,7 @@ function PredCell({ label, pred, highlight, points, align = 'start' }: { label: 
       {pred ? (
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, justifyContent: align === 'end' ? 'flex-end' : 'flex-start' }}>
           <span style={{ fontFamily: 'var(--font-display)', fontSize: 18 }}>{pred.homeScore} - {pred.awayScore}</span>
-          {pred.auto && <span style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>🤖</span>}
+          {pred.auto && <span style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>🎲</span>}
           {points !== null && <span style={{ fontSize: 12, fontWeight: 800, color: points > 0 ? 'var(--color-primary)' : 'var(--color-text-muted)' }}>{points} נק׳</span>}
         </div>
       ) : (

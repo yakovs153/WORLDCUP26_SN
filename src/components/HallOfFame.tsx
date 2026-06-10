@@ -19,7 +19,7 @@ export default function HallOfFame() {
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 13 }}>{r.title} · {a.name}</div>
               <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{a.detail}</div>
-              {a.blurb && <div style={{ fontSize: 11, fontStyle: 'italic', color: 'var(--color-accent)', marginTop: 2 }}>🤖 {a.blurb}</div>}
+              {a.blurb && <div style={{ fontSize: 11, fontStyle: 'italic', color: 'var(--color-accent)', marginTop: 2 }}>🎲 {a.blurb}</div>}
             </div>
           </div>
         )

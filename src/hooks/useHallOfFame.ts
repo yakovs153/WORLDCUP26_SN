@@ -14,7 +14,7 @@ const DEMO_HOF: HallOfFame = {
   prophet: { name: 'עידן', detail: '3 תוצאות בול', blurb: 'יש לו כדור בדולח, או שהוא פשוט טוב מדי 🔮' },
   optimist: { name: 'טל', detail: 'ניחש בממוצע 4.2 שערים למשחק', blurb: 'מאמין שכל משחק נגמר 5-4' },
   draw: { name: 'שרון', detail: '5 ניחושי תיקו', blurb: 'אוהב לשבת על הגדר' },
-  disaster: { name: 'יעל', detail: '0 נק׳ מ-4 משחקים', blurb: 'אפילו רובי האנליסט מרחם' }
+  disaster: { name: 'יעל', detail: '0 נק׳ מ-4 משחקים', blurb: 'אפילו עמוס ואביגדור מרחמים' }
 }
 
 export function useHallOfFame(): HallOfFame {

@@ -148,13 +148,13 @@ async function runDaily(geminiKey: string) {
     const summary = `מובילים: ${standings}. חי כעת: ${live}. הסתיימו היום: ${finishedToday}. צפויים היום: ${todayFixtures.length}.`
 
     const recap = await geminiCall(geminiKey, GMODEL,
-      `אתה "רובי האנליסט", אנליסט כדורגל מבוסס-AI של StoreNext — חד, מדויק, שנון וקליל. ` +
+      `אתה "עמוס ואביגדור", צמד אנליסטים כדורגל מבוסס-AI של StoreNext — חד, מדויק, שנון וקליל, מדבר בלשון רבים. ` +
       `כתוב "מבזק יומי" בעברית: 2–3 שורות קצרות, כל שורה מתחילה באימוג'י, מתייחס למוביל, עוקץ קלות את המפגרים ומה שמעניין היום. ` +
       `בלי האשטגים/מרכאות, עד 300 תווים.\nנתונים: ${summary}`, { maxTokens: 220 })
     let preview: string | null = null
     if (todayFixtures.length) {
       preview = await geminiCall(geminiKey, GMODEL,
-        `אתה רובי האנליסט. מבין משחקי היום: ${todayFixtures.join(', ')}. ` +
+        `אתה עמוס ואביגדור (צמד אנליסטים, לשון רבים). מבין משחקי היום: ${todayFixtures.join(', ')}. ` +
         `בחר את המשחק הכי מסקרן וכתוב משפט הייפ אחד קצר בעברית (עד 120 תווים), בלי מרכאות.`, { maxTokens: 80 })
     }
     await db.collection('appState').doc('pundit').set({ text: recap || '', preview: preview || '', updatedAt: Timestamp.now() }, { merge: true })
@@ -178,7 +178,7 @@ async function runDaily(geminiKey: string) {
     for (const [uid, a] of coachable) {
       const cSummary = `דיוק: ${a.exact} תוצאות בול, ${a.points} נק' מ-${a.predCount} משחקים, ${a.draws} ניחושי תיקו, ממוצע ${(a.predGoals / Math.max(1, a.predCount)).toFixed(1)} שערים למשחק`
       const text = await geminiCall(geminiKey, GMODEL,
-        `אתה "רובי האנליסט". כתוב משפט אחד בעברית (עד 140 תווים), עוקצני אך מועיל, עם טיפ קונקרטי אחד, לשחקן לפי הנתונים. בלי מרכאות.\n${cSummary}`,
+        `אתה "עמוס ואביגדור" (צמד אנליסטים, לשון רבים). כתוב משפט אחד בעברית (עד 140 תווים), עוקצני אך מועיל, עם טיפ קונקרטי אחד, לשחקן לפי הנתונים. בלי מרכאות.\n${cSummary}`,
         { maxTokens: 90 })
       if (text) { await db.collection('users').doc(uid).set({ coach: { text } }, { merge: true }); coachWritten++ }
     }

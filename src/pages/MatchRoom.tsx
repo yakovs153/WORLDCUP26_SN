@@ -13,6 +13,7 @@ import { useAppConfig } from '../hooks/useAppConfig'
 import { tomPick } from '../lib/octopus'
 import { venueFor } from '../lib/wcVenues'
 import MatchPreview from '../components/MatchPreview'
+import OctopusMark from '../components/OctopusMark'
 import type { Prediction, UserDoc } from '../types'
 
 interface PeerPred { name: string; home: number; away: number; auto: boolean }
@@ -21,7 +22,7 @@ const DEMO_PEERS: PeerPred[] = [
   { name: 'רונן ל.', home: 2, away: 1, auto: false },
   { name: 'שרון ק.', home: 1, away: 1, auto: false },
   { name: 'עמית ב.', home: 0, away: 2, auto: false },
-  { name: 'רובי האנליסט', home: 2, away: 0, auto: true }
+  { name: 'עמוס ואביגדור', home: 2, away: 0, auto: true }
 ]
 
 const REACTIONS = ['🔥', '⚽', '😱', '🎉', '👏', '😂', '💪', '😭']
@@ -117,7 +118,7 @@ export default function MatchRoom() {
       {match && (
         <div className="glass" style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, flexWrap: 'wrap' }}>
-            {tom && <span style={{ fontWeight: 700 }}>🤖 רובי מנחש: {tom[0]}–{tom[1]}</span>}
+            {tom && <span style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 5 }}><OctopusMark size={18} /> עמוס ואביגדור מנחשים: {tom[0]}–{tom[1]}</span>}
             {consensus && <span className="text-muted">· הכי נפוץ בקרב המשתתפים: {consensus[0]} ({consensus[1]})</span>}
           </div>
           {match.scorers && match.scorers.length > 0 && (
@@ -144,7 +145,7 @@ export default function MatchRoom() {
           <div style={{ marginTop: 8, maxHeight: 160, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
             {peers.map((p, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '3px 0' }}>
-                <span>{p.auto ? '🤖 ' : ''}{p.name}</span>
+                <span>{p.auto ? '🎲 ' : ''}{p.name}</span>
                 <b>{p.home}–{p.away}</b>
               </div>
             ))}

@@ -9,9 +9,9 @@ import { tomPick } from '../lib/octopus'
 import { useToast } from '../components/Toast'
 
 const TOGGLES: { key: 'pundit' | 'leaderPerk' | 'analystAutofill' | 'requireEmailVerification'; label: string; desc: string }[] = [
-  { key: 'pundit', label: '🤖 מבזק רובי האנליסט', desc: 'כרטיס ה-AI היומי במסך הבית' },
+  { key: 'pundit', label: '🤖 מבזק עמוס ואביגדור', desc: 'כרטיס ה-AI היומי במסך הבית' },
   { key: 'leaderPerk', label: '👑 הטבת המוביל', desc: 'באנר המלך + רמקול להודעה לכולם' },
-  { key: 'analystAutofill', label: '🧠 מילוי אוטומטי ע״י רובי', desc: 'מי ששכח לנחש מקבל את ניחוש ה-AI (50% מהנקודות)' },
+  { key: 'analystAutofill', label: '🧠 מילוי אוטומטי ע״י עמוס ואביגדור', desc: 'מי ששכח לנחש מקבל את ניחוש ה-AI (50% מהנקודות)' },
   { key: 'requireEmailVerification', label: '📧 חובת אימות מייל בהרשמה', desc: 'חוסם גישה עד שהמשתמש לוחץ על קישור האימות במייל שנשלח אליו' }
 ]
 
@@ -40,7 +40,7 @@ export default function AdminFeatures() {
   const clearPick = (id: string) => setOv((p) => { const { [id]: _drop, ...rest } = p; return rest })
   const saveOv = async () => {
     setSavingOv(true)
-    try { await patchAppConfig({ analystOverrides: ov }); toast.show('עקיפות רובי נשמרו ✓', 'success') }
+    try { await patchAppConfig({ analystOverrides: ov }); toast.show('עקיפות עמוס ואביגדור נשמרו ✓', 'success') }
     catch (e) { toast.show(e instanceof Error ? e.message : 'שמירה נכשלה', 'error') }
     finally { setSavingOv(false) }
   }
@@ -102,7 +102,7 @@ export default function AdminFeatures() {
 
       {/* Trigger Tom's daily run on demand (real Gemini call) */}
       <section className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>✨ הרץ את רובי עכשיו</h3>
+        <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>✨ הרץ את עמוס ואביגדור עכשיו</h3>
         <p className="text-muted" style={{ fontSize: 12 }}>
           רוצה לראות את שולחן הפרשנים, האימון האישי וההצעות לסקרים מבלי לחכות לבוקר? פתח את ה-Action ולחץ "Run workflow".
         </p>
@@ -114,8 +114,8 @@ export default function AdminFeatures() {
 
       {/* Override Tom's daily recap */}
       <section className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>🤖 מבזק רובי (עקיפה ידנית)</h3>
-        <p className="text-muted" style={{ fontSize: 12 }}>הטקסט שמוצג כרגע במסך הבית. רובי מעדכן אותו אוטומטית כל בוקר; כאן אפשר לערוך או לנקות ידנית.</p>
+        <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>🤖 מבזק עמוס ואביגדור (עקיפה ידנית)</h3>
+        <p className="text-muted" style={{ fontSize: 12 }}>הטקסט שמוצג כרגע במסך הבית. עמוס ואביגדור מעדכנים אותו אוטומטית כל בוקר; כאן אפשר לערוך או לנקות ידנית.</p>
         <textarea rows={4} value={pundit} onChange={(e) => setPundit(e.target.value)} placeholder={DEMO_MODE ? '(זמין בפרודקשן)' : 'טקסט המבזק…'} style={fld} />
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn" onClick={savePundit} disabled={savingPundit} style={{ flex: 1 }}>{savingPundit ? 'שומר…' : 'עדכון מבזק'}</button>
@@ -134,8 +134,8 @@ export default function AdminFeatures() {
 
       {/* Tom's pick override (ahead of kickoff) */}
       <section className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>🤖 עקיפת ניחושי רובי</h3>
-        <p className="text-muted" style={{ fontSize: 12 }}>רובי מנחש את הפייבוריט אוטומטית. כאן אפשר לעקוף ידנית ניחוש למשחק מסוים (לפני פתיחתו). ריק = ניחוש אוטומטי.</p>
+        <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>🤖 עקיפת ניחושי עמוס ואביגדור</h3>
+        <p className="text-muted" style={{ fontSize: 12 }}>עמוס ואביגדור מנחשים את הפייבוריט אוטומטית. כאן אפשר לעקוף ידנית ניחוש למשחק מסוים (לפני פתיחתו). ריק = ניחוש אוטומטי.</p>
         <div style={{ maxHeight: 320, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
           {scheduled.map((m) => {
             const [ah, aa] = tomPick(m.homeTeam.code, m.awayTeam.code, m.id)

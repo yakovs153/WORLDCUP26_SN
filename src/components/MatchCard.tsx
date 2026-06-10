@@ -13,6 +13,7 @@ import { useAppConfig } from '../hooks/useAppConfig'
 import { ringColors } from '../lib/players'
 import { fireConfetti } from '../lib/confetti'
 import { tomPick, AUTO_FACTOR } from '../lib/octopus'
+import OctopusMark from './OctopusMark'
 
 interface Props {
   match: Match
@@ -187,7 +188,7 @@ export default function MatchCard({ match, prediction, uid }: Props) {
 
         {locked && prediction?.auto && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-muted)' }}>
-            🤖 רובי האנליסט ניחש בשבילך · 50% מהנקודות
+            <OctopusMark size={18} /> עמוס ואביגדור ניחשו בשבילך · 50% מהנקודות
           </div>
         )}
 
@@ -198,7 +199,7 @@ export default function MatchCard({ match, prediction, uid }: Props) {
             <>
               <ResultBadge myHome={oh} myAway={oa} points={octoPts} isLive={match.status === 'LIVE'} />
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-muted)' }}>
-                🤖 שכחת לנחש — רובי האנליסט ניחש בשבילך · 50% מהנקודות
+                <OctopusMark size={18} /> שכחת לנחש — עמוס ואביגדור ניחשו בשבילך · 50% מהנקודות
               </div>
             </>
           )
