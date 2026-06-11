@@ -6,6 +6,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useUserDoc } from '../hooks/useUserDoc'
 import { useBonus } from '../hooks/useBonus'
 import { usePredictions } from '../hooks/usePredictions'
+import { useLivePoints } from '../hooks/useLivePoints'
 import { useMatches } from '../hooks/useMatches'
 import { useAppConfig } from '../hooks/useAppConfig'
 import FlagIcon from '../components/FlagIcon'
@@ -33,6 +34,11 @@ export default function Compare() {
   const myUid = user?.uid ?? null
   const isOtherTom = otherUid === OCTOPUS_UID
   const otherUidRef = isOtherTom ? null : otherUid
+
+  // Live provisional points from in-play matches — so the head-to-head total
+  // matches the leaderboard during a live game (not the stale stored total).
+  const liveUids = useMemo(() => [myUid, otherUidRef].filter(Boolean) as string[], [myUid, otherUidRef])
+  const liveDelta = useLivePoints(matches, cfg.scoring, liveUids, cfg.analystOverrides)
 
   const { data: myDoc } = useUserDoc(myUid)
   const { data: otherDoc } = useUserDoc(otherUidRef)
@@ -105,8 +111,8 @@ export default function Compare() {
 
   const otherName = isOtherTom ? OCTOPUS_NAME : (otherDoc?.displayName || 'משתמש')
   const otherPhoto = isOtherTom ? null : otherDoc?.photoURL || null
-  const otherTotal = isOtherTom ? tomTotal : (otherDoc?.totalPoints ?? 0)
-  const myTotal = myDoc?.totalPoints ?? 0
+  const otherTotal = isOtherTom ? tomTotal : ((otherDoc?.totalPoints ?? 0) + (otherUidRef ? (liveDelta.get(otherUidRef) || 0) : 0))
+  const myTotal = (myDoc?.totalPoints ?? 0) + (myUid ? (liveDelta.get(myUid) || 0) : 0)
   const ahead = myTotal === otherTotal ? null : myTotal > otherTotal ? 'me' : 'them'
 
   return (
