@@ -59,6 +59,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ===== Match previews (ESPN form / H2H / news) — written by matchPreview fn =====
+    match /matchPreviews/{matchId} {
+      allow read: if true;   // public, read-only context for the match room
+      allow write: if false; // admin SDK only (bypasses rules)
+    }
+
     // ===== Playground (live-pipeline test) — written by the playground scripts only =====
     match /playgroundSnapshot/{docId} {
       allow read: if true;
