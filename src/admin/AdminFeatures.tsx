@@ -25,6 +25,7 @@ export default function AdminFeatures() {
   const [tipsEnabled, setTipsEnabled] = useState(cfg.tipsEnabled)
   const [savingFlags, setSavingFlags] = useState(false)
   const [pundit, setPundit] = useState('')
+  const [punditPreview, setPunditPreview] = useState('')
   const [savingPundit, setSavingPundit] = useState(false)
   const [ov, setOv] = useState<Record<string, [number, number]>>(cfg.analystOverrides)
   const [savingOv, setSavingOv] = useState(false)
@@ -46,7 +47,10 @@ export default function AdminFeatures() {
   }
   useEffect(() => {
     if (DEMO_MODE) return
-    return onSnapshot(doc(db, 'appState', 'pundit'), (s) => setPundit((s.data()?.text as string) || ''))
+    return onSnapshot(doc(db, 'appState', 'pundit'), (s) => {
+      setPundit((s.data()?.text as string) || '')
+      setPunditPreview((s.data()?.preview as string) || '')
+    })
   }, [])
 
   const flagsDirty = JSON.stringify(flags) !== JSON.stringify(cfg.features) || tipsEnabled !== cfg.tipsEnabled
@@ -61,7 +65,7 @@ export default function AdminFeatures() {
   const savePundit = async () => {
     if (DEMO_MODE) { toast.show('עריכת מבזק זמינה בפרודקשן', 'info'); return }
     setSavingPundit(true)
-    try { await setDoc(doc(db, 'appState', 'pundit'), { text: pundit.trim(), updatedAt: serverTimestamp() }); toast.show('המבזק עודכן ✓', 'success') }
+    try { await setDoc(doc(db, 'appState', 'pundit'), { text: pundit.trim(), preview: punditPreview.trim(), updatedAt: serverTimestamp() }, { merge: true }); toast.show('המבזק עודכן ✓', 'success') }
     catch (e) { toast.show(e instanceof Error ? e.message : 'שמירה נכשלה', 'error') }
     finally { setSavingPundit(false) }
   }
@@ -116,10 +120,13 @@ export default function AdminFeatures() {
       <section className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>🤖 מבזק עמוס ואביגדור (עקיפה ידנית)</h3>
         <p className="text-muted" style={{ fontSize: 12 }}>הטקסט שמוצג כרגע במסך הבית. עמוס ואביגדור מעדכנים אותו אוטומטית כל בוקר; כאן אפשר לערוך או לנקות ידנית.</p>
+        <label style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>מבזק יומי (2–3 שורות)</label>
         <textarea rows={4} value={pundit} onChange={(e) => setPundit(e.target.value)} placeholder={DEMO_MODE ? '(זמין בפרודקשן)' : 'טקסט המבזק…'} style={fld} />
+        <label style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700, marginTop: 4 }}>🔮 תחזית היום (שורה אחת)</label>
+        <textarea rows={2} value={punditPreview} onChange={(e) => setPunditPreview(e.target.value)} placeholder={DEMO_MODE ? '(זמין בפרודקשן)' : 'משפט תחזית למשחק היום…'} style={fld} />
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn" onClick={savePundit} disabled={savingPundit} style={{ flex: 1 }}>{savingPundit ? 'שומר…' : 'עדכון מבזק'}</button>
-          <button onClick={() => setPundit('')} className="btn-ghost" style={{ padding: '10px 14px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)' }}>נקה</button>
+          <button onClick={() => { setPundit(''); setPunditPreview('') }} className="btn-ghost" style={{ padding: '10px 14px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)' }}>נקה</button>
         </div>
       </section>
 
