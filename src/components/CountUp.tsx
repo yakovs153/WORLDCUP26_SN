@@ -13,7 +13,9 @@ export function useCountUp(target: number, duration = 650): number {
     const step = (now: number) => {
       const t = Math.min(1, (now - start) / duration)
       const eased = 1 - Math.pow(1 - t, 3)
-      setVal(Math.round(from + (target - from) * eased))
+      // Round to int while animating (smooth count-up), but settle on the exact
+      // target so half-points (e.g. 7.5 from auto-fills) survive.
+      setVal(t < 1 ? Math.round(from + (target - from) * eased) : target)
       if (t < 1) rafRef.current = requestAnimationFrame(step)
       else fromRef.current = target
     }
@@ -24,7 +26,10 @@ export function useCountUp(target: number, duration = 650): number {
   return val
 }
 
+/** Format points: whole numbers plain, halves with one decimal (7 → "7", 7.5 → "7.5"). */
+export const fmtPoints = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1))
+
 /** Inline animated number. */
 export default function CountUp({ value }: { value: number }) {
-  return <>{useCountUp(value)}</>
+  return <>{fmtPoints(useCountUp(value))}</>
 }

@@ -39,7 +39,7 @@ export function useLivePoints(matches: Match[], scoring: ScoringConfig, uids: st
         const pa = p ? p.awayScore : oa
         const isAuto = !p || p.auto // Tom filled it (live) or it was auto-filled
         const base = scorePredictionForStage(ph, pa, m.homeScore, m.awayScore, m.stage, scoring)
-        delta.set(uid, (delta.get(uid) || 0) + Math.round(base * (isAuto ? AUTO_FACTOR : 1)))
+        delta.set(uid, (delta.get(uid) || 0) + base * (isAuto ? AUTO_FACTOR : 1))
       }
     }
     return delta

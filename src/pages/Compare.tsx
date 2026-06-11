@@ -249,7 +249,7 @@ function pointsFor(pred: Prediction | { homeScore: number; awayScore: number; au
   // Cached points on the doc win when present.
   if ('points' in pred && typeof pred.points === 'number') return pred.points
   const base = scorePredictionForStage(pred.homeScore, pred.awayScore, m.homeScore, m.awayScore, m.stage, cfg.scoring)
-  return Math.round(base * (pred.auto ? AUTO_FACTOR : 1))
+  return base * (pred.auto ? AUTO_FACTOR : 1)
 }
 
 function MatchCompareRow({ match, mine, theirs, cfg }: { match: Match; mine?: Prediction; theirs?: Prediction | { homeScore: number; awayScore: number; auto?: boolean }; cfg: Cfg }) {

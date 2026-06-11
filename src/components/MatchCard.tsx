@@ -78,7 +78,7 @@ export default function MatchCard({ match, prediction, uid }: Props) {
   const scoreKnown = match.homeScore !== null && match.awayScore !== null
   const potential =
     prediction && scoreKnown
-      ? prediction.points ?? Math.round(scorePredictionForStage(prediction.homeScore, prediction.awayScore, match.homeScore!, match.awayScore!, match.stage, cfg.scoring) * (prediction.auto ? AUTO_FACTOR : 1))
+      ? prediction.points ?? (scorePredictionForStage(prediction.homeScore, prediction.awayScore, match.homeScore!, match.awayScore!, match.stage, cfg.scoring) * (prediction.auto ? AUTO_FACTOR : 1))
       : null
 
   // Confetti once when a finished match rewards the user.
@@ -194,7 +194,7 @@ export default function MatchCard({ match, prediction, uid }: Props) {
 
         {locked && !prediction && (() => {
           const [oh, oa] = tomPick(match.homeTeam.code, match.awayTeam.code, match.id, cfg.analystOverrides)
-          const octoPts = scoreKnown ? Math.round(scorePredictionForStage(oh, oa, match.homeScore!, match.awayScore!, match.stage, cfg.scoring) * AUTO_FACTOR) : null
+          const octoPts = scoreKnown ? (scorePredictionForStage(oh, oa, match.homeScore!, match.awayScore!, match.stage, cfg.scoring) * AUTO_FACTOR) : null
           return (
             <>
               <ResultBadge myHome={oh} myAway={oa} points={octoPts} isLive={match.status === 'LIVE'} />

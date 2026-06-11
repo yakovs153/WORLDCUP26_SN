@@ -304,7 +304,7 @@ async function runSync(token: string) {
         const p = d.data()
         if (p.points !== null && p.points !== undefined) continue
         let pts = scorePrediction(p.homeScore, p.awayScore, fm.h, fm.a, fm.stage, scoringCfg)
-        if (p.auto) pts = Math.round(pts * 0.5)
+        if (p.auto) pts = pts * 0.5 // auto-fill scores 50% — kept fractional (e.g. 1.5)
         tx.update(d.ref, { points: pts })
         userDelta.set(p.uid, (userDelta.get(p.uid) || 0) + pts)
       }
