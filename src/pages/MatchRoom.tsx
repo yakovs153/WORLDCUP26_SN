@@ -85,7 +85,16 @@ export default function MatchRoom() {
         <div className="glass" style={{ padding: '12px 16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700, marginBottom: 8 }}>
             <span>{stageLabel(match.stage, match.group)}</span>
-            {match.status === 'SCHEDULED' ? <span>{formatTimeHe(match.kickoff.toDate())}</span> : <LiveBadge status={match.status} />}
+            {match.status === 'SCHEDULED' ? (
+              <span>{formatTimeHe(match.kickoff.toDate())}</span>
+            ) : (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                {match.status === 'LIVE' && match.minute != null && (
+                  <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>{match.minute}'</span>
+                )}
+                <LiveBadge status={match.status} />
+              </span>
+            )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
             <Side name={match.homeTeam.name} code={match.homeTeam.code} flag={match.homeTeam.flag} />

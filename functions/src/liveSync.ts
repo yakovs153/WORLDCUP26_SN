@@ -150,6 +150,40 @@ async function runSync(token: string) {
     }
   }
 
+  // ===== ESPN live overlay =====
+  // football-data's FREE tier lags badly on in-play status/score/minute, so we
+  // overlay ESPN's free scoreboard (no key) for anything it reports as live or
+  // finished. ESPN abbreviations match our TLAs (CUR↔CUW aliased). Keyed by the
+  // sorted team-code pair. Only used when there's no manual override.
+  type EspnLive = { state: 'pre' | 'in' | 'post'; bySideCode: Record<string, number | null>; minute: number | null }
+  const espnByPair = new Map<string, EspnLive>()
+  const espnCodeAlias: Record<string, string> = { CUR: 'CUW' }
+  const espnNorm = (c: string | undefined | null) => { const u = (c || '').toUpperCase(); return espnCodeAlias[u] || u }
+  try {
+    const nowMsE = Date.now(), DAYM = 86_400_000
+    const ymdE = (ms: number) => new Date(ms).toLocaleDateString('en-CA', { timeZone: 'America/New_York' }).replace(/-/g, '')
+    const datesE = [...new Set([-1, 0, 1].map((off) => ymdE(nowMsE + off * DAYM)))]
+    for (const date of datesE) {
+      const er = await fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${date}`)
+      if (!er.ok) continue
+      const edata = await er.json() as { events?: Array<{ competitions?: Array<{ competitors?: Array<{ homeAway?: string; score?: string; team?: { abbreviation?: string } }>; status?: { type?: { state?: string }; displayClock?: string } }> }> }
+      for (const ev of edata.events || []) {
+        const comp = ev.competitions?.[0]
+        const cs = comp?.competitors || []
+        if (cs.length !== 2) continue
+        const a = espnNorm(cs[0].team?.abbreviation), b = espnNorm(cs[1].team?.abbreviation)
+        if (!a || !b) continue
+        const state = (comp?.status?.type?.state as 'pre' | 'in' | 'post') || 'pre'
+        const min = parseInt(String(comp?.status?.displayClock || '').replace(/[^0-9]/g, ''), 10)
+        espnByPair.set([a, b].sort().join('_'), {
+          state,
+          bySideCode: { [a]: cs[0].score != null ? Number(cs[0].score) : null, [b]: cs[1].score != null ? Number(cs[1].score) : null },
+          minute: Number.isFinite(min) ? min : null
+        })
+      }
+    }
+  } catch (e) { logger.warn('ESPN overlay fetch failed', e) }
+
   const batch = db.batch()
   let upserts = 0
   const finishedToScore: Array<{ id: string; h: number; a: number; stage: string }> = []
@@ -160,13 +194,31 @@ async function runSync(token: string) {
     const ov = manualOverrides.get(id)
     // For overridden matches, score/status/winner/minute come from Firestore (admin),
     // NOT the API. Other metadata (teams, kickoff, stage, venue) always comes from API.
-    const status = ov ? ov.status : statusOf(m.status)
-    const hs = ov ? ov.homeScore : (m.score?.fullTime?.home ?? null)
-    const as = ov ? ov.awayScore : (m.score?.fullTime?.away ?? null)
+    let status = ov ? ov.status : statusOf(m.status)
+    let hs = ov ? ov.homeScore : (m.score?.fullTime?.home ?? null)
+    let as = ov ? ov.awayScore : (m.score?.fullTime?.away ?? null)
     const pH = m.score?.penalties?.home ?? null
     const pA = m.score?.penalties?.away ?? null
-    const winner = ov ? ov.winner : (m.score?.winner ?? null)
-    const minute = ov ? ov.minute : (m.minute ?? null)
+    let winner = ov ? ov.winner : (m.score?.winner ?? null)
+    let minute = ov ? ov.minute : (m.minute ?? null)
+
+    // ESPN live overlay (only when no manual override): if ESPN reports this
+    // match in-play or finished, trust ESPN for status/score/minute — it's far
+    // more timely than football-data's free tier.
+    if (!ov) {
+      const hc = espnNorm(m.homeTeam.tla), ac = espnNorm(m.awayTeam.tla)
+      const e = (hc && ac) ? espnByPair.get([hc, ac].sort().join('_')) : undefined
+      if (e && (e.state === 'in' || e.state === 'post')) {
+        status = e.state === 'in' ? 'LIVE' : 'FINISHED'
+        const eh = e.bySideCode[hc], ea = e.bySideCode[ac]
+        if (eh != null) hs = eh
+        if (ea != null) as = ea
+        minute = e.state === 'in' ? e.minute : null
+        if (e.state === 'post' && hs != null && as != null) {
+          winner = hs > as ? 'HOME_TEAM' : hs < as ? 'AWAY_TEAM' : 'DRAW'
+        }
+      }
+    }
     const homeTeam = { name: heName(m.homeTeam.tla, m.homeTeam.shortName || m.homeTeam.name), code: m.homeTeam.tla || '', flag: '' }
     const awayTeam = { name: heName(m.awayTeam.tla, m.awayTeam.shortName || m.awayTeam.name), code: m.awayTeam.tla || '', flag: '' }
     const group = m.group ? String(m.group).replace('GROUP_', '') : null
