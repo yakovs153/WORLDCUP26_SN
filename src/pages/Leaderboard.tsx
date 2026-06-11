@@ -25,7 +25,7 @@ export default function Leaderboard() {
 
   // Inject the Octopus + fold in provisional points from any live matches.
   const ranked = useMemo(() => {
-    const octo = octopusEntry(matches, cfg.scoring, undefined, cfg.analystOverrides) // includes live, provisional
+    const octo = octopusEntry(matches, cfg.scoring, undefined, cfg.analystOverrides, { values: cfg.bonus, topScorers: cfg.bonusResults?.topScorers ?? (cfg.bonusResults?.topScorer ? [cfg.bonusResults.topScorer] : []) }) // includes live + the duo's own bonus
     const withLive = entries
       .filter((e) => e.uid !== OCTOPUS_UID)
       .map((e) => ({ ...e, totalPoints: e.totalPoints + (liveDelta.get(e.uid) || 0) }))

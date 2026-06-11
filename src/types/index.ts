@@ -193,6 +193,7 @@ export interface AppConfig {
   adminEmails: string[]
   allowedEmailDomains: string[]         // e.g. ["storenext.com"] — empty = no restriction
   blockedEmails: string[]               // emails rejected from login/register (admin-managed)
+  bonusResults?: { topScorer?: string; topScorers?: string[] } // official tournament top scorer(s) — set by admin at the end
   updatedAt?: Timestamp
 }
 

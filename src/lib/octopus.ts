@@ -1,6 +1,19 @@
 import { scorePredictionForStage } from './scoring'
 import strength from '../data/teamStrength.json'
-import type { Match, ScoringConfig, LeaderboardEntry } from '../types'
+import type { Match, ScoringConfig, BonusScoringConfig, LeaderboardEntry } from '../types'
+
+/**
+ * עמוס ואביגדור's own bonus picks (hardcoded — they put their bonus on the line
+ * like everyone else). Scored inside octopusEntry with the same resolution rules
+ * real users get, so the duo's leaderboard total grows as bonuses resolve.
+ */
+export const OCTOPUS_BONUS = {
+  championTeamCode: 'ESP',   // 🏆 ספרד
+  runnerUpCode:     'ARG',   // 🥈 ארגנטינה (מפסידת הגמר)
+  surpriseTeamCode: 'NOR',   // 🐎 נורבגיה (הפתעה — מגיעה לרבע גמר)
+  flopTeamCode:     'BRA',   // 📉 ברזיל (אכזבה — לא מגיעה לרבע גמר)
+  topScorer:        'ארלינג הולאנד' // ⚽ מלך שערים
+}
 
 export const OCTOPUS_UID = 'octopus'        // internal id (kept stable)
 export const OCTOPUS_NAME = 'עמוס ואביגדור'   // display name — the AI analysts (formerly "טום"/"רובי")
@@ -68,8 +81,14 @@ export function winProb(homeCode: string, awayCode: string): { home: number; dra
   return { home: Math.round((h / tot) * 100), draw: Math.round((draw / tot) * 100), away: Math.round((a / tot) * 100) }
 }
 
-/** Synthetic leaderboard entry for Tom, scored from his picks vs finished results. */
-export function octopusEntry(matches: Match[], scoring: ScoringConfig, _stageMult?: unknown, overrides?: AnalystOverrides): LeaderboardEntry {
+/** Synthetic leaderboard entry for the analyst duo: match picks + their own bonus. */
+export function octopusEntry(
+  matches: Match[],
+  scoring: ScoringConfig,
+  _stageMult?: unknown,
+  overrides?: AnalystOverrides,
+  bonus?: { values: BonusScoringConfig; topScorers?: string[] }
+): LeaderboardEntry {
   let total = 0
   let count = 0
   for (const m of matches) {
@@ -80,6 +99,33 @@ export function octopusEntry(matches: Match[], scoring: ScoringConfig, _stageMul
       count++
     }
   }
+
+  // ===== Analyst bonus — same resolution rules as real users =====
+  if (bonus) {
+    const up = (s: string | undefined | null) => String(s || '').toUpperCase()
+    const codeOf = (t: { code?: string } | undefined) => up(t?.code)
+    const final = matches.find((m) => m.stage === 'F' && m.status === 'FINISHED' && m.homeScore != null && m.awayScore != null)
+    let champion: string | null = null, runnerUp: string | null = null
+    if (final && final.homeScore != null && final.awayScore != null) {
+      const h = codeOf(final.homeTeam), a = codeOf(final.awayTeam)
+      if (final.homeScore > final.awayScore) { champion = h; runnerUp = a }
+      else if (final.awayScore > final.homeScore) { champion = a; runnerUp = h }
+    }
+    const reachedIn = (stages: string[]) => {
+      const s = new Set<string>()
+      for (const m of matches) if (stages.includes(m.stage)) { const h = codeOf(m.homeTeam), a = codeOf(m.awayTeam); if (h) s.add(h); if (a) s.add(a) }
+      return s
+    }
+    const qfReachers = reachedIn(['QF', 'SF', 'TP', 'F'])
+    const qfStarted = qfReachers.size > 0
+    const v = bonus.values
+    if (champion && OCTOPUS_BONUS.championTeamCode === champion) total += v.champion || 0
+    if (runnerUp && OCTOPUS_BONUS.runnerUpCode === runnerUp) total += v.runnerUp || 0
+    if (qfReachers.has(OCTOPUS_BONUS.surpriseTeamCode)) total += v.surprise || 0
+    if (qfStarted && !qfReachers.has(OCTOPUS_BONUS.flopTeamCode)) total += v.flop || 0
+    if (bonus.topScorers?.includes(OCTOPUS_BONUS.topScorer)) total += v.topScorer || 0
+  }
+
   return {
     uid: OCTOPUS_UID,
     displayName: OCTOPUS_NAME,

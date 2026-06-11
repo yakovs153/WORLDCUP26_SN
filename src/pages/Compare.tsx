@@ -93,7 +93,7 @@ export default function Compare() {
 
   // Tom's totals: derived live from octopusEntry (he isn't a real user doc).
   const tomTotal = useMemo(
-    () => isOtherTom ? octopusEntry(matches, cfg.scoring, undefined, cfg.analystOverrides).totalPoints : 0,
+    () => isOtherTom ? octopusEntry(matches, cfg.scoring, undefined, cfg.analystOverrides, { values: cfg.bonus, topScorers: cfg.bonusResults?.topScorers ?? (cfg.bonusResults?.topScorer ? [cfg.bonusResults.topScorer] : []) }).totalPoints : 0,
     [isOtherTom, matches, cfg.scoring, cfg.analystOverrides]
   )
 
