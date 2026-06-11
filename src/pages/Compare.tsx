@@ -14,7 +14,7 @@ import LiveBadge from '../components/LiveBadge'
 import OctopusMark from '../components/OctopusMark'
 import { MatchCardSkeleton } from '../components/Skeleton'
 import { scorePredictionForStage } from '../lib/scoring'
-import { tomPick, AUTO_FACTOR, OCTOPUS_UID, OCTOPUS_NAME, octopusEntry } from '../lib/octopus'
+import { tomPick, AUTO_FACTOR, OCTOPUS_UID, OCTOPUS_NAME, OCTOPUS_BONUS, octopusEntry } from '../lib/octopus'
 import { formatTimeHe, formatDateHe, stageLabel } from '../lib/format'
 import type { Match, Prediction, ScoringConfig } from '../types'
 
@@ -133,25 +133,33 @@ export default function Compare() {
         <Stat label={isOtherTom ? 'ניצחונות עמוס ואביגדור' : 'ניצחונות שלו/ה'} value={tally.theirWins} />
       </div>
 
-      {/* Bonus side-by-side (hidden until tournament starts; not applicable for Tom) */}
-      {!isOtherTom && (
-        <section className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 'var(--space-4)' }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 18 }}>🏆 ניחושי הבונוס</h2>
-          {!bonusRevealed ? (
-            <p className="text-muted" style={{ fontSize: 13 }}>
-              🔒 ייחשפו עם פתיחת המשחק הראשון בטורניר.
-            </p>
-          ) : (
-            <>
-              <BonusRow label="🏆 זוכה" mine={myBonus?.championTeamCode} theirs={otherBonus?.championTeamCode} matches={matches} />
-              <BonusRow label="🥈 סגנית" mine={myBonus?.runnerUpCode} theirs={otherBonus?.runnerUpCode} matches={matches} />
-              <BonusRow label="🐎 הפתעה" mine={myBonus?.surpriseTeamCode} theirs={otherBonus?.surpriseTeamCode} matches={matches} />
-              <BonusRow label="📉 אכזבה" mine={myBonus?.flopTeamCode} theirs={otherBonus?.flopTeamCode} matches={matches} />
-              <BonusRow label="⚽ מלך שערים" mineText={myBonus?.topScorer} theirsText={otherBonus?.topScorer} />
-            </>
-          )}
-        </section>
-      )}
+      {/* Bonus side-by-side. For the analyst, "theirs" comes from the hardcoded
+          OCTOPUS_BONUS picks; for real users from their bonus doc. */}
+      {(() => {
+        const theirChampion  = isOtherTom ? OCTOPUS_BONUS.championTeamCode : otherBonus?.championTeamCode
+        const theirRunnerUp  = isOtherTom ? OCTOPUS_BONUS.runnerUpCode     : otherBonus?.runnerUpCode
+        const theirSurprise  = isOtherTom ? OCTOPUS_BONUS.surpriseTeamCode : otherBonus?.surpriseTeamCode
+        const theirFlop      = isOtherTom ? OCTOPUS_BONUS.flopTeamCode     : otherBonus?.flopTeamCode
+        const theirTopScorer = isOtherTom ? OCTOPUS_BONUS.topScorer        : otherBonus?.topScorer
+        return (
+          <section className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 'var(--space-4)' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 18 }}>🏆 ניחושי הבונוס</h2>
+            {!bonusRevealed ? (
+              <p className="text-muted" style={{ fontSize: 13 }}>
+                🔒 ייחשפו עם פתיחת המשחק הראשון בטורניר.
+              </p>
+            ) : (
+              <>
+                <BonusRow label="🏆 זוכה" mine={myBonus?.championTeamCode} theirs={theirChampion} matches={matches} />
+                <BonusRow label="🥈 סגנית" mine={myBonus?.runnerUpCode} theirs={theirRunnerUp} matches={matches} />
+                <BonusRow label="🐎 הפתעה" mine={myBonus?.surpriseTeamCode} theirs={theirSurprise} matches={matches} />
+                <BonusRow label="📉 אכזבה" mine={myBonus?.flopTeamCode} theirs={theirFlop} matches={matches} />
+                <BonusRow label="⚽ מלך שערים" mineText={myBonus?.topScorer} theirsText={theirTopScorer} />
+              </>
+            )}
+          </section>
+        )
+      })()}
 
       {/* Match-by-match */}
       <section className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 'var(--space-4)' }}>
