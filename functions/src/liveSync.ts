@@ -174,7 +174,10 @@ async function runSync(token: string) {
         const a = espnNorm(cs[0].team?.abbreviation), b = espnNorm(cs[1].team?.abbreviation)
         if (!a || !b) continue
         const state = (comp?.status?.type?.state as 'pre' | 'in' | 'post') || 'pre'
-        const min = parseInt(String(comp?.status?.displayClock || '').replace(/[^0-9]/g, ''), 10)
+        // Parse the LEADING integer only. ESPN's stoppage clock is "45+4'" —
+        // stripping all non-digits would wrongly produce "454", so parseInt
+        // (which stops at the '+') gives the base minute 45. "HT"/non-numeric → NaN → null.
+        const min = parseInt(String(comp?.status?.displayClock || ''), 10)
         espnByPair.set([a, b].sort().join('_'), {
           state,
           bySideCode: { [a]: cs[0].score != null ? Number(cs[0].score) : null, [b]: cs[1].score != null ? Number(cs[1].score) : null },
