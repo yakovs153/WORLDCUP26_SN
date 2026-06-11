@@ -31,6 +31,9 @@ export default function AdminUsers() {
   const [busy, setBusy] = useState<string | null>(null)
   const [resettingUid, setResettingUid] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
+  // uids whose bonus picks are COMPLETE (have both champion + top scorer —
+  // same rule the app uses for needsBonus). Everyone else "didn't fill yet".
+  const [completeBonusUids, setCompleteBonusUids] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (DEMO_MODE) return
@@ -38,6 +41,28 @@ export default function AdminUsers() {
       setUsers(s.docs.map((d) => ({ ...(d.data() as UserDoc), uid: d.id })).sort((a, b) => (a.displayName || '').localeCompare(b.displayName || '', 'he')))
     })
   }, [])
+
+  useEffect(() => {
+    if (DEMO_MODE) return
+    return onSnapshot(collection(db, 'bonusPredictions'), (s) => {
+      const done = new Set<string>()
+      s.docs.forEach((d) => {
+        const b = d.data()
+        if (b.championTeamCode && b.topScorer) done.add(d.id)
+      })
+      setCompleteBonusUids(done)
+    })
+  }, [])
+
+  // Real participants who haven't completed their bonus picks yet.
+  const missingBonus = users.filter((u) => u.uid && !completeBonusUids.has(u.uid))
+  const copyMissing = () => {
+    const names = missingBonus.map((u) => u.displayName || u.email || '').filter(Boolean).join(', ')
+    navigator.clipboard?.writeText(names).then(
+      () => toast.show(`${missingBonus.length} שמות הועתקו ✓`, 'success'),
+      () => toast.show('העתקה נכשלה', 'error')
+    )
+  }
 
   const isAdmin = (email: string | null | undefined) => !!email && cfg.adminEmails.map((e) => e.toLowerCase()).includes(email.toLowerCase())
 
@@ -124,6 +149,31 @@ export default function AdminUsers() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      {/* Who hasn't filled their bonus picks yet — pre-kickoff nudge list */}
+      {!DEMO_MODE && (
+        <section className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>🏆 לא מילאו ניחושי בונוס ({missingBonus.length})</h3>
+            <button onClick={copyMissing} disabled={missingBonus.length === 0}
+              className="btn-ghost" style={{ padding: '6px 12px', fontSize: 12, border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', color: 'var(--color-text)' }}>
+              📋 העתק שמות
+            </button>
+          </div>
+          <p className="text-muted" style={{ fontSize: 12 }}>משתמשים שנרשמו אך טרם בחרו זוכה + מלך שערים. שלח להם תזכורת לפני נעילת הבונוס.</p>
+          {missingBonus.length === 0 ? (
+            <p style={{ fontSize: 13, color: 'var(--color-primary)', fontWeight: 700 }}>כולם מילאו ✓</p>
+          ) : (
+            <div style={{ maxHeight: 200, overflowY: 'auto', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {missingBonus.map((u) => (
+                <span key={u.uid} style={{ fontSize: 12, padding: '4px 8px', background: 'var(--color-bg-elevated)', borderRadius: 'var(--radius-full)', border: '1px solid var(--color-border)' }}>
+                  {u.displayName || u.email}
+                </span>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       <section className="card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>👥 ניהול משתמשים</h3>
         <p className="text-muted" style={{ fontSize: 12 }}>
