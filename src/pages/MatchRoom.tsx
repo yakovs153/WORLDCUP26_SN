@@ -12,7 +12,6 @@ import { db, DEMO_MODE } from '../firebase'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { tomPick } from '../lib/octopus'
 import { venueFor } from '../lib/wcVenues'
-import MatchPreview from '../components/MatchPreview'
 import OctopusMark from '../components/OctopusMark'
 import type { Prediction, UserDoc } from '../types'
 
@@ -139,9 +138,6 @@ export default function MatchRoom() {
           )}
         </div>
       )}
-
-      {/* Match preview — ESPN form / H2H / news (free, no key) */}
-      {match && <MatchPreview matchId={id} homeName={match.homeTeam.name} awayName={match.awayTeam.name} />}
 
       {/* Everyone's predictions — locked until kickoff */}
       {!revealed ? (
