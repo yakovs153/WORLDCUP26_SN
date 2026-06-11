@@ -36,55 +36,17 @@ export default function MatchPreview({ matchId, homeName, awayName }: { matchId:
 
   if (!p) return null
   const hasForm = !!(p.homeForm || p.awayForm)
-  const hasH2H = !!p.h2h?.length
-  const hasNews = !!p.news?.length
-  if (!hasForm && !hasH2H && !hasNews) return null
+  if (!hasForm) return null
 
   return (
-    <div className="glass" style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 800, letterSpacing: 0.5 }}>📋 לקראת המשחק</div>
+    <div className="glass" style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 800, letterSpacing: 0.5 }}>📋 כושר אחרון</div>
 
       {/* Recent form — colored W/D/L pills per team */}
-      {hasForm && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <FormRow name={homeName} form={p.homeForm} />
-          <FormRow name={awayName} form={p.awayForm} />
-        </div>
-      )}
-
-      {/* Head-to-head */}
-      {hasH2H && (
-        <div>
-          <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700, marginBottom: 4 }}>🆚 מפגשים אחרונים</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {p.h2h!.map((g, i) => (
-              <div key={i} style={{ fontSize: 12, display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                <span>{g.home} <b>{g.hs}–{g.as}</b> {g.away}</span>
-                <span style={{ color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>{g.comp || yr(g.date)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* News headlines */}
-      {hasNews && (
-        <div>
-          <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700, marginBottom: 4 }}>📰 חדשות</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {p.news!.map((n, i) => (
-              n.link && n.link !== '#' ? (
-                <a key={i} href={n.link} target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: 12, color: 'var(--color-primary)', textDecoration: 'none' }}>
-                  • {n.headline}
-                </a>
-              ) : (
-                <span key={i} style={{ fontSize: 12 }}>• {n.headline}</span>
-              )
-            ))}
-          </div>
-        </div>
-      )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <FormRow name={homeName} form={p.homeForm} />
+        <FormRow name={awayName} form={p.awayForm} />
+      </div>
 
       <div style={{ fontSize: 9, color: 'var(--color-text-muted)', textAlign: 'left', opacity: 0.7 }}>נתונים: ESPN</div>
     </div>
@@ -110,4 +72,3 @@ function FormRow({ name, form }: { name: string; form?: string }) {
 }
 
 const heResult = (r: string) => (r === 'W' ? 'נ' : r === 'D' ? 'ת' : r === 'L' ? 'ה' : r)
-const yr = (d: string) => (d ? new Date(d).getFullYear().toString() : '')
