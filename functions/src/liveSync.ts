@@ -19,9 +19,10 @@ import scorerAliases from './data/scorerAliases.json'
 export const FOOTBALL_TOKEN = defineSecret('FOOTBALL_DATA_TOKEN')
 export const SYNC_SECRET = defineSecret('SYNC_SECRET')
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY')
-// Optional — both APIs are best-effort. Missing key/failure never affects ESPN sync.
-const ODDS_API_KEY = defineSecret('ODDS_API_KEY')          // the-odds-api.com (free 500/mo)
-const API_FOOTBALL_KEY = defineSecret('API_FOOTBALL_KEY')  // api-football.com (free ~100/day)
+// ODDS_API_KEY (the-odds-api.com) and API_FOOTBALL_KEY (api-football.com) are
+// read from process.env — NOT defineSecret — so deploys never prompt/fail on
+// them. Both APIs are best-effort: when the env var is unset the feature simply
+// no-ops, and nothing ever affects the ESPN live sync.
 
 const EN_TEAMS = enTeams as Record<string, string>           // normalized english name -> TLA
 const SCORER_ALIASES = scorerAliases as Record<string, string[]> // hebrew candidate -> latin aliases
@@ -536,7 +537,7 @@ async function runSync(token: string, geminiKey?: string, oddsKey?: string, apiF
 }
 
 export const liveSync = onRequest(
-  { secrets: [FOOTBALL_TOKEN, SYNC_SECRET, GEMINI_API_KEY, ODDS_API_KEY, API_FOOTBALL_KEY], region: 'europe-west1', timeoutSeconds: 120 },
+  { secrets: [FOOTBALL_TOKEN, SYNC_SECRET, GEMINI_API_KEY], region: 'europe-west1', timeoutSeconds: 120 },
   async (req, res) => {
     const provided = String(req.header('X-Sync-Secret') || '')
     if (!provided || provided !== SYNC_SECRET.value()) {
@@ -544,9 +545,11 @@ export const liveSync = onRequest(
       return
     }
     try {
-      // All three are optional — read defensively so a missing secret never 500s.
-      const optKey = (s: { value: () => string }) => { try { return s.value() || undefined } catch { return undefined } }
-      const result = await runSync(FOOTBALL_TOKEN.value(), optKey(GEMINI_API_KEY), optKey(ODDS_API_KEY), optKey(API_FOOTBALL_KEY))
+      // Gemini is an optional secret; odds/api-football are optional env vars.
+      // Read defensively so a missing key never 500s the sync.
+      let geminiKey: string | undefined
+      try { geminiKey = GEMINI_API_KEY.value() || undefined } catch { geminiKey = undefined }
+      const result = await runSync(FOOTBALL_TOKEN.value(), geminiKey, process.env.ODDS_API_KEY || undefined, process.env.API_FOOTBALL_KEY || undefined)
       logger.info('liveSync', result)
       res.status(200).json({ ok: true, ...result })
     } catch (e) {
