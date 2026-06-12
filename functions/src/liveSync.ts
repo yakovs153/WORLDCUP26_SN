@@ -137,8 +137,12 @@ async function runSync(token: string) {
   const existingMatches = await db.collection('matches').get()
   type ManualOverride = { homeScore: number | null; awayScore: number | null; status: string; winner: string | null; minute: number | null }
   const manualOverrides = new Map<string, ManualOverride>()
+  // Last-known live minute per match — so a momentary non-numeric ESPN clock
+  // (e.g. "HT") doesn't blank the minute out during a live match.
+  const existingMinuteById = new Map<string, number | null>()
   for (const d of existingMatches.docs) {
     const data = d.data()
+    existingMinuteById.set(d.id, typeof data.minute === 'number' ? data.minute : null)
     if (data.manualOverride === true) {
       manualOverrides.set(d.id, {
         homeScore: data.homeScore ?? null,
@@ -216,7 +220,9 @@ async function runSync(token: string) {
         const eh = e.bySideCode[hc], ea = e.bySideCode[ac]
         if (eh != null) hs = eh
         if (ea != null) as = ea
-        minute = e.state === 'in' ? e.minute : null
+        // Keep the last known minute if ESPN's live clock is momentarily
+        // non-numeric (halftime etc.), so it doesn't flicker to blank.
+        minute = e.state === 'in' ? (e.minute ?? existingMinuteById.get(id) ?? null) : null
         if (e.state === 'post' && hs != null && as != null) {
           winner = hs > as ? 'HOME_TEAM' : hs < as ? 'AWAY_TEAM' : 'DRAW'
         }
