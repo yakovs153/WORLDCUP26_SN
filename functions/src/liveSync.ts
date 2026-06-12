@@ -13,10 +13,46 @@ import { Timestamp, getFirestore, FieldValue } from 'firebase-admin/firestore'
 import heTeams from './data/heTeams.json'
 import heVenues from './data/heVenues.json'
 import teamStrength from './data/teamStrength.json'
+import enTeams from './data/enTeams.json'
+import scorerAliases from './data/scorerAliases.json'
 
 export const FOOTBALL_TOKEN = defineSecret('FOOTBALL_DATA_TOKEN')
 export const SYNC_SECRET = defineSecret('SYNC_SECRET')
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY')
+// Optional — both APIs are best-effort. Missing key/failure never affects ESPN sync.
+const ODDS_API_KEY = defineSecret('ODDS_API_KEY')          // the-odds-api.com (free 500/mo)
+const API_FOOTBALL_KEY = defineSecret('API_FOOTBALL_KEY')  // api-football.com (free ~100/day)
+
+const EN_TEAMS = enTeams as Record<string, string>           // normalized english name -> TLA
+const SCORER_ALIASES = scorerAliases as Record<string, string[]> // hebrew candidate -> latin aliases
+
+// Normalize a name for matching: lowercase, strip diacritics + punctuation, collapse spaces.
+const COMBINING_MARKS = new RegExp('[\\u0300-\\u036f]', 'g')
+function norm(s: string | undefined | null): string {
+  return String(s || '')
+    .normalize('NFD').replace(COMBINING_MARKS, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+}
+// CUR -> CUW so odds/match pairs key consistently with the client.
+const tlaAlias = (c: string) => { const u = (c || '').toUpperCase(); return u === 'CUR' ? 'CUW' : u }
+const pairKey = (a: string, b: string) => [tlaAlias(a), tlaAlias(b)].sort().join('_')
+// English team name (as returned by odds APIs) -> our TLA, via the alias table.
+function tlaFromEnglish(name: string): string | null {
+  const n = norm(name)
+  if (EN_TEAMS[n]) return EN_TEAMS[n]
+  // Try a looser contains-match for names like "Korea Republic" vs odds variants.
+  for (const k of Object.keys(EN_TEAMS)) if (n === k || n.includes(k) || k.includes(n)) return EN_TEAMS[k]
+  return null
+}
+// Map a Latin scorer name to a Hebrew candidate name, or null if not a candidate.
+function hebScorer(latinName: string): string | null {
+  const n = norm(latinName)
+  if (!n) return null
+  for (const [heb, aliases] of Object.entries(SCORER_ALIASES)) {
+    for (const a of aliases) { const an = norm(a); if (an && (n === an || n.includes(an))) return heb }
+  }
+  return null
+}
 
 // Minimal Gemini call for the post-match recap (mirrors dailyJob's helper).
 async function geminiCall(key: string, model: string, prompt: string, maxTokens = 200): Promise<string | null> {
@@ -118,7 +154,7 @@ function scorePrediction(ph: number, pa: number, ah: number, aa: number, stage: 
   return s.direction
 }
 
-async function runSync(token: string, geminiKey?: string) {
+async function runSync(token: string, geminiKey?: string, oddsKey?: string, apiFootballKey?: string) {
   const db = getFirestore()
   const res = await fetch('https://api.football-data.org/v4/competitions/WC/matches', { headers: { 'X-Auth-Token': token } })
   if (!res.ok) throw new Error(`football-data ${res.status}: ${await res.text()}`)
@@ -204,6 +240,45 @@ async function runSync(token: string, geminiKey?: string) {
       }
     }
   } catch (e) { logger.warn('ESPN overlay fetch failed', e) }
+
+  // ===== Odds overlay (best-effort — separate doc, never touches match state) =====
+  // The Odds API (free 500/mo). Refresh only when stale (>90 min) to stay within
+  // quota — one call returns all WC fixtures. Writes ONLY snapshot/odds.
+  if (oddsKey) {
+    try {
+      const oddsDoc = await db.collection('snapshot').doc('odds').get()
+      const lastMs = (oddsDoc.exists ? (oddsDoc.data() as { updatedAt?: { toMillis?: () => number } }).updatedAt?.toMillis?.() : 0) || 0
+      if (Date.now() - lastMs > 90 * 60_000) {
+        const or = await fetch(`https://api.the-odds-api.com/v4/sports/soccer_fifa_world_cup/odds/?apiKey=${oddsKey}&regions=eu,uk&markets=h2h&oddsFormat=decimal`)
+        if (or.ok) {
+          const events = await or.json() as Array<{ home_team?: string; away_team?: string; bookmakers?: Array<{ markets?: Array<{ key?: string; outcomes?: Array<{ name?: string; price?: number }> }> }> }>
+          const items: Record<string, { home: number; draw: number; away: number; source: string }> = {}
+          for (const ev of events || []) {
+            const hT = tlaFromEnglish(ev.home_team || ''), aT = tlaFromEnglish(ev.away_team || '')
+            if (!hT || !aT || hT === aT) continue
+            // Average implied probabilities across bookmakers, then de-vig (normalize to 100%).
+            let sh = 0, sd = 0, sa = 0, n = 0
+            for (const bk of ev.bookmakers || []) {
+              const mkt = (bk.markets || []).find((m) => m.key === 'h2h')
+              if (!mkt) continue
+              const priceOf = (nm: string) => mkt.outcomes?.find((o) => norm(o.name) === norm(nm))?.price
+              const ph = priceOf(ev.home_team || ''), pa = priceOf(ev.away_team || ''), pd = mkt.outcomes?.find((o) => norm(o.name) === 'draw')?.price
+              if (!ph || !pa || !pd) continue
+              const ih = 1 / ph, id = 1 / pd, ia = 1 / pa, tot = ih + id + ia
+              sh += ih / tot; sd += id / tot; sa += ia / tot; n++
+            }
+            if (!n) continue
+            items[pairKey(hT, aT)] = {
+              home: Math.round((sh / n) * 100), draw: Math.round((sd / n) * 100), away: Math.round((sa / n) * 100), source: 'market'
+            }
+          }
+          if (Object.keys(items).length) {
+            await db.collection('snapshot').doc('odds').set({ items, updatedAt: Timestamp.now() })
+          }
+        } else { logger.warn('odds api status', or.status) }
+      }
+    } catch (e) { logger.warn('odds fetch failed', e) }
+  }
 
   const batch = db.batch()
   let upserts = 0
@@ -364,6 +439,55 @@ async function runSync(token: string, geminiKey?: string) {
     })
   }
 
+  // ===== Golden Boot auto-track (best-effort — api-football) =====
+  // Fire only when a match just finished (a few times/day → well under the ~100/day
+  // free quota). Writes stats/goldenBoot (race display) and auto-resolves the
+  // top-scorer bonus to the live leader unless an admin locked it. ESPN state untouched.
+  if (apiFootballKey && finishedToScore.length) {
+    try {
+      const league = process.env.API_FOOTBALL_LEAGUE || '1'   // FIFA World Cup
+      const season = process.env.API_FOOTBALL_SEASON || '2026'
+      const sr = await fetch(`https://v3.football.api-sports.io/players/topscorers?league=${league}&season=${season}`, {
+        headers: { 'x-apisports-key': apiFootballKey }
+      })
+      if (sr.ok) {
+        const sdata = await sr.json() as { response?: Array<{ player?: { name?: string; firstname?: string; lastname?: string }; statistics?: Array<{ goals?: { total?: number | null } }> }> }
+        const rows = sdata.response || []
+        const goalsOf = (r: { statistics?: Array<{ goals?: { total?: number | null } }> }) =>
+          Math.max(0, ...(r.statistics || []).map((s) => s.goals?.total || 0))
+        const nameOf = (r: { player?: { name?: string; firstname?: string; lastname?: string } }) =>
+          [r.player?.firstname, r.player?.lastname].filter(Boolean).join(' ') || r.player?.name || ''
+        // Goals per Hebrew candidate (for the race display).
+        const goals: Record<string, number> = {}
+        let topGoals = 0
+        for (const r of rows) {
+          const g = goalsOf(r)
+          if (g > topGoals) topGoals = g
+          if (g <= 0) continue
+          const heb = hebScorer(nameOf(r))
+          if (heb) goals[heb] = Math.max(goals[heb] || 0, g)
+        }
+        if (rows.length) {
+          await db.collection('stats').doc('goldenBoot').set({ goals, updatedAt: Timestamp.now() }, { merge: true })
+        }
+        // Auto-resolve the top-scorer bonus to the current leader(s), unless locked.
+        const bonusResults = (cfg.bonusResults || {}) as { topScorers?: string[]; topScorerLocked?: boolean }
+        if (!bonusResults.topScorerLocked && topGoals > 0) {
+          const heLeaders = [...new Set(
+            rows.filter((r) => goalsOf(r) === topGoals).map((r) => hebScorer(nameOf(r))).filter((x): x is string => !!x)
+          )]
+          // If the real leader isn't a listed candidate, the "אחר" (Other) pick wins.
+          const resolved = heLeaders.length ? heLeaders : ['אחר']
+          const prev = bonusResults.topScorers || []
+          const changed = resolved.length !== prev.length || resolved.some((x) => !prev.includes(x))
+          if (changed) {
+            await db.collection('appConfig').doc('main').set({ bonusResults: { topScorers: resolved } }, { merge: true })
+          }
+        }
+      } else { logger.warn('api-football status', sr.status) }
+    } catch (e) { logger.warn('golden boot fetch failed', e) }
+  }
+
   // ===== Post-match recap — keep the home pundit card fresh after every game =====
   // When a match finished this run, the duo react to it (overwrites the morning
   // briefing with the latest result). Best-effort: fires once per match (the next
@@ -405,7 +529,7 @@ async function runSync(token: string, geminiKey?: string) {
 }
 
 export const liveSync = onRequest(
-  { secrets: [FOOTBALL_TOKEN, SYNC_SECRET, GEMINI_API_KEY], region: 'europe-west1', timeoutSeconds: 120 },
+  { secrets: [FOOTBALL_TOKEN, SYNC_SECRET, GEMINI_API_KEY, ODDS_API_KEY, API_FOOTBALL_KEY], region: 'europe-west1', timeoutSeconds: 120 },
   async (req, res) => {
     const provided = String(req.header('X-Sync-Secret') || '')
     if (!provided || provided !== SYNC_SECRET.value()) {
@@ -413,9 +537,9 @@ export const liveSync = onRequest(
       return
     }
     try {
-      let geminiKey: string | undefined
-      try { geminiKey = GEMINI_API_KEY.value() } catch { geminiKey = undefined }
-      const result = await runSync(FOOTBALL_TOKEN.value(), geminiKey)
+      // All three are optional — read defensively so a missing secret never 500s.
+      const optKey = (s: { value: () => string }) => { try { return s.value() || undefined } catch { return undefined } }
+      const result = await runSync(FOOTBALL_TOKEN.value(), optKey(GEMINI_API_KEY), optKey(ODDS_API_KEY), optKey(API_FOOTBALL_KEY))
       logger.info('liveSync', result)
       res.status(200).json({ ok: true, ...result })
     } catch (e) {

@@ -137,13 +137,35 @@ async function runDaily(geminiKey: string) {
       .docs.map((d) => ({ name: d.data().displayName || 'משתמש', pts: d.data().totalPoints || 0 })).filter((u) => u.pts > 0)
     const now = Date.now(), DAY = 86_400_000
     const todayFixtures: string[] = []
+    const todayMeta: Array<{ hn: string; an: string; hc: string; ac: string }> = []
     let live = 0, finishedToday = 0
     ;(await db.collection('matches').get()).forEach((d) => {
       const m = d.data(); const k = m.kickoff?.toMillis?.() ?? 0
       if (m.status === 'LIVE') live++
       if (m.status === 'FINISHED' && now - k < DAY && now - k > 0) finishedToday++
-      if (m.status === 'SCHEDULED' && k > now && k - now < DAY) todayFixtures.push(`${m.homeTeam?.name} נגד ${m.awayTeam?.name}`)
+      if (m.status === 'SCHEDULED' && k > now && k - now < DAY) {
+        todayFixtures.push(`${m.homeTeam?.name} נגד ${m.awayTeam?.name}`)
+        todayMeta.push({ hn: m.homeTeam?.name || '', an: m.awayTeam?.name || '', hc: m.homeTeam?.code || '', ac: m.awayTeam?.code || '' })
+      }
     })
+
+    // Market favorite among today's games (best-effort — from snapshot/odds, written by liveSync).
+    let oddsHint = ''
+    try {
+      const oddsDoc = await db.collection('snapshot').doc('odds').get()
+      const oItems = ((oddsDoc.exists ? (oddsDoc.data() as { items?: Record<string, { home: number; away: number }> }).items : {}) || {})
+      const alias = (c: string) => { const u = (c || '').toUpperCase(); return u === 'CUR' ? 'CUW' : u }
+      const pk = (a: string, b: string) => [alias(a), alias(b)].sort().join('_')
+      let best: { name: string; pct: number } | null = null
+      for (const m of todayMeta) {
+        const o = oItems[pk(m.hc, m.ac)]
+        if (!o) continue
+        const favPct = Math.max(o.home, o.away)
+        const favName = o.home >= o.away ? m.hn : m.an
+        if (!best || favPct > best.pct) best = { name: favName, pct: favPct }
+      }
+      if (best) oddsHint = ` לפי שוק ההימורים, הפייבוריט הבולט היום הוא ${best.name} (${best.pct}%) — אפשר להתייחס לזה בנימה של "השוק אומר…".`
+    } catch { /* ignore — odds are optional */ }
     const standings = top.length ? top.map((t) => `${t.name} ${t.pts}`).join(', ') : 'אין עדיין נקודות'
     const summary = `מובילים: ${standings}. חי כעת: ${live}. הסתיימו היום: ${finishedToday}. צפויים היום: ${todayFixtures.length}.`
 
@@ -163,7 +185,7 @@ async function runDaily(geminiKey: string) {
         `המארחות הן ארה"ב, קנדה ומקסיקו בלבד — אף נבחרת אחרת אינה מארחת, אל תניח שמישהי מהן משחקת בביתה. ` +
         `מבין משחקי היום: ${todayFixtures.join(', ')}. בחר את המשחק הכי מסקרן וכתוב משפט הייפ אחד קצר בעברית (עד 150 תווים) ` +
         `על המשחק עצמו. אפשר לתבל ב"טיפ פנימי" קומי ובדוי מבן גיסי / בן אחותי שעובד באחת המארחות, ולסיים בביטחון: "זה באנקר!" / "בדוק נעול" / "את הילד שלי אני שם על זה". ` +
-        `אל תמציא עובדות אמיתיות (מארחת, דירוג, פציעות) שאינך בטוח בהן — ה"מודיעין מהמשפחה" הוא בדיחה ברורה. בלי מרכאות.`, { maxTokens: 110 })
+        `אל תמציא עובדות אמיתיות (מארחת, דירוג, פציעות) שאינך בטוח בהן — ה"מודיעין מהמשפחה" הוא בדיחה ברורה. בלי מרכאות.${oddsHint}`, { maxTokens: 110 })
     }
     await db.collection('appState').doc('pundit').set({ text: recap || '', preview: preview || '', updatedAt: Timestamp.now() }, { merge: true })
     punditOK = !!recap

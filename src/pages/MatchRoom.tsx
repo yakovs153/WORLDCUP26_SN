@@ -10,7 +10,8 @@ import { formatTimeHe, stageLabel } from '../lib/format'
 import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
 import { useAppConfig } from '../hooks/useAppConfig'
-import { tomPick } from '../lib/octopus'
+import { useOdds, type MatchOdds } from '../hooks/useOdds'
+import { tomPick, winProb } from '../lib/octopus'
 import { venueFor } from '../lib/wcVenues'
 import OctopusMark from '../components/OctopusMark'
 import type { Prediction, UserDoc } from '../types'
@@ -69,6 +70,12 @@ export default function MatchRoom() {
   }, [id, revealed])
 
   const tom = match ? tomPick(match.homeTeam.code, match.awayTeam.code, id, cfg.analystOverrides) : null
+  const oddsFor = useOdds()
+  // Real bookmaker odds when available; otherwise the model-based estimate.
+  const odds = match
+    ? (oddsFor(match.homeTeam.code, match.awayTeam.code)
+       || { ...winProb(match.homeTeam.code, match.awayTeam.code), source: 'model' })
+    : null
   const consensus = useMemo(() => {
     if (!peers.length) return null
     const counts = new Map<string, number>()
@@ -129,6 +136,7 @@ export default function MatchRoom() {
             {tom && <span style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 5 }}><OctopusMark size={18} /> עמוס ואביגדור מנחשים: {tom[0]} : {tom[1]}</span>}
             {consensus && <span className="text-muted">· הכי נפוץ בקרב המשתתפים: {consensus[0]} ({consensus[1]})</span>}
           </div>
+          {odds && <OddsBar homeCode={match.homeTeam.code} awayCode={match.awayTeam.code} odds={odds} />}
           {match.scorers && match.scorers.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px', fontSize: 12, color: 'var(--color-text-muted)' }}>
               {[...match.scorers].sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0)).map((s, i) => (
@@ -198,6 +206,42 @@ function Side({ name, code, flag }: { name: string; code: string; flag: string }
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
       <FlagIcon flag={flag} code={code} size={40} />
       <span style={{ fontSize: 13, fontWeight: 700 }}>{name || 'להיקבע'}</span>
+    </div>
+  )
+}
+
+/**
+ * Win/draw/win probability bar. Uses real bookmaker odds (The Odds API, via
+ * snapshot/odds) when available, otherwise a model estimate (octopus.winProb).
+ * RTL: home segment sits on the right to match the scoreline above.
+ */
+function OddsBar({ homeCode, awayCode, odds }: { homeCode: string; awayCode: string; odds: MatchOdds }) {
+  const isMarket = odds.source !== 'model'
+  const segs = [
+    { pct: odds.home, color: 'var(--color-primary)', label: homeCode },
+    { pct: odds.draw, color: 'var(--color-text-muted)', label: 'תיקו' },
+    { pct: odds.away, color: 'var(--color-accent)', label: awayCode }
+  ]
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>
+        <span>סיכויים</span>
+        <span style={{ opacity: 0.8 }}>{isMarket ? '📊 שוק ההימורים' : '🎲 הערכת מודל'}</span>
+      </div>
+      <div style={{ display: 'flex', height: 10, borderRadius: 'var(--radius-full)', overflow: 'hidden', background: 'var(--glass-bg-hi)' }}>
+        {segs.map((s, i) => (
+          <div key={i} style={{ width: `${s.pct}%`, background: s.color, transition: 'width .4s ease' }} />
+        ))}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+        {segs.map((s, i) => (
+          <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color, display: 'inline-block' }} />
+            <span style={{ fontWeight: 700 }}>{s.label}</span>
+            <span className="text-muted">{s.pct}%</span>
+          </span>
+        ))}
+      </div>
     </div>
   )
 }
