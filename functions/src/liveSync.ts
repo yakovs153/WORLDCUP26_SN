@@ -468,11 +468,18 @@ async function runSync(token: string, geminiKey?: string, oddsKey?: string, apiF
           if (heb) goals[heb] = Math.max(goals[heb] || 0, g)
         }
         if (rows.length) {
+          // Race display updates live all tournament long (visual only, no points).
           await db.collection('stats').doc('goldenBoot').set({ goals, updatedAt: Timestamp.now() }, { merge: true })
         }
-        // Auto-resolve the top-scorer bonus to the current leader(s), unless locked.
+        // Top-scorer BONUS points are only awarded at the END of the tournament:
+        // we write bonusResults.topScorers (which the leaderboard scores) ONLY once
+        // the Final has finished — never mid-tournament. Admin lock still respected.
+        const finalDone = [...snap.values()].some((it) => {
+          const x = it as { stage?: string; status?: string }
+          return x.stage === 'F' && x.status === 'FINISHED'
+        })
         const bonusResults = (cfg.bonusResults || {}) as { topScorers?: string[]; topScorerLocked?: boolean }
-        if (!bonusResults.topScorerLocked && topGoals > 0) {
+        if (finalDone && !bonusResults.topScorerLocked && topGoals > 0) {
           const heLeaders = [...new Set(
             rows.filter((r) => goalsOf(r) === topGoals).map((r) => hebScorer(nameOf(r))).filter((x): x is string => !!x)
           )]
