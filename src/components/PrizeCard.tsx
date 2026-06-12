@@ -10,7 +10,9 @@
  */
 const BANNER_SRC = '/prize-banner.jpg'
 // Intrinsic size of the artwork (used to reserve space and avoid layout shift).
-const BANNER_RATIO = '1024 / 434'
+// Ratio matches the source artwork (public/prize-banner.jpg, 1024×339) so it
+// fills the card width with no cropping. Replace the file + this ratio together.
+const BANNER_RATIO = '1024 / 339'
 
 export default function PrizeCard() {
   return (
@@ -22,7 +24,8 @@ export default function PrizeCard() {
         borderRadius: 'var(--radius-md)',
         border: '1px solid color-mix(in srgb, var(--color-accent) 55%, var(--color-border-strong))',
         boxShadow: '0 6px 20px rgba(111,78,55,0.18)',
-        lineHeight: 0
+        lineHeight: 0,
+        width: '100%'
       }}
     >
       <img
