@@ -10,6 +10,7 @@ import HallOfFame from '../components/HallOfFame'
 import OctopusMark from '../components/OctopusMark'
 import CountUp from '../components/CountUp'
 import { octopusEntry, OCTOPUS_UID } from '../lib/octopus'
+import { kingTitle } from '../lib/king'
 import type { LeaderboardEntry } from '../types'
 
 export default function Leaderboard() {
@@ -100,7 +101,7 @@ function Personal({ entries, meUid }: { entries: LeaderboardEntry[]; meUid?: str
               <div>
                 <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
                   {e.displayName}
-                  {king && <span style={{ fontSize: 10, fontWeight: 800, color: '#1a1320', background: 'var(--color-accent)', padding: '1px 8px', borderRadius: 'var(--radius-full)' }}>המלך</span>}
+                  {king && <span style={{ fontSize: 10, fontWeight: 800, color: '#1a1320', background: 'var(--color-accent)', padding: '1px 8px', borderRadius: 'var(--radius-full)' }}>{kingTitle(e.gender)}</span>}
                   {me && <span style={{ color: 'var(--color-primary)', fontSize: 12 }}>(אתה)</span>}
                 </div>
                 <div className="text-muted" style={{ fontSize: 12 }}>{e.department || `${e.predictionsCount} ניחושים`}</div>

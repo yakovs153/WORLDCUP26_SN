@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { collection, deleteDoc, doc, getDocs, onSnapshot, query, where } from 'firebase/firestore'
+import { collection, deleteDoc, doc, getDocs, onSnapshot, query, setDoc, where } from 'firebase/firestore'
 import { db, auth, DEMO_MODE } from '../firebase'
 
 const ADMIN_SET_PASSWORD_URL = 'https://europe-west1-world-cup-2026-c145b.cloudfunctions.net/adminSetPassword'
@@ -136,6 +136,13 @@ export default function AdminUsers() {
     } finally { setResettingUid(null) }
   }
 
+  // Set a user's gender (drives מלך/מלכה titles on the leaderboard + king banner).
+  const setGender = async (u: UserDoc, gender: 'male' | 'female' | null) => {
+    if (DEMO_MODE || !u.uid) return
+    try { await setDoc(doc(db, 'users', u.uid), { gender }, { merge: true }); toast.show('מגדר עודכן ✓', 'success') }
+    catch (e) { toast.show(e instanceof Error ? e.message : 'עדכון נכשל', 'error') }
+  }
+
   const unblock = async (email: string) => {
     const next = (cfg.blockedEmails || []).filter((e) => e.toLowerCase() !== email.toLowerCase())
     try { await patchAppConfig({ blockedEmails: next }); logActivity('admin_unblock_email', { email }); toast.show('בוטל החסימה ✓', 'success') }
@@ -196,7 +203,14 @@ export default function AdminUsers() {
                   </div>
                   <div className="text-muted" style={{ fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email} · {u.department || 'ללא מחלקה'} · {u.totalPoints || 0} נק׳</div>
                 </div>
-                <div style={{ display: 'flex', gap: 6 }}>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <select value={u.gender || ''} onChange={(e) => setGender(u, (e.target.value || null) as 'male' | 'female' | null)}
+                    title="מגדר — לתואר מלך/מלכה" disabled={DEMO_MODE}
+                    style={{ padding: '6px 6px', fontSize: 12, border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', background: 'var(--glass-bg-hi)', color: 'var(--color-text)', outline: 'none' }}>
+                    <option value="">מגדר —</option>
+                    <option value="male">מלך ♂</option>
+                    <option value="female">מלכה ♀</option>
+                  </select>
                   <button onClick={() => setUserPassword(u)} disabled={resettingUid === u.uid}
                     title="הגדר סיסמה זמנית חדשה (מוצגת לך למסירה)"
                     className="btn-ghost" style={{ padding: '6px 10px', fontSize: 12, border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', color: 'var(--color-text)' }}>

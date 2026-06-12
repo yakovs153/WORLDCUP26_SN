@@ -72,7 +72,7 @@ export default function MatchRoom() {
   const consensus = useMemo(() => {
     if (!peers.length) return null
     const counts = new Map<string, number>()
-    for (const p of peers) { const k = `${p.home}-${p.away}`; counts.set(k, (counts.get(k) || 0) + 1) }
+    for (const p of peers) { const k = `${p.home} : ${p.away}`; counts.set(k, (counts.get(k) || 0) + 1) }
     return [...counts.entries()].sort((a, b) => b[1] - a[1])[0] // [scoreline, count]
   }, [peers])
 
@@ -126,7 +126,7 @@ export default function MatchRoom() {
       {match && (
         <div className="glass" style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, flexWrap: 'wrap' }}>
-            {tom && <span style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 5 }}><OctopusMark size={18} /> עמוס ואביגדור מנחשים: {tom[0]}–{tom[1]}</span>}
+            {tom && <span style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 5 }}><OctopusMark size={18} /> עמוס ואביגדור מנחשים: {tom[0]} : {tom[1]}</span>}
             {consensus && <span className="text-muted">· הכי נפוץ בקרב המשתתפים: {consensus[0]} ({consensus[1]})</span>}
           </div>
           {match.scorers && match.scorers.length > 0 && (

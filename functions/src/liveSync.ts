@@ -333,7 +333,7 @@ async function runSync(token: string) {
   if (!topSnap.empty && (topSnap.docs[0].data().totalPoints || 0) > 0) {
     const top = topSnap.docs[0]
     await db.collection('appState').doc('king').set({
-      uid: top.id, name: top.data().displayName || 'משתמש', totalPoints: top.data().totalPoints || 0, updatedAt: Timestamp.now()
+      uid: top.id, name: top.data().displayName || 'משתמש', totalPoints: top.data().totalPoints || 0, gender: top.data().gender || null, updatedAt: Timestamp.now()
     })
   }
 

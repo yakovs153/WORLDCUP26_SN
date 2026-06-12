@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
-import { watchKing, setKingMessage, type KingState } from '../lib/king'
+import { watchKing, setKingMessage, kingConstruct, type KingState } from '../lib/king'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { useToast } from './Toast'
 
@@ -35,8 +35,8 @@ export default function KingBanner() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <span style={{ fontSize: 24 }}>👑</span>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>מלך/ת הניחושים</div>
-          <div style={{ fontWeight: 800 }}>{king.name} · {king.totalPoints} נק׳ {isKing && <span style={{ color: 'var(--color-primary)', fontSize: 12 }}>(אתה 👑)</span>}</div>
+          <div style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 700 }}>{kingConstruct(king.gender)} הניחושים</div>
+          <div style={{ fontWeight: 800 }}>{king.name} · {king.totalPoints} נק׳ {isKing && <span style={{ color: 'var(--color-primary)', fontSize: 12 }}>({king.gender === 'female' ? 'את' : 'אתה'} 👑)</span>}</div>
         </div>
       </div>
 

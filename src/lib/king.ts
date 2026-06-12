@@ -9,7 +9,13 @@ export interface KingState {
   totalPoints: number
   message: string
   messageBy: string
+  gender?: 'male' | 'female' | null
 }
+
+/** Title noun for the leader, gendered. Construct form for "X הניחושים". */
+export const kingConstruct = (g?: string | null) => (g === 'female' ? 'מלכת' : 'מלך')
+/** Standalone gendered title ("המלך" / "המלכה"). */
+export const kingTitle = (g?: string | null) => (g === 'female' ? 'המלכה' : 'המלך')
 
 const DEMO_MSG_KEY = 'demo-king-message-v1'
 const DEMO_CHANGED = 'demo-king-changed'
@@ -24,14 +30,14 @@ export function watchKing(cb: (k: KingState | null) => void): () => void {
       if (!top || top.totalPoints <= 0) { cb(null); return }
       let msg: { message?: string; byUid?: string } = {}
       try { msg = JSON.parse(localStorage.getItem(DEMO_MSG_KEY) || '{}') } catch { /* ignore */ }
-      cb({ uid: top.uid, name: top.displayName, totalPoints: top.totalPoints, message: msg.message || '', messageBy: msg.byUid || '' })
+      cb({ uid: top.uid, name: top.displayName, totalPoints: top.totalPoints, message: msg.message || '', messageBy: msg.byUid || '', gender: top.gender ?? null })
     }
     refresh()
     window.addEventListener('demo-predictions-changed', refresh)
     window.addEventListener(DEMO_CHANGED, refresh)
     return () => { window.removeEventListener('demo-predictions-changed', refresh); window.removeEventListener(DEMO_CHANGED, refresh) }
   }
-  let king: { uid: string; name: string; totalPoints: number } | null = null
+  let king: { uid: string; name: string; totalPoints: number; gender?: 'male' | 'female' | null } | null = null
   let kmsg: { message?: string; byUid?: string } = {}
   const emit = () => cb(king ? { ...king, message: kmsg.message || '', messageBy: kmsg.byUid || '' } : null)
   const u1 = onSnapshot(doc(db, 'appState', 'king'), (s) => { king = s.exists() ? (s.data() as typeof king) : null; emit() })

@@ -17,7 +17,7 @@ export default function MyPredictions() {
   const rows = useMemo(() => {
     return matches
       .filter((m) => byMatchId[m.id])
-      .sort((a, b) => b.kickoff.toMillis() - a.kickoff.toMillis())
+      .sort((a, b) => a.kickoff.toMillis() - b.kickoff.toMillis()) // chronological: earliest first
   }, [matches, byMatchId])
 
   // Cumulative points over time across finished matches (chronological).

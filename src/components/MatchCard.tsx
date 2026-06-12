@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import type { Match, Prediction } from '../types'
 import FlagIcon from './FlagIcon'
@@ -11,7 +11,6 @@ import { useToast } from './Toast'
 import { scorePredictionForStage } from '../lib/scoring'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { ringColors } from '../lib/players'
-import { fireConfetti } from '../lib/confetti'
 import { tomPick, AUTO_FACTOR } from '../lib/octopus'
 import OctopusMark from './OctopusMark'
 
@@ -81,14 +80,7 @@ export default function MatchCard({ match, prediction, uid }: Props) {
       ? prediction.points ?? (scorePredictionForStage(prediction.homeScore, prediction.awayScore, match.homeScore!, match.awayScore!, match.stage, cfg.scoring) * (prediction.auto ? AUTO_FACTOR : 1))
       : null
 
-  // Confetti once when a finished match rewards the user.
-  const celebrated = useRef(false)
-  useEffect(() => {
-    if (match.status === 'FINISHED' && (potential ?? 0) > 0 && !celebrated.current) {
-      celebrated.current = true
-      fireConfetti()
-    }
-  }, [match.status, potential])
+  // (Confetti on a rewarded finished match was removed — too noisy on the home feed.)
 
   const homeRing = ringColors(match.homeTeam.code)
   const awayRing = ringColors(match.awayTeam.code)
