@@ -16,6 +16,20 @@ import teamStrength from './data/teamStrength.json'
 
 export const FOOTBALL_TOKEN = defineSecret('FOOTBALL_DATA_TOKEN')
 export const SYNC_SECRET = defineSecret('SYNC_SECRET')
+const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY')
+
+// Minimal Gemini call for the post-match recap (mirrors dailyJob's helper).
+async function geminiCall(key: string, model: string, prompt: string, maxTokens = 200): Promise<string | null> {
+  try {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: maxTokens, temperature: 1.0 } })
+    })
+    if (!r.ok) { logger.warn('gemini (liveSync)', r.status); return null }
+    const data = await r.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> }
+    return data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null
+  } catch (e) { logger.warn('gemini error (liveSync)', e); return null }
+}
 
 const STRENGTH = teamStrength as Record<string, number>
 const HE_TEAMS = heTeams as Record<string, string>
@@ -104,7 +118,7 @@ function scorePrediction(ph: number, pa: number, ah: number, aa: number, stage: 
   return s.direction
 }
 
-async function runSync(token: string) {
+async function runSync(token: string, geminiKey?: string) {
   const db = getFirestore()
   const res = await fetch('https://api.football-data.org/v4/competitions/WC/matches', { headers: { 'X-Auth-Token': token } })
   if (!res.ok) throw new Error(`football-data ${res.status}: ${await res.text()}`)
@@ -306,8 +320,15 @@ async function runSync(token: string) {
 
   // Score finished matches
   const userDelta = new Map<string, number>()
+  const exactByMatch = new Map<string, number>() // # of manual exact-score predictions per finished match (for the recap)
   for (const fm of finishedToScore) {
     const preds = await db.collection('predictions').where('matchId', '==', fm.id).get()
+    let exact = 0
+    for (const d of preds.docs) {
+      const p = d.data()
+      if (!p.auto && p.homeScore === fm.h && p.awayScore === fm.a) exact++
+    }
+    exactByMatch.set(fm.id, exact)
     await db.runTransaction(async (tx) => {
       for (const d of preds.docs) {
         const p = d.data()
@@ -343,6 +364,35 @@ async function runSync(token: string) {
     })
   }
 
+  // ===== Post-match recap — keep the home pundit card fresh after every game =====
+  // When a match finished this run, the duo react to it (overwrites the morning
+  // briefing with the latest result). Best-effort: fires once per match (the next
+  // run won't see it in finishedToScore since it's already scored).
+  if (geminiKey && finishedToScore.length) {
+    const fm = finishedToScore[finishedToScore.length - 1] // most recent finish
+    const item = snap.get(fm.id) as { homeTeam?: { name?: string; code?: string }; awayTeam?: { name?: string; code?: string } } | undefined
+    if (item?.homeTeam && item?.awayTeam) {
+      const hn = item.homeTeam.name || '', an = item.awayTeam.name || ''
+      const [oh, oa] = tomPick(item.homeTeam.code || '', item.awayTeam.code || '', fm.id, analystOverrides)
+      const exact = exactByMatch.get(fm.id) || 0
+      const leaderName = topSnap.empty ? '' : (topSnap.docs[0].data().displayName || '')
+      const ctx = `המשחק שהרגע נגמר: ${hn} ${fm.h}-${fm.a} ${an}. ` +
+        `מספר המשתתפים שניחשו את התוצאה המדויקת: ${exact}. הניחוש שלכם (עמוס ואביגדור) היה: ${oh}-${oa}. ` +
+        `המוביל בטבלה כעת: ${leaderName || 'טרם נקבע'}.`
+      const recap = await geminiCall(
+        geminiKey,
+        process.env.GEMINI_MODEL || 'gemini-flash-lite-latest',
+        `אתה "עמוס ואביגדור", צמד אנליסטים כדורגל מבוסס-AI של StoreNext — חד, שנון, מדבר בלשון רבים. ` +
+        `המשחק הרגע נגמר. כתוב "מבזק אחרי המשחק" בעברית, 2 שורות קצרות, כל שורה מתחילה באימוג'י: ` +
+        `שורה על התוצאה והניחוש שלכם מולה, ושורה על מי שצדק / מצב הטבלה. טון חיובי וקליל, בלי לעלוב. ` +
+        `שלבו אחד מהביטויים שלכם (באור שאני רואה / זה באנקר! / נביא את הבוחטיות / תביא את הג'ובות / את הילד שלי אני שם על זה), ` +
+        `ומדי פעם "טיפ" קומי מבן גיסי/בן אחותי. בלי האשטגים/מרכאות, עד 280 תווים.\n${ctx}`,
+        220
+      )
+      if (recap) await db.collection('appState').doc('pundit').set({ text: recap, updatedAt: Timestamp.now() }, { merge: true })
+    }
+  }
+
   // Public snapshot — clients read ONE doc instead of all 104 matches
   await db.collection('snapshot').doc('matches').set({
     items: [...snap.values()].sort((a, b) => (a.kickoffMs as number) - (b.kickoffMs as number)),
@@ -355,7 +405,7 @@ async function runSync(token: string) {
 }
 
 export const liveSync = onRequest(
-  { secrets: [FOOTBALL_TOKEN, SYNC_SECRET], region: 'europe-west1', timeoutSeconds: 120 },
+  { secrets: [FOOTBALL_TOKEN, SYNC_SECRET, GEMINI_API_KEY], region: 'europe-west1', timeoutSeconds: 120 },
   async (req, res) => {
     const provided = String(req.header('X-Sync-Secret') || '')
     if (!provided || provided !== SYNC_SECRET.value()) {
@@ -363,7 +413,9 @@ export const liveSync = onRequest(
       return
     }
     try {
-      const result = await runSync(FOOTBALL_TOKEN.value())
+      let geminiKey: string | undefined
+      try { geminiKey = GEMINI_API_KEY.value() } catch { geminiKey = undefined }
+      const result = await runSync(FOOTBALL_TOKEN.value(), geminiKey)
       logger.info('liveSync', result)
       res.status(200).json({ ok: true, ...result })
     } catch (e) {
