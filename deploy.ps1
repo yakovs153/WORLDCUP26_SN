@@ -12,11 +12,9 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-Write-Host "`n=== 2/2  Deploying hosting + liveSync function ===" -ForegroundColor Cyan
+Write-Host "`n=== 2/2  Deploying hosting + functions (liveSync, dailyJob) + Firestore rules ===" -ForegroundColor Cyan
 # functions deploy auto-builds functions via the predeploy hook in firebase.json.
-# It may ask to grant liveSync access to GEMINI_API_KEY / ODDS_API_KEY /
-# API_FOOTBALL_KEY - answer Yes.
-firebase.cmd deploy --only "hosting,functions:liveSync"
+firebase.cmd deploy --only "hosting,functions:liveSync,functions:dailyJob,firestore:rules"
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Deploy FAILED. See output above (if it says credentials no longer valid, run: firebase.cmd login --reauth)." -ForegroundColor Red
     exit 1
