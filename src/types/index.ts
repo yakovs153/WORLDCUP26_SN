@@ -69,6 +69,8 @@ export interface BonusPrediction {
   flopTeamCode: string | null      // the favourite predicted to crash out earliest
   championPoints: number | null   // computed after tournament ends
   topScorerPoints: number | null  // computed after tournament ends
+  awardedPoints?: number          // total bonus points awarded (written by dailyJob)
+  auto?: boolean                  // true = auto-filled with the analyst's picks (scores 50%)
   updatedAt: Timestamp
 }
 
@@ -194,7 +196,7 @@ export interface AppConfig {
   adminEmails: string[]
   allowedEmailDomains: string[]         // e.g. ["storenext.com"] — empty = no restriction
   blockedEmails: string[]               // emails rejected from login/register (admin-managed)
-  bonusResults?: { topScorer?: string; topScorers?: string[] } // official tournament top scorer(s) — set by admin at the end
+  bonusResults?: { topScorer?: string; topScorers?: string[]; topScorerLocked?: boolean } // official tournament top scorer(s); topScorerLocked = admin-set, auto-track won't override
   updatedAt?: Timestamp
 }
 

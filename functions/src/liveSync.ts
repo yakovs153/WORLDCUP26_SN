@@ -24,6 +24,9 @@ const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY')
 // them. Both APIs are best-effort: when the env var is unset the feature simply
 // no-ops, and nothing ever affects the ESPN live sync.
 
+// Analyst duo's own bonus picks — KEEP IN SYNC with src/lib/octopus.ts OCTOPUS_BONUS.
+const ANALYST_BONUS = { championTeamCode: 'ESP', runnerUpCode: 'ARG', surpriseTeamCode: 'NOR', flopTeamCode: 'BRA', topScorer: 'ארלינג הולאנד' }
+
 const EN_TEAMS = enTeams as Record<string, string>           // normalized english name -> TLA
 const SCORER_ALIASES = scorerAliases as Record<string, string[]> // hebrew candidate -> latin aliases
 
@@ -366,10 +369,15 @@ async function runSync(token: string, geminiKey?: string, oddsKey?: string, apiF
         team: g.team?.id === detail.homeTeam?.id ? (detail.homeTeam?.tla || '') : (detail.awayTeam?.tla || ''),
         minute: g.minute ?? null
       })).filter((s) => s.name)
-      const minute = detail.minute ?? m.minute ?? null
-      await db.collection('matches').doc(String(m.id)).set({ minute, scorers }, { merge: true })
+      // football-data's free-tier detail.minute is frequently null and would
+      // CLOBBER the timely ESPN minute set above. Only update minute when it's an
+      // actual number; otherwise leave the ESPN-derived minute untouched.
+      const detailMinute = typeof detail.minute === 'number' ? detail.minute : null
+      const update: Record<string, unknown> = { scorers }
+      if (detailMinute != null) update.minute = detailMinute
+      await db.collection('matches').doc(String(m.id)).set(update, { merge: true })
       const item = snap.get(String(m.id))
-      if (item) { item.minute = minute; item.scorers = scorers }
+      if (item) { if (detailMinute != null) item.minute = detailMinute; item.scorers = scorers }
     } catch { /* ignore detail errors */ }
   }
 
@@ -429,6 +437,35 @@ async function runSync(token: string, geminiKey?: string, oddsKey?: string, apiF
   }
   if (earliest !== null) {
     await db.collection('appState').doc('timing').set({ bonusLockAt: Timestamp.fromMillis(earliest) }, { merge: true })
+  }
+
+  // ===== Auto-fill missing BONUS picks (analyst's picks, scored 50% like matches) =====
+  // Once bonus has locked (first kickoff), anyone who never submitted a bonus gets
+  // the duo's picks, flagged auto:true so dailyJob scores them at 50%. Idempotent:
+  // users who already have a bonus doc are skipped, so latecomers get filled too.
+  if (earliest !== null && Date.now() >= earliest) {
+    const [usersSnap, bonusSnap] = await Promise.all([
+      db.collection('users').get(),
+      db.collection('bonusPredictions').get()
+    ])
+    const haveBonus = new Set(bonusSnap.docs.map((d) => d.id))
+    const bb = db.batch()
+    let filled = 0
+    for (const u of usersSnap.docs) {
+      if (haveBonus.has(u.id) || filled >= 450) continue
+      bb.set(db.collection('bonusPredictions').doc(u.id), {
+        uid: u.id,
+        championTeamCode: ANALYST_BONUS.championTeamCode,
+        runnerUpCode: ANALYST_BONUS.runnerUpCode,
+        surpriseTeamCode: ANALYST_BONUS.surpriseTeamCode,
+        flopTeamCode: ANALYST_BONUS.flopTeamCode,
+        topScorer: ANALYST_BONUS.topScorer,
+        championPoints: null, topScorerPoints: null, awardedPoints: 0,
+        auto: true, updatedAt: Timestamp.now()
+      })
+      filled++
+    }
+    if (filled) await bb.commit()
   }
 
   // King of the hill

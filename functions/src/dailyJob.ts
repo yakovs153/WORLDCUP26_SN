@@ -120,6 +120,7 @@ async function runDaily(geminiKey: string) {
     if (adminTopScorers.size && b.topScorer && adminTopScorers.has(b.topScorer)) pts += bonusPts.topScorer || 0
     if (b.surpriseTeamCode && qfReachers.has(up(b.surpriseTeamCode))) pts += bonusPts.surprise || 0
     if (qfStarted && b.flopTeamCode && !qfReachers.has(up(b.flopTeamCode))) pts += bonusPts.flop || 0
+    if (b.auto) pts = pts * 0.5 // auto-filled bonus (forgot to pick) scores 50%, like matches
     const prev = b.awardedPoints || 0
     if (pts !== prev) {
       bonusDelta.set(b.uid, (bonusDelta.get(b.uid) || 0) + (pts - prev))

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
 import { scorePredictionForStage } from '../lib/scoring'
-import { tomPick, AUTO_FACTOR, type AnalystOverrides } from '../lib/octopus'
+import { tomPick, AUTO_FACTOR, OCTOPUS_UID, type AnalystOverrides } from '../lib/octopus'
 import type { Match, Prediction, ScoringConfig } from '../types'
 
 /**
@@ -37,7 +37,9 @@ export function useLivePoints(matches: Match[], scoring: ScoringConfig, uids: st
         const p = pm[uid]
         const ph = p ? p.homeScore : oh
         const pa = p ? p.awayScore : oa
-        const isAuto = !p || p.auto // Tom filled it (live) or it was auto-filled
+        // Real users with no/auto prediction score 50%; the analyst duo owns
+        // their pick and always scores FULL.
+        const isAuto = uid !== OCTOPUS_UID && (!p || p.auto)
         const base = scorePredictionForStage(ph, pa, m.homeScore, m.awayScore, m.stage, scoring)
         delta.set(uid, (delta.get(uid) || 0) + base * (isAuto ? AUTO_FACTOR : 1))
       }

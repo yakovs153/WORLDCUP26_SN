@@ -257,13 +257,16 @@ interface Cfg {
   scoring: ScoringConfig
 }
 
-function pointsFor(pred: Prediction | { homeScore: number; awayScore: number; auto?: boolean; points?: number | null } | undefined, m: Match, cfg: Cfg): number {
+function pointsFor(pred: Prediction | { homeScore: number; awayScore: number; auto?: boolean; isTom?: boolean; points?: number | null } | undefined, m: Match, cfg: Cfg): number {
   if (!pred) return 0
   if (m.status !== 'FINISHED' || m.homeScore == null || m.awayScore == null) return 0
   // Cached points on the doc win when present.
   if ('points' in pred && typeof pred.points === 'number') return pred.points
   const base = scorePredictionForStage(pred.homeScore, pred.awayScore, m.homeScore, m.awayScore, m.stage, cfg.scoring)
-  return base * (pred.auto ? AUTO_FACTOR : 1)
+  // The analyst duo (isTom) own their picks — they score FULL. Only real users'
+  // auto-filled predictions are halved.
+  const isAnalyst = 'isTom' in pred && pred.isTom
+  return base * (pred.auto && !isAnalyst ? AUTO_FACTOR : 1)
 }
 
 function MatchCompareRow({ match, mine, theirs, cfg }: { match: Match; mine?: Prediction; theirs?: Prediction | { homeScore: number; awayScore: number; auto?: boolean }; cfg: Cfg }) {
