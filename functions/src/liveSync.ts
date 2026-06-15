@@ -559,6 +559,32 @@ async function runSync(token: string, geminiKey?: string, oddsKey?: string, apiF
         220
       )
       if (recap) await db.collection('appState').doc('pundit').set({ text: recap, updatedAt: Timestamp.now() }, { merge: true })
+
+      // Refresh the תחזית tip too — predict the NEXT upcoming match (the duo's
+      // actual scoreline pick), so the whole card stays fresh after each game.
+      const nowMs2 = Date.now()
+      let next: { id: string; hn: string; an: string; hc: string; ac: string; k: number } | null = null
+      for (const it of snap.values()) {
+        const x = it as { id?: string; status?: string; kickoffMs?: number; homeTeam?: { name?: string; code?: string }; awayTeam?: { name?: string; code?: string } }
+        if (x.status !== 'SCHEDULED' || typeof x.kickoffMs !== 'number' || x.kickoffMs <= nowMs2) continue
+        if (!next || x.kickoffMs < next.k) next = { id: x.id || '', hn: x.homeTeam?.name || '', an: x.awayTeam?.name || '', hc: x.homeTeam?.code || '', ac: x.awayTeam?.code || '', k: x.kickoffMs }
+      }
+      if (next) {
+        const nx: { id: string; hn: string; an: string; hc: string; ac: string; k: number } = next
+        const [ph, pa] = tomPick(nx.hc, nx.ac, nx.id, analystOverrides)
+        const preview = await geminiCall(
+          geminiKey,
+          process.env.GEMINI_MODEL || 'gemini-flash-lite-latest',
+          `אתה עמוס ואביגדור (צמד אנליסטים AI, לשון רבים) — מונדיאל 2026 בלבד. ` +
+          `המשחק הקרוב: ${nx.hn} נגד ${nx.an}. הניחוש הרשמי שלכם לתוצאה: ${ph}-${pa}. ` +
+          `כתוב משפט תחזית אחד, חד ובטוח בעברית, שמציין במפורש את התוצאה שניחשתם (${nx.hn} ${ph}-${pa} ${nx.an}) ` +
+          `ומסתיים בביטוי ביטחון (החלף ביניהם): "זה באנקר!" / "בדוק נעול" / "את הילד שלי אני שם על זה". ` +
+          `משפט אחד שלם — אל תיחתך באמצע. עד 200 תווים. בלי מרכאות ובלי האשטגים. ` +
+          `לעולם אל תכתוב "בן דוד"; אם בא לך טיפ משפחתי קליל — רק "בן אחותי" או "בן גיסי", ובמשורה.`,
+          220
+        )
+        if (preview) await db.collection('appState').doc('pundit').set({ preview, updatedAt: Timestamp.now() }, { merge: true })
+      }
     }
   }
 
