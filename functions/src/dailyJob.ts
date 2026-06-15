@@ -7,7 +7,7 @@ import { onRequest } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import { defineSecret } from 'firebase-functions/params'
 import { Timestamp, getFirestore, FieldValue } from 'firebase-admin/firestore'
-import { SYNC_SECRET } from './liveSync'
+import { SYNC_SECRET, tomPick } from './liveSync'
 
 export const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY')
 
@@ -138,55 +138,54 @@ async function runDaily(geminiKey: string) {
       .docs.map((d) => ({ name: d.data().displayName || 'משתמש', pts: d.data().totalPoints || 0 })).filter((u) => u.pts > 0)
     const now = Date.now(), DAY = 86_400_000
     const todayFixtures: string[] = []
-    const todayMeta: Array<{ hn: string; an: string; hc: string; ac: string }> = []
     let live = 0, finishedToday = 0
+    let nextMatch: { id: string; hn: string; an: string; hc: string; ac: string; k: number } | null = null
     ;(await db.collection('matches').get()).forEach((d) => {
       const m = d.data(); const k = m.kickoff?.toMillis?.() ?? 0
       if (m.status === 'LIVE') live++
       if (m.status === 'FINISHED' && now - k < DAY && now - k > 0) finishedToday++
-      if (m.status === 'SCHEDULED' && k > now && k - now < DAY) {
-        todayFixtures.push(`${m.homeTeam?.name} נגד ${m.awayTeam?.name}`)
-        todayMeta.push({ hn: m.homeTeam?.name || '', an: m.awayTeam?.name || '', hc: m.homeTeam?.code || '', ac: m.awayTeam?.code || '' })
+      if (m.status === 'SCHEDULED' && k > now && k - now < DAY) todayFixtures.push(`${m.homeTeam?.name} נגד ${m.awayTeam?.name}`)
+      // Soonest upcoming match — the duo predict THIS one in the תחזית tip.
+      if (m.status === 'SCHEDULED' && k > now && (!nextMatch || k < nextMatch.k)) {
+        nextMatch = { id: d.id, hn: m.homeTeam?.name || '', an: m.awayTeam?.name || '', hc: m.homeTeam?.code || '', ac: m.awayTeam?.code || '', k }
       }
     })
 
-    // Market favorite among today's games (best-effort — from snapshot/odds, written by liveSync).
-    let oddsHint = ''
-    try {
-      const oddsDoc = await db.collection('snapshot').doc('odds').get()
-      const oItems = ((oddsDoc.exists ? (oddsDoc.data() as { items?: Record<string, { home: number; away: number }> }).items : {}) || {})
-      const alias = (c: string) => { const u = (c || '').toUpperCase(); return u === 'CUR' ? 'CUW' : u }
-      const pk = (a: string, b: string) => [alias(a), alias(b)].sort().join('_')
-      let best: { name: string; pct: number } | null = null
-      for (const m of todayMeta) {
-        const o = oItems[pk(m.hc, m.ac)]
-        if (!o) continue
-        const favPct = Math.max(o.home, o.away)
-        const favName = o.home >= o.away ? m.hn : m.an
-        if (!best || favPct > best.pct) best = { name: favName, pct: favPct }
-      }
-      if (best) oddsHint = ` לפי שוק ההימורים, הפייבוריט הבולט היום הוא ${best.name} (${best.pct}%) — אפשר להתייחס לזה בנימה של "השוק אומר…".`
-    } catch { /* ignore — odds are optional */ }
     const standings = top.length ? top.map((t) => `${t.name} ${t.pts}`).join(', ') : 'אין עדיין נקודות'
     const summary = `מובילים: ${standings}. חי כעת: ${live}. הסתיימו היום: ${finishedToday}. צפויים היום: ${todayFixtures.length}.`
 
     const recap = await geminiCall(geminiKey, GMODEL,
-      `אתה "עמוס ואביגדור", צמד אנליסטים כדורגל מבוסס-AI של StoreNext — חד, מדויק, שנון וקליל, מדבר בלשון רבים. ` +
-      `כתוב "מבזק יומי" בעברית שעוסק אך ורק במונדיאל 2026 (גביע העולם בכדורגל) — לא בליגות מקומיות, אירופיות או כל תחרות אחרת. ` +
-      `2–3 שורות קצרות, כל שורה מתחילה באימוג'י, מתייחס למוביל בטבלת הניחושים ולמה שמעניין היום במונדיאל. ` +
-      `שמור על טון חיובי וקליל — בלי לעלוב במשתתפים. ` +
-      `חובה לשלב באחת השורות, באופן טבעי וחלק, אחד מהביטויים האופייניים שלכם (בניסוח מדויק): ` +
+      `אתה "עמוס ואביגדור", צמד אנליסטים כדורגל מבוסס-AI של StoreNext — חד, שנון וקליל, מדבר בלשון רבים. ` +
+      `כתוב "מבזק יומי" בעברית שעוסק אך ורק במונדיאל 2026 (גביע העולם) — לא בליגות מקומיות/אירופיות. ` +
+      `2–3 שורות קצרות, כל שורה מתחילה באימוג'י: אחת על המוביל בטבלת הניחושים, ואחת-שתיים על מה שמעניין היום במונדיאל. ` +
+      `טון חיובי וקליל, בלי לעלוב. גוון מיום ליום — אל תחזור על אותו מבנה, אותן בדיחות או אותו פתיח, והפתע. ` +
+      `שלב באופן טבעי באחת השורות אחד מהביטויים שלכם (בניסוח מדויק, והחלף ביניהם בכל פעם): ` +
       `באור שאני רואה / זה באנקר! / נביא את הבוחטיות / את הילד שלי אני שם על זה / תביא את הג'ובות. ` +
-      `מדי פעם שלבו "מודיעין" קומי ובדוי מקרוב משפחה — בן גיסי או בן אחותי — שעובד בעבודה משעשעת באחת המארחות (קנדה / מקסיקו / ארה"ב) ומוסר "טיפ פנימי" על נבחרת בנימת ביטחון (למשל "בדוק חתום" / "בדוק נעול"). קצר והומוריסטי. ` +
-      `בלי האשטגים/מרכאות, עד 320 תווים.\nנתונים: ${summary}`, { maxTokens: 240 })
+      `"מודיעין מהמשפחה" הוא תבלין רשות בלבד: לכל היותר באחת מהשורות ולא בכל יום. ` +
+      `לעולם אל תכתוב "בן דוד" — אם בכלל, רק "בן אחותי" או "בן גיסי", והחלף ביניהם. ` +
+      `בלי האשטגים/מרכאות, עד 320 תווים.\nנתונים: ${summary}`, { maxTokens: 260 })
+
+    // Tip = the duo's PREDICTION for the next match (their actual scoreline pick) — not a "game to watch".
     let preview: string | null = null
-    if (todayFixtures.length) {
+    if (nextMatch) {
+      const nm: { id: string; hn: string; an: string; hc: string; ac: string; k: number } = nextMatch
+      const [ph, pa] = tomPick(nm.hc, nm.ac, nm.id, (cfg.analystOverrides || {}) as Record<string, [number, number]>)
+      // Optional market context for THIS match (best-effort, from snapshot/odds).
+      let oddsLine = ''
+      try {
+        const oddsDoc = await db.collection('snapshot').doc('odds').get()
+        const oItems = ((oddsDoc.exists ? (oddsDoc.data() as { items?: Record<string, { home: number; away: number }> }).items : {}) || {})
+        const alias = (c: string) => { const u = (c || '').toUpperCase(); return u === 'CUR' ? 'CUW' : u }
+        const o = oItems[[alias(nm.hc), alias(nm.ac)].sort().join('_')]
+        if (o) oddsLine = ` (שוק ההימורים: ${nm.hn} ${o.home}%, ${nm.an} ${o.away}%)`
+      } catch { /* ignore — odds optional */ }
       preview = await geminiCall(geminiKey, GMODEL,
-        `אתה עמוס ואביגדור (צמד אנליסטים, לשון רבים). מדובר אך ורק במונדיאל 2026 בכדורגל. ` +
-        `המארחות הן ארה"ב, קנדה ומקסיקו בלבד — אף נבחרת אחרת אינה מארחת, אל תניח שמישהי מהן משחקת בביתה. ` +
-        `מבין משחקי היום: ${todayFixtures.join(', ')}. בחר את המשחק הכי מסקרן וכתוב משפט הייפ אחד קצר בעברית (עד 150 תווים) ` +
-        `על המשחק עצמו. אפשר לתבל ב"טיפ פנימי" קומי ובדוי מבן גיסי / בן אחותי שעובד באחת המארחות, ולסיים בביטחון: "זה באנקר!" / "בדוק נעול" / "את הילד שלי אני שם על זה". ` +
-        `אל תמציא עובדות אמיתיות (מארחת, דירוג, פציעות) שאינך בטוח בהן — ה"מודיעין מהמשפחה" הוא בדיחה ברורה. בלי מרכאות.${oddsHint}`, { maxTokens: 110 })
+        `אתה עמוס ואביגדור (צמד אנליסטים AI, לשון רבים) — מונדיאל 2026 בלבד. ` +
+        `המשחק הקרוב: ${nm.hn} נגד ${nm.an}.${oddsLine} הניחוש הרשמי שלכם לתוצאה: ${ph}-${pa}. ` +
+        `כתוב משפט תחזית אחד, חד ובטוח בעברית, שמציין במפורש את התוצאה שניחשתם (${nm.hn} ${ph}-${pa} ${nm.an}) ` +
+        `ומסתיים בביטוי ביטחון (החלף ביניהם): "זה באנקר!" / "בדוק נעול" / "את הילד שלי אני שם על זה". ` +
+        `משפט אחד שלם — אל תיחתך באמצע. עד 200 תווים. בלי מרכאות ובלי האשטגים. ` +
+        `לעולם אל תכתוב "בן דוד"; אם בא לך טיפ משפחתי קליל — רק "בן אחותי" או "בן גיסי", ובמשורה.`, { maxTokens: 220 })
     }
     await db.collection('appState').doc('pundit').set({ text: recap || '', preview: preview || '', updatedAt: Timestamp.now() }, { merge: true })
     punditOK = !!recap

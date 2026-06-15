@@ -115,7 +115,7 @@ function bucket(gap: number) {
   if (gap > -2.0) return AWAY_COMFORT
   return AWAY_BIG
 }
-function tomPick(homeCode: string, awayCode: string, matchId: string, overrides?: Record<string, [number, number]>): [number, number] {
+export function tomPick(homeCode: string, awayCode: string, matchId: string, overrides?: Record<string, [number, number]>): [number, number] {
   const ov = overrides?.[matchId]
   if (Array.isArray(ov) && ov.length === 2) return ov
   const gap = strengthOf(homeCode) + 0.3 - strengthOf(awayCode)
@@ -555,7 +555,7 @@ async function runSync(token: string, geminiKey?: string, oddsKey?: string, apiF
         `המשחק הרגע נגמר. כתוב "מבזק אחרי המשחק" בעברית, 2 שורות קצרות, כל שורה מתחילה באימוג'י: ` +
         `שורה על התוצאה והניחוש שלכם מולה, ושורה על מי שצדק / מצב הטבלה. טון חיובי וקליל, בלי לעלוב. ` +
         `שלבו אחד מהביטויים שלכם (באור שאני רואה / זה באנקר! / נביא את הבוחטיות / תביא את הג'ובות / את הילד שלי אני שם על זה), ` +
-        `ומדי פעם "טיפ" קומי מבן גיסי/בן אחותי. בלי האשטגים/מרכאות, עד 280 תווים.\n${ctx}`,
+        `ומדי פעם (לא תמיד) "טיפ" קומי קצר מ"בן אחותי" או "בן גיסי" — לעולם אל תכתוב "בן דוד". גוון בכל פעם. בלי האשטגים/מרכאות, עד 280 תווים.\n${ctx}`,
         220
       )
       if (recap) await db.collection('appState').doc('pundit').set({ text: recap, updatedAt: Timestamp.now() }, { merge: true })
