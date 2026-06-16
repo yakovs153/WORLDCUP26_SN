@@ -25,7 +25,7 @@ if ($LASTEXITCODE -ne 0) { Write-Host "Build FAILED - nothing deployed." -Foregr
 
 # --- 3/3  Deploy hosting + functions (liveSync, dailyJob) + Firestore rules ---
 Write-Host "`n=== 3/3  Deploying hosting + functions + rules ===" -ForegroundColor Cyan
-firebase.cmd deploy --only "hosting,functions:liveSync,functions:dailyJob,firestore:rules"
+firebase.cmd deploy --only "hosting,functions:liveSync,functions:dailyJob,functions:runPundit,firestore:rules"
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Deploy FAILED. See output above (credentials issue? run: firebase.cmd login --reauth)." -ForegroundColor Red
     exit 1

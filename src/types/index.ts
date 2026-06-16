@@ -197,6 +197,7 @@ export interface AppConfig {
   allowedEmailDomains: string[]         // e.g. ["storenext.com"] — empty = no restriction
   blockedEmails: string[]               // emails rejected from login/register (admin-managed)
   bonusResults?: { topScorer?: string; topScorers?: string[]; topScorerLocked?: boolean } // official tournament top scorer(s); topScorerLocked = admin-set, auto-track won't override
+  punditVoice?: string                  // admin-editable persona/voice for all AI pundit text (empty = built-in default)
   updatedAt?: Timestamp
 }
 

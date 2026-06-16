@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore'
-import { db, DEMO_MODE } from '../firebase'
+import { db, auth, DEMO_MODE } from '../firebase'
+
+const RUN_PUNDIT_URL = 'https://europe-west1-world-cup-2026-c145b.cloudfunctions.net/runPundit'
 import { useAuth } from '../auth/AuthProvider'
 import { useAppConfig } from '../hooks/useAppConfig'
 import { useMatches } from '../hooks/useMatches'
@@ -29,8 +31,32 @@ export default function AdminFeatures() {
   const [savingPundit, setSavingPundit] = useState(false)
   const [ov, setOv] = useState<Record<string, [number, number]>>(cfg.analystOverrides)
   const [savingOv, setSavingOv] = useState(false)
+  const [voice, setVoice] = useState('')
+  const [savingVoice, setSavingVoice] = useState(false)
+  const [runningNow, setRunningNow] = useState(false)
 
-  useEffect(() => { setFlags(cfg.features); setTipsEnabled(cfg.tipsEnabled); setOv(cfg.analystOverrides) }, [cfg])
+  useEffect(() => { setFlags(cfg.features); setTipsEnabled(cfg.tipsEnabled); setOv(cfg.analystOverrides); setVoice(cfg.punditVoice || '') }, [cfg])
+
+  const voiceDirty = (voice.trim()) !== (cfg.punditVoice || '')
+  const saveVoice = async () => {
+    setSavingVoice(true)
+    try { await patchAppConfig({ punditVoice: voice.trim() }); toast.show('סגנון הפרשנים נשמר ✓', 'success') }
+    catch (e) { toast.show(e instanceof Error ? e.message : 'שמירה נכשלה', 'error') }
+    finally { setSavingVoice(false) }
+  }
+  const runNow = async () => {
+    if (DEMO_MODE) { toast.show('זמין בפרודקשן', 'info'); return }
+    setRunningNow(true)
+    try {
+      const token = await auth.currentUser?.getIdToken()
+      if (!token) throw new Error('לא מחובר')
+      const res = await fetch(RUN_PUNDIT_URL, { method: 'POST', headers: { Authorization: `Bearer ${token}` } })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || `שגיאה ${res.status}`)
+      toast.show('המבזק והתחזית עודכנו ✓', 'success')
+    } catch (e) { toast.show(e instanceof Error ? e.message : 'הרצה נכשלה', 'error') }
+    finally { setRunningNow(false) }
+  }
 
   const scheduled = matches.filter((m) => m.status === 'SCHEDULED').slice(0, 60)
   const ovDirty = JSON.stringify(ov) !== JSON.stringify(cfg.analystOverrides)
@@ -104,16 +130,25 @@ export default function AdminFeatures() {
         </button>
       </section>
 
-      {/* Trigger Tom's daily run on demand (real Gemini call) */}
+      {/* Editable AI voice/persona + on-demand run */}
       <section className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>✨ הרץ את עמוס ואביגדור עכשיו</h3>
+        <h3 style={{ fontFamily: 'var(--font-display)', letterSpacing: 1, fontSize: 16 }}>🎭 סגנון עמוס ואביגדור (פרומפט)</h3>
         <p className="text-muted" style={{ fontSize: 12 }}>
-          רוצה לראות את שולחן הפרשנים, האימון האישי וההצעות לסקרים מבלי לחכות לבוקר? פתח את ה-Action ולחץ "Run workflow".
+          האישיות, הטון, הביטויים והכללים של ה-AI. נכנס לכל הטקסטים (מבזק יומי, מבזק אחרי משחק, ותחזית למשחק הבא).
+          המבנה והנתונים (תוצאות, טבלה, המשחק הבא) מתווספים אוטומטית — אז אי אפשר "לשבור" אותם. ריק = ברירת המחדל המובנית.
         </p>
-        <a href="https://github.com/yakovs153/WORLDCUP26_SN/actions/workflows/pundit.yml" target="_blank" rel="noopener noreferrer"
-          className="btn-ghost" style={{ alignSelf: 'flex-start', padding: '8px 14px', fontSize: 13, border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)', color: 'var(--color-text)', textDecoration: 'none' }}>
-          פתח את ה-Action ↗
-        </a>
+        <textarea rows={7} value={voice} onChange={(e) => setVoice(e.target.value)}
+          placeholder={DEMO_MODE ? '(זמין בפרודקשן)' : 'השאר ריק לשימוש בברירת המחדל, או כתוב כאן את האישיות והכללים…'} style={fld} />
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button className="btn" onClick={saveVoice} disabled={!voiceDirty || savingVoice || DEMO_MODE}>{savingVoice ? 'שומר…' : 'שמירת סגנון'}</button>
+          <button onClick={() => setVoice('')} className="btn-ghost" style={{ padding: '10px 14px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)' }}>אפס לברירת מחדל</button>
+        </div>
+        <div style={{ borderTop: '1px solid var(--color-border)', marginTop: 6, paddingTop: 10 }}>
+          <p className="text-muted" style={{ fontSize: 12, marginBottom: 8 }}>הרץ עכשיו: מחולל מבזק יומי + תחזית למשחק הבא מיד (קריאת Gemini אמיתית), בלי לחכות לסיום משחק.</p>
+          <button className="btn" onClick={runNow} disabled={runningNow || DEMO_MODE} style={{ alignSelf: 'flex-start' }}>
+            {runningNow ? '⏳ מריץ…' : '✨ הרץ את עמוס ואביגדור עכשיו'}
+          </button>
+        </div>
       </section>
 
       {/* Override Tom's daily recap */}

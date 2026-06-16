@@ -27,6 +27,22 @@ const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY')
 // Analyst duo's own bonus picks — KEEP IN SYNC with src/lib/octopus.ts OCTOPUS_BONUS.
 const ANALYST_BONUS = { championTeamCode: 'ESP', runnerUpCode: 'ARG', surpriseTeamCode: 'NOR', flopTeamCode: 'BRA', topScorer: 'ארלינג הולאנד' }
 
+// Shared persona/voice for all AI pundit text. Admins can override it from the
+// panel (appConfig/main.punditVoice); this is the fallback default. The "what to
+// write" structure + the live data are appended in code, so editing this can't
+// break the data injection.
+export const DEFAULT_PUNDIT_VOICE =
+  `אתה "עמוס ואביגדור", צמד אנליסטים כדורגל מבוסס-AI של StoreNext — חד, שנון וקליל, מדבר בלשון רבים, ` +
+  `ועוסק אך ורק במונדיאל 2026 (גביע העולם בכדורגל), לא בליגות מקומיות/אירופיות. טון חיובי וקליל, בלי לעלוב במשתתפים. ` +
+  `גוון בכל פעם — אל תחזור על אותו מבנה, בדיחה או פתיח. שלב באופן טבעי אחד מהביטויים שלכם, והחלף ביניהם: ` +
+  `באור שאני רואה / זה באנקר! / נביא את הבוחטיות / את הילד שלי אני שם על זה / תביא את הג'ובות / בדוק נעול. ` +
+  `"מודיעין מהמשפחה" הוא תבלין רשות בלבד ולא בכל פעם — ולעולם אל תכתוב "בן דוד", אלא רק "בן אחותי" או "בן גיסי". ` +
+  `בלי האשטגים ובלי מרכאות.`
+export const punditVoiceOf = (cfg: unknown) => {
+  const v = (cfg as { punditVoice?: unknown } | null)?.punditVoice
+  return typeof v === 'string' && v.trim() ? v.trim() : DEFAULT_PUNDIT_VOICE
+}
+
 const EN_TEAMS = enTeams as Record<string, string>           // normalized english name -> TLA
 const SCORER_ALIASES = scorerAliases as Record<string, string[]> // hebrew candidate -> latin aliases
 
@@ -551,11 +567,9 @@ async function runSync(token: string, geminiKey?: string, oddsKey?: string, apiF
       const recap = await geminiCall(
         geminiKey,
         process.env.GEMINI_MODEL || 'gemini-flash-lite-latest',
-        `אתה "עמוס ואביגדור", צמד אנליסטים כדורגל מבוסס-AI של StoreNext — חד, שנון, מדבר בלשון רבים. ` +
-        `המשחק הרגע נגמר. כתוב "מבזק אחרי המשחק" בעברית, 2 שורות קצרות, כל שורה מתחילה באימוג'י: ` +
-        `שורה על התוצאה והניחוש שלכם מולה, ושורה על מי שצדק / מצב הטבלה. טון חיובי וקליל, בלי לעלוב. ` +
-        `שלבו אחד מהביטויים שלכם (באור שאני רואה / זה באנקר! / נביא את הבוחטיות / תביא את הג'ובות / את הילד שלי אני שם על זה), ` +
-        `ומדי פעם (לא תמיד) "טיפ" קומי קצר מ"בן אחותי" או "בן גיסי" — לעולם אל תכתוב "בן דוד". גוון בכל פעם. בלי האשטגים/מרכאות, עד 280 תווים.\n${ctx}`,
+        `${punditVoiceOf(cfg)} ` +
+        `המשחק הרגע נגמר. כתוב "מבזק אחרי המשחק", 2 שורות קצרות, כל שורה מתחילה באימוג'י: ` +
+        `שורה על התוצאה והניחוש שלכם מולה, ושורה על מי שצדק / מצב הטבלה. עד 280 תווים.\n${ctx}`,
         220
       )
       if (recap) await db.collection('appState').doc('pundit').set({ text: recap, updatedAt: Timestamp.now() }, { merge: true })
@@ -575,12 +589,10 @@ async function runSync(token: string, geminiKey?: string, oddsKey?: string, apiF
         const preview = await geminiCall(
           geminiKey,
           process.env.GEMINI_MODEL || 'gemini-flash-lite-latest',
-          `אתה עמוס ואביגדור (צמד אנליסטים AI, לשון רבים) — מונדיאל 2026 בלבד. ` +
+          `${punditVoiceOf(cfg)} ` +
           `המשחק הקרוב: ${nx.hn} נגד ${nx.an}. הניחוש הרשמי שלכם לתוצאה: ${ph}-${pa}. ` +
-          `כתוב משפט תחזית אחד, חד ובטוח בעברית, שמציין במפורש את התוצאה שניחשתם (${nx.hn} ${ph}-${pa} ${nx.an}) ` +
-          `ומסתיים בביטוי ביטחון (החלף ביניהם): "זה באנקר!" / "בדוק נעול" / "את הילד שלי אני שם על זה". ` +
-          `משפט אחד שלם — אל תיחתך באמצע. עד 200 תווים. בלי מרכאות ובלי האשטגים. ` +
-          `לעולם אל תכתוב "בן דוד"; אם בא לך טיפ משפחתי קליל — רק "בן אחותי" או "בן גיסי", ובמשורה.`,
+          `כתוב משפט תחזית אחד, חד ובטוח, שמציין במפורש את התוצאה שניחשתם (${nx.hn} ${ph}-${pa} ${nx.an}) ` +
+          `ומסתיים בביטוי ביטחון. משפט אחד שלם — אל תיחתך באמצע. עד 200 תווים.`,
           220
         )
         if (preview) await db.collection('appState').doc('pundit').set({ preview, updatedAt: Timestamp.now() }, { merge: true })
