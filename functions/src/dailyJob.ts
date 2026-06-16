@@ -7,6 +7,7 @@ import { onRequest } from 'firebase-functions/v2/https'
 import { logger } from 'firebase-functions/v2'
 import { defineSecret } from 'firebase-functions/params'
 import { Timestamp, getFirestore, FieldValue } from 'firebase-admin/firestore'
+import { getStorage } from 'firebase-admin/storage'
 import { SYNC_SECRET } from './liveSync'
 import { generateDailyPundit } from './pundit'
 
@@ -130,6 +131,29 @@ async function runDaily(geminiKey: string) {
   }
   for (const [uid, delta] of bonusDelta) if (delta) await db.collection('users').doc(uid).set({ totalPoints: FieldValue.increment(delta) }, { merge: true })
 
+  // ===== Daily backup → Cloud Storage (replaces the old GitHub Action) =====
+  // Service-account auth (no refresh token), so it can't expire. Best-effort:
+  // a storage hiccup or missing permission never fails the rest of the job.
+  let backupOK = false
+  try {
+    const esc = (v: unknown) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s }
+    const isoDate = new Date().toISOString().slice(0, 10)
+    const predRows = ['uid,matchId,homeScore,awayScore,points,auto,submittedAt']
+    for (const d of allPreds.docs) {
+      const p = d.data()
+      predRows.push([p.uid, p.matchId, p.homeScore, p.awayScore, p.points, p.auto, p.submittedAt?.toDate?.()?.toISOString?.() ?? ''].map(esc).join(','))
+    }
+    const bonusRows = ['uid,championTeamCode,runnerUpCode,surpriseTeamCode,flopTeamCode,topScorer,awardedPoints,auto']
+    for (const d of bps.docs) {
+      const b = d.data()
+      bonusRows.push([b.uid, b.championTeamCode, b.runnerUpCode, b.surpriseTeamCode, b.flopTeamCode, b.topScorer, b.awardedPoints, b.auto].map(esc).join(','))
+    }
+    const bucket = getStorage().bucket() // default bucket from FIREBASE_CONFIG
+    await bucket.file(`backups/predictions-${isoDate}.csv`).save(predRows.join('\n'), { contentType: 'text/csv; charset=utf-8' })
+    await bucket.file(`backups/bonus-predictions-${isoDate}.csv`).save(bonusRows.join('\n'), { contentType: 'text/csv; charset=utf-8' })
+    backupOK = true
+  } catch (e) { logger.warn('daily backup failed', e) }
+
   // ===== Tom recap + survey suggestions + HoF blurbs + coach lines =====
   let punditOK = false, suggestionsOK = false, coachWritten = 0
   if (geminiKey) {
@@ -165,7 +189,7 @@ async function runDaily(geminiKey: string) {
   return {
     users: counts.size, predictions: allPreds.size, hof: Object.keys(hof).length,
     bonusAdjusted: bonusDelta.size, champion: champion || '-',
-    pundit: punditOK, suggestions: suggestionsOK, coach: coachWritten
+    pundit: punditOK, suggestions: suggestionsOK, coach: coachWritten, backup: backupOK
   }
 }
 
