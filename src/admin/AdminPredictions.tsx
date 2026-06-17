@@ -10,6 +10,8 @@ import type { BonusPrediction, Match, Prediction, UserDoc } from '../types'
 interface Row {
   user: string; email: string; dept: string; match: string
   kickoff: string; pred: string; points: string; auto: string
+  submitted: string  // when the prediction was written
+  suspect: boolean   // auto-flagged BUT saved before kickoff => a real bet wrongly marked auto
 }
 
 interface BonusRow {
@@ -18,10 +20,16 @@ interface BonusRow {
   awardedPoints: string
 }
 
-const HEADERS = ['שם', 'אימייל', 'מחלקה', 'משחק', 'מועד', 'ניחוש', 'נקודות', 'אוטומטי']
+const HEADERS = ['שם', 'אימייל', 'מחלקה', 'משחק', 'מועד', 'ניחוש', 'נקודות', 'אוטומטי', 'מועד שמירה']
 const BONUS_HEADERS = ['שם', 'אימייל', 'מחלקה', 'זוכה', 'סגנית', 'הפתעה', 'אכזבה', 'מלך שערים', 'נק׳ בונוס']
 
-function toRow(p: Prediction, m: Match | undefined, u: UserDoc | undefined): Row {
+function toRow(p: Prediction & { submittedAt?: { toMillis?: () => number; toDate?: () => Date } }, m: Match | undefined, u: UserDoc | undefined): Row {
+  const subMs = p.submittedAt?.toMillis?.() ?? null
+  const kickMs = m?.kickoff?.toMillis?.() ?? null
+  // A genuine bet is written by the client BEFORE kickoff; the auto-fill writes
+  // AT/AFTER kickoff. So auto + submitted-before-kickoff = a real bet wrongly
+  // flagged auto (worth a closer look / fix).
+  const suspect = !!p.auto && subMs != null && kickMs != null && subMs < kickMs
   return {
     user: u?.displayName ?? p.uid,
     email: u?.email ?? '',
@@ -30,7 +38,9 @@ function toRow(p: Prediction, m: Match | undefined, u: UserDoc | undefined): Row
     kickoff: m ? m.kickoff.toDate().toLocaleString('he-IL') : '',
     pred: `${p.homeScore}-${p.awayScore}`,
     points: p.points == null ? '' : String(p.points),
-    auto: p.auto ? 'כן' : ''
+    auto: p.auto ? 'כן' : '',
+    submitted: subMs != null ? new Date(subMs).toLocaleString('he-IL') : '',
+    suspect
   }
 }
 
@@ -53,7 +63,7 @@ function exportCsv(rows: Row[]) {
   const esc = (s: string) => `"${String(s).replace(/"/g, '""')}"`
   const lines = [
     HEADERS.join(','),
-    ...rows.map((r) => [r.user, r.email, r.dept, r.match, r.kickoff, r.pred, r.points, r.auto].map(esc).join(','))
+    ...rows.map((r) => [r.user, r.email, r.dept, r.match, r.kickoff, r.pred, r.points, r.auto, r.submitted].map(esc).join(','))
   ]
   // BOM so Excel reads UTF-8 (Hebrew) correctly
   const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })
@@ -126,7 +136,8 @@ export default function AdminPredictions() {
         const r = pSnap.docs
           .map((d) => d.data() as Prediction)
           .map((p) => toRow(p, matches.get(p.matchId), users.get(p.uid)))
-          .sort((a, b) => a.user.localeCompare(b.user, 'he'))
+          // Surface suspect rows (auto-flagged but saved before kickoff) at the top.
+          .sort((a, b) => (b.suspect ? 1 : 0) - (a.suspect ? 1 : 0) || a.user.localeCompare(b.user, 'he'))
         const br = bSnap.docs
           .map((d) => d.data() as BonusPrediction & { awardedPoints?: number })
           .map((b) => toBonusRow(b, users.get(b.uid), teamCodeToName))
@@ -170,7 +181,7 @@ export default function AdminPredictions() {
               </thead>
               <tbody>
                 {rows.map((r, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                  <tr key={i} style={{ borderBottom: '1px solid var(--color-border)', background: r.suspect ? 'color-mix(in srgb, var(--color-accent) 14%, transparent)' : undefined }}>
                     <td style={{ padding: '7px 10px', fontWeight: 700 }}>{r.user}</td>
                     <td style={{ padding: '7px 10px', color: 'var(--color-text-muted)' }}>{r.email}</td>
                     <td style={{ padding: '7px 10px' }}>{r.dept}</td>
@@ -178,7 +189,8 @@ export default function AdminPredictions() {
                     <td style={{ padding: '7px 10px', color: 'var(--color-text-muted)' }}>{r.kickoff}</td>
                     <td style={{ padding: '7px 10px', fontWeight: 800, textAlign: 'center' }}>{r.pred}</td>
                     <td style={{ padding: '7px 10px', textAlign: 'center' }}>{r.points}</td>
-                    <td style={{ padding: '7px 10px', textAlign: 'center' }}>{r.auto && '🎲'}</td>
+                    <td style={{ padding: '7px 10px', textAlign: 'center' }}>{r.auto && '🎲'}{r.suspect && <span title="ניחש לפני המשחק אך סומן אוטומטי — כנראה הימור אמיתי">⚠️</span>}</td>
+                    <td style={{ padding: '7px 10px', color: 'var(--color-text-muted)' }}>{r.submitted}</td>
                   </tr>
                 ))}
               </tbody>
