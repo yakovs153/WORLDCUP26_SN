@@ -43,10 +43,18 @@ export default function AdminGoldenBoot() {
     try {
       const clean: Record<string, number> = {}
       for (const [k, v] of Object.entries(goals)) if (v > 0) clean[k] = v
-      await setDoc(doc(db, 'stats', 'goldenBoot'), { goals: clean, updatedAt: serverTimestamp() }, { merge: true })
-      toast.show('שערים נשמרו ✓', 'success')
+      // manual:true takes the race off the automatic updater until "back to auto".
+      await setDoc(doc(db, 'stats', 'goldenBoot'), { goals: clean, manual: true, updatedAt: serverTimestamp() }, { merge: true })
+      toast.show('שערים נשמרו ✓ (מצב ידני — עדכון אוטומטי מושהה)', 'success')
     } catch (e) { toast.show(e instanceof Error ? e.message : 'שמירה נכשלה', 'error') }
     finally { setSavingGoals(false) }
+  }
+
+  const backToAuto = async () => {
+    try {
+      await setDoc(doc(db, 'stats', 'goldenBoot'), { manual: false, updatedAt: serverTimestamp() }, { merge: true })
+      toast.show('חזרה לעדכון אוטומטי ✓', 'success')
+    } catch (e) { toast.show(e instanceof Error ? e.message : 'נכשל', 'error') }
   }
 
   const toggleWinner = (name: string) =>
@@ -82,9 +90,15 @@ export default function AdminGoldenBoot() {
             </div>
           ))}
         </div>
-        <button className="btn" onClick={saveGoals} disabled={savingGoals} style={{ alignSelf: 'flex-start' }}>
-          {savingGoals ? 'שומר…' : 'שמירת שערים'}
-        </button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button className="btn" onClick={saveGoals} disabled={savingGoals}>
+            {savingGoals ? 'שומר…' : 'שמירה ידנית'}
+          </button>
+          <button onClick={backToAuto} className="btn-ghost" style={{ padding: '8px 14px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-md)' }}>
+            ↻ חזרה לעדכון אוטומטי
+          </button>
+        </div>
+        <p className="text-muted" style={{ fontSize: 11 }}>שמירה ידנית משהה את העדכון האוטומטי. "חזרה לאוטומטי" מחזירה את העדכון מהסנכרון החי.</p>
       </div>
 
       <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

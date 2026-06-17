@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, doc, setDoc, arrayUnion, serverTimestamp } from 'firebase/firestore'
 import { db, DEMO_MODE } from '../firebase'
 import { useAuth } from '../auth/AuthProvider'
 import { getDemoMatches, getDemoPredictions, getDemoUser, getDemoBonus } from '../lib/demoData'
@@ -8,6 +8,7 @@ import { heName } from '../lib/teamNames'
 import type { BonusPrediction, Match, Prediction, UserDoc } from '../types'
 
 interface Row {
+  uid: string; matchId: string  // for the fix-it action
   user: string; email: string; dept: string; match: string
   kickoff: string; pred: string; points: string; auto: string
   submitted: string  // when the prediction was written
@@ -31,6 +32,8 @@ function toRow(p: Prediction & { submittedAt?: { toMillis?: () => number; toDate
   // flagged auto (worth a closer look / fix).
   const suspect = !!p.auto && subMs != null && kickMs != null && subMs < kickMs
   return {
+    uid: p.uid,
+    matchId: p.matchId,
     user: u?.displayName ?? p.uid,
     email: u?.email ?? '',
     dept: u?.department ?? '',
@@ -96,6 +99,20 @@ export default function AdminPredictions() {
   const [rows, setRows] = useState<Row[]>([])
   const [bonusRows, setBonusRows] = useState<BonusRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [fixing, setFixing] = useState<string | null>(null)
+
+  // Queue a "re-score to full points" request; liveSync applies it on its next
+  // run (sets auto:false, recomputes full points, corrects the user's total).
+  const fixToFull = async (uid: string, matchId: string) => {
+    const k = `${uid}_${matchId}`
+    setFixing(k)
+    try {
+      await setDoc(doc(db, 'appState', 'fixRequests'),
+        { items: arrayUnion({ uid, matchId }), updatedAt: serverTimestamp() }, { merge: true })
+      toast.show('נשלח — הניקוד יעודכן לנק׳ מלאות בסנכרון הבא (עד דקה)', 'success')
+    } catch (e) { toast.show(e instanceof Error ? e.message : 'הבקשה נכשלה', 'error') }
+    finally { setFixing(null) }
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -189,7 +206,16 @@ export default function AdminPredictions() {
                     <td style={{ padding: '7px 10px', color: 'var(--color-text-muted)' }}>{r.kickoff}</td>
                     <td style={{ padding: '7px 10px', fontWeight: 800, textAlign: 'center' }}>{r.pred}</td>
                     <td style={{ padding: '7px 10px', textAlign: 'center' }}>{r.points}</td>
-                    <td style={{ padding: '7px 10px', textAlign: 'center' }}>{r.auto && '🎲'}{r.suspect && <span title="ניחש לפני המשחק אך סומן אוטומטי — כנראה הימור אמיתי">⚠️</span>}</td>
+                    <td style={{ padding: '7px 10px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                      {r.auto && '🎲'}{r.suspect && <span title="ניחש לפני המשחק אך סומן אוטומטי — כנראה הימור אמיתי">⚠️</span>}
+                      {r.auto && r.points !== '' && (
+                        <button onClick={() => fixToFull(r.uid, r.matchId)} disabled={fixing === `${r.uid}_${r.matchId}`}
+                          title="תקן לנק׳ מלאות (הימור אמיתי שסומן בטעות כאוטומטי)"
+                          style={{ marginInlineStart: 6, padding: '2px 8px', fontSize: 11, borderRadius: 'var(--radius-full)', border: '1px solid var(--color-border-strong)', background: 'transparent', color: 'var(--color-text)', cursor: 'pointer' }}>
+                          {fixing === `${r.uid}_${r.matchId}` ? '…' : 'תקן'}
+                        </button>
+                      )}
+                    </td>
                     <td style={{ padding: '7px 10px', color: 'var(--color-text-muted)' }}>{r.submitted}</td>
                   </tr>
                 ))}

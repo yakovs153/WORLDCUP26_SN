@@ -23,7 +23,22 @@ export default function Matches() {
   const { byMatchId } = usePredictions(user?.uid ?? null)
   const { data: bonus } = useBonus(user?.uid ?? null)
 
-  const grouped = useMemo(() => groupByDate(matches), [matches])
+  // Group for the betting list: LIVE first, then UPCOMING (soonest first),
+  // then finished matches collapsed at the bottom — so opening the app lands
+  // you on what's live/next, not on games that already happened.
+  const sections = useMemo(() => {
+    const byKick = (a: Match, b: Match) => a.kickoff.toMillis() - b.kickoff.toMillis()
+    const live = matches.filter((m) => m.status === 'LIVE').sort(byKick)
+    const upcoming = matches.filter((m) => m.status === 'SCHEDULED').sort(byKick)
+    const past = matches.filter((m) => m.status === 'FINISHED' || m.status === 'POSTPONED')
+    return {
+      live,
+      upcomingGroups: groupByDate(upcoming),
+      pastGroups: groupByDate(past).reverse(), // most-recent day first
+      pastCount: past.length,
+      isEmpty: live.length === 0 && upcoming.length === 0 && past.length === 0
+    }
+  }, [matches])
 
   // Nudge: scheduled matches the user hasn't predicted yet within the next
   // 3 days, split by day (today / tomorrow / day-after) so the banner can be
@@ -138,23 +153,57 @@ export default function Matches() {
         </Link>
       )}
 
-      {grouped.length === 0 ? (
+      {sections.isEmpty ? (
         <div className="card" style={{ textAlign: 'center' }}>אין משחקים להצגה</div>
       ) : (
-        grouped.map((group) => (
-          <section key={group.key} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <h2 style={{ fontSize: 14, color: 'var(--color-text-muted)', fontWeight: 700 }}>
-              {formatDateHe(group.date)}
-            </h2>
-            <div className="stagger" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-              {group.matches.map((m) => (
-                <div key={m.id} className="animate-in">
-                  <MatchCard match={m} prediction={byMatchId[m.id]} uid={user!.uid} />
-                </div>
-              ))}
-            </div>
-          </section>
-        ))
+        <>
+          {/* 🔴 Live now — pinned to the top */}
+          {sections.live.length > 0 && (
+            <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+              <h2 style={{ fontSize: 14, color: 'var(--color-primary)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 6 }}>
+                🔴 חי עכשיו
+              </h2>
+              <div className="stagger" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                {sections.live.map((m) => (
+                  <div key={m.id} className="animate-in"><MatchCard match={m} prediction={byMatchId[m.id]} uid={user!.uid} /></div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Upcoming — soonest first, grouped by day */}
+          {sections.upcomingGroups.map((group) => (
+            <section key={group.key} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+              <h2 style={{ fontSize: 14, color: 'var(--color-text-muted)', fontWeight: 700 }}>{formatDateHe(group.date)}</h2>
+              <div className="stagger" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                {group.matches.map((m) => (
+                  <div key={m.id} className="animate-in"><MatchCard match={m} prediction={byMatchId[m.id]} uid={user!.uid} /></div>
+                ))}
+              </div>
+            </section>
+          ))}
+
+          {/* Finished — collapsed by default so they don't bury what's next */}
+          {sections.pastGroups.length > 0 && (
+            <details style={{ borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', background: 'var(--glass-bg-hi)', padding: '4px 0' }}>
+              <summary style={{ cursor: 'pointer', padding: '10px 14px', fontWeight: 800, fontSize: 14, listStyle: 'none' }}>
+                ✓ משחקים שהסתיימו · {sections.pastCount}
+              </summary>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: '8px 12px 12px' }}>
+                {sections.pastGroups.map((group) => (
+                  <section key={group.key} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                    <h2 style={{ fontSize: 13, color: 'var(--color-text-muted)', fontWeight: 700 }}>{formatDateHe(group.date)}</h2>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                      {group.matches.map((m) => (
+                        <div key={m.id}><MatchCard match={m} prediction={byMatchId[m.id]} uid={user!.uid} /></div>
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            </details>
+          )}
+        </>
       )}
     </div>
   )

@@ -445,6 +445,33 @@ async function runSync(token: string, geminiKey?: string, oddsKey?: string, apiF
     await db.collection('users').doc(uid).set({ totalPoints: FieldValue.increment(delta) }, { merge: true })
   }
 
+  // ===== Admin fix-it: re-score specific predictions to FULL points =====
+  // Admins queue {uid, matchId} via appState/fixRequests (e.g. a real bet wrongly
+  // flagged auto/50%). Flip auto:false, recompute at full, correct the user's
+  // total. Processed once then cleared. Best-effort.
+  try {
+    const frDoc = await db.collection('appState').doc('fixRequests').get()
+    const items = ((frDoc.exists ? (frDoc.data() as { items?: Array<{ uid?: string; matchId?: string }> }).items : []) || [])
+    if (items.length) {
+      for (const it of items) {
+        if (!it?.uid || !it?.matchId) continue
+        const pref = db.collection('predictions').doc(`${it.uid}_${it.matchId}`)
+        const [psnap, msnap] = await Promise.all([pref.get(), db.collection('matches').doc(it.matchId).get()])
+        if (!psnap.exists || !msnap.exists) continue
+        const p = psnap.data() as { homeScore?: number; awayScore?: number; points?: number | null }
+        const md = msnap.data() as { status?: string; homeScore?: number | null; awayScore?: number | null; stage?: string }
+        if (md.status !== 'FINISHED' || typeof md.homeScore !== 'number' || typeof md.awayScore !== 'number') continue
+        if (typeof p.homeScore !== 'number' || typeof p.awayScore !== 'number') continue
+        const full = scorePrediction(p.homeScore, p.awayScore, md.homeScore, md.awayScore, md.stage || 'GROUP', scoringCfg)
+        const old = typeof p.points === 'number' ? p.points : 0
+        await pref.set({ auto: false, points: full }, { merge: true })
+        if (full !== old) await db.collection('users').doc(it.uid).set({ totalPoints: FieldValue.increment(full - old) }, { merge: true })
+        logger.info('fix-it applied', { uid: it.uid, matchId: it.matchId, old, full })
+      }
+      await db.collection('appState').doc('fixRequests').set({ items: [], updatedAt: Timestamp.now() }, { merge: true })
+    }
+  } catch (e) { logger.warn('fix-requests failed', e) }
+
   // Bonus lock = first game kickoff
   let earliest: number | null = null
   for (const m of apiMatches) {
@@ -493,61 +520,67 @@ async function runSync(token: string, geminiKey?: string, oddsKey?: string, apiF
     })
   }
 
-  // ===== Golden Boot auto-track (best-effort — api-football) =====
-  // Fire only when a match just finished (a few times/day → well under the ~100/day
-  // free quota). Writes stats/goldenBoot (race display) and auto-resolves the
-  // top-scorer bonus to the live leader unless an admin locked it. ESPN state untouched.
-  if (apiFootballKey && finishedToScore.length) {
-    try {
-      const league = process.env.API_FOOTBALL_LEAGUE || '1'   // FIFA World Cup
-      const season = process.env.API_FOOTBALL_SEASON || '2026'
-      const sr = await fetch(`https://v3.football.api-sports.io/players/topscorers?league=${league}&season=${season}`, {
-        headers: { 'x-apisports-key': apiFootballKey }
-      })
-      if (sr.ok) {
-        const sdata = await sr.json() as { response?: Array<{ player?: { name?: string; firstname?: string; lastname?: string }; statistics?: Array<{ goals?: { total?: number | null } }> }> }
-        const rows = sdata.response || []
-        const goalsOf = (r: { statistics?: Array<{ goals?: { total?: number | null } }> }) =>
-          Math.max(0, ...(r.statistics || []).map((s) => s.goals?.total || 0))
-        const nameOf = (r: { player?: { name?: string; firstname?: string; lastname?: string } }) =>
-          [r.player?.firstname, r.player?.lastname].filter(Boolean).join(' ') || r.player?.name || ''
-        // Goals per Hebrew candidate (for the race display).
-        const goals: Record<string, number> = {}
-        let topGoals = 0
-        for (const r of rows) {
-          const g = goalsOf(r)
-          if (g > topGoals) topGoals = g
-          if (g <= 0) continue
-          const heb = hebScorer(nameOf(r))
-          if (heb) goals[heb] = Math.max(goals[heb] || 0, g)
+  // ===== Golden Boot auto-track (best-effort) =====
+  // Updates the race display (stats/goldenBoot.goals, keyed by Hebrew candidate
+  // name). Source: api-football topscorers when API_FOOTBALL_KEY is set
+  // (authoritative, polled only when a match just finished — quota-friendly);
+  // otherwise the goalscorers we already store per match are tallied (keyless).
+  // Skipped entirely if an admin took manual control (stats/goldenBoot.manual).
+  // Never touches ESPN/score/minute state.
+  try {
+    const gbDoc = await db.collection('stats').doc('goldenBoot').get()
+    const gbManual = gbDoc.exists && (gbDoc.data() as { manual?: boolean }).manual === true
+    if (!gbManual) {
+      let goals: Record<string, number> | null = null
+      let viaApi = false
+      if (apiFootballKey) {
+        if (finishedToScore.length) {
+          try {
+            const league = process.env.API_FOOTBALL_LEAGUE || '1'   // FIFA World Cup
+            const season = process.env.API_FOOTBALL_SEASON || '2026'
+            const sr = await fetch(`https://v3.football.api-sports.io/players/topscorers?league=${league}&season=${season}`, {
+              headers: { 'x-apisports-key': apiFootballKey }
+            })
+            if (sr.ok) {
+              const sdata = await sr.json() as { response?: Array<{ player?: { name?: string; firstname?: string; lastname?: string }; statistics?: Array<{ goals?: { total?: number | null } }> }> }
+              const g: Record<string, number> = {}
+              for (const r of sdata.response || []) {
+                const total = Math.max(0, ...(r.statistics || []).map((s) => s.goals?.total || 0))
+                if (total <= 0) continue
+                const heb = hebScorer([r.player?.firstname, r.player?.lastname].filter(Boolean).join(' ') || r.player?.name || '')
+                if (heb) g[heb] = Math.max(g[heb] || 0, total)
+              }
+              goals = g; viaApi = true
+            } else { logger.warn('api-football status', sr.status) }
+          } catch (e) { logger.warn('api-football fetch failed', e) }
         }
-        if (rows.length) {
-          // Race display updates live all tournament long (visual only, no points).
-          await db.collection('stats').doc('goldenBoot').set({ goals, updatedAt: Timestamp.now() }, { merge: true })
+      } else {
+        // Keyless fallback: tally the scorers stored on each match (one entry per goal).
+        const g: Record<string, number> = {}
+        for (const d of existingMatches.docs) {
+          const sc = (d.data() as { scorers?: Array<{ name?: string }> }).scorers
+          if (!Array.isArray(sc)) continue
+          for (const s of sc) { const heb = hebScorer(s?.name || ''); if (heb) g[heb] = (g[heb] || 0) + 1 }
         }
-        // Top-scorer BONUS points are only awarded at the END of the tournament:
-        // we write bonusResults.topScorers (which the leaderboard scores) ONLY once
-        // the Final has finished — never mid-tournament. Admin lock still respected.
-        const finalDone = [...snap.values()].some((it) => {
-          const x = it as { stage?: string; status?: string }
-          return x.stage === 'F' && x.status === 'FINISHED'
-        })
+        goals = g
+      }
+      if (goals) {
+        await db.collection('stats').doc('goldenBoot').set({ goals, manual: false, updatedAt: Timestamp.now() }, { merge: true })
+        // Top-scorer BONUS only at tournament end, only from the authoritative source.
+        const finalDone = [...snap.values()].some((it) => { const x = it as { stage?: string; status?: string }; return x.stage === 'F' && x.status === 'FINISHED' })
         const bonusResults = (cfg.bonusResults || {}) as { topScorers?: string[]; topScorerLocked?: boolean }
-        if (finalDone && !bonusResults.topScorerLocked && topGoals > 0) {
-          const heLeaders = [...new Set(
-            rows.filter((r) => goalsOf(r) === topGoals).map((r) => hebScorer(nameOf(r))).filter((x): x is string => !!x)
-          )]
-          // If the real leader isn't a listed candidate, the "אחר" (Other) pick wins.
+        const topGoals = Math.max(0, ...Object.values(goals))
+        if (viaApi && finalDone && !bonusResults.topScorerLocked && topGoals > 0) {
+          const heLeaders = Object.entries(goals).filter(([, gg]) => gg === topGoals).map(([n]) => n)
           const resolved = heLeaders.length ? heLeaders : ['אחר']
           const prev = bonusResults.topScorers || []
-          const changed = resolved.length !== prev.length || resolved.some((x) => !prev.includes(x))
-          if (changed) {
+          if (resolved.length !== prev.length || resolved.some((x) => !prev.includes(x))) {
             await db.collection('appConfig').doc('main').set({ bonusResults: { topScorers: resolved } }, { merge: true })
           }
         }
-      } else { logger.warn('api-football status', sr.status) }
-    } catch (e) { logger.warn('golden boot fetch failed', e) }
-  }
+      }
+    }
+  } catch (e) { logger.warn('golden boot failed', e) }
 
   // ===== Post-match recap — keep the home pundit card fresh after every game =====
   // When a match finished this run, the duo react to it (overwrites the morning
